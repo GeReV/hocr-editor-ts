@@ -1,0 +1,63 @@
+{
+  "name": "ocr",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@reduxjs/toolkit": "^1.3.6",
+    "bootstrap": "^4.4.1",
+    "konva": "^6.0.0",
+    "react": "^16.13.1",
+    "react-bootstrap": "^1.0.1",
+    "react-dom": "^16.13.1",
+    "react-konva": "^16.13.0-2",
+    "react-sortable-tree": "^2.7.1",
+    "react-use": "^14.2.0",
+    "tesseract.js": "^2.1.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.7.0",
+    "@testing-library/react": "^10.0.4",
+    "@testing-library/user-event": "^10.1.2",
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.13.5",
+    "@types/react": "^16.9.0",
+    "@types/react-bootstrap": "^1.0.1",
+    "@types/react-dom": "^16.9.0",
+    "@types/react-sortable-tree": "^0.3.11",
+    "@types/tesseract.js": "^0.0.2",
+    "@typescript-eslint/eslint-plugin": "2.x",
+    "@typescript-eslint/parser": "2.x",
+    "babel-eslint": "10.x",
+    "eslint": "6.x",
+    "eslint-config-react-app": "^5.2.1",
+    "eslint-plugin-flowtype": "4.x",
+    "eslint-plugin-import": "2.x",
+    "eslint-plugin-jsx-a11y": "6.x",
+    "eslint-plugin-react": "7.x",
+    "eslint-plugin-react-hooks": "2.x",
+    "node-sass": "^4.14.1",
+    "react-scripts": "3.4.1",
+    "typescript": "~3.8.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

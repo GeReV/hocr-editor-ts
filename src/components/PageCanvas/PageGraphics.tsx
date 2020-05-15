@@ -1,0 +1,108 @@
+﻿import { Image, Layer, Stage } from "react-konva";
+import { BlockTreeItem, LineTreeItem, PageImage, ParagraphTreeItem, Position } from "../../types";
+import { Block, ChangeCallbackParams } from "./Block";
+import React from "react";
+import { useAppReducer } from "../../reducerContext";
+import { createUpdateTreeNodePosition } from "../../pageReducer";
+
+export interface Props {
+  width: number;
+  height: number;
+  scale: number;
+  onSelect: (id: number) => void;
+  onDeselect: () => void;
+  hoveredId?: number | null;
+  selectedId?: number | null;
+  tree: BlockTreeItem[] | null;
+  pageImage?: PageImage;
+}
+
+export default function PageGraphics({ width, height, onSelect, scale, onDeselect, hoveredId, pageImage, selectedId, tree }: Props) {
+  const [, dispatch] = useAppReducer();
+  
+  function handleChange(args: ChangeCallbackParams) {
+    const pos: Position = {
+      x: args.x,
+      y: args.y,
+    };
+    
+    dispatch(createUpdateTreeNodePosition(args.nodeId, pos));
+  }
+  
+  if (!pageImage) {
+    return null;
+  }
+  
+  const pageProps = {
+    pageWidth: pageImage.image.width,
+    pageHeight: pageImage.image.height,
+  };
+  
+  return (
+    <Stage
+      onClick={onDeselect}
+      width={width}
+      height={height}
+      scaleX={scale}
+      scaleY={scale}
+      draggable
+    >
+      <Layer>
+        <Image image={pageImage.image} />
+      </Layer>
+      <Layer>
+        {
+          tree?.map((block: BlockTreeItem) =>
+            (
+              <Block
+                key={`block-${block.id}`}
+                fill="blue"
+                opacity={0.2}
+                item={block}
+                onChange={handleChange}
+                onSelected={onSelect}
+                isSelected={selectedId === block.id}
+                isHovered={hoveredId === block.id}
+                draggable
+                {...pageProps}
+              >
+                {
+                  block.children?.map((para: ParagraphTreeItem) =>
+                    (
+                      <Block
+                        key={`paragraph-${para.id}`}
+                        fill="green"
+                        opacity={0.2}
+                        item={para}
+                        onChange={handleChange}
+                        onSelected={onSelect}
+                        isSelected={selectedId === para.id}
+                        isHovered={hoveredId === para.id}
+                        draggable
+                        {...pageProps}
+                      >
+                        {
+                          para.children?.map((line: LineTreeItem) =>
+                            <Block
+                              key={`line-${line.id}`}
+                              fill="red"
+                              opacity={0.2}
+                              item={line}
+                              onChange={handleChange}
+                              onSelected={onSelect}
+                              isSelected={selectedId === line.id}
+                              isHovered={hoveredId === line.id}
+                              draggable
+                              {...pageProps}
+                            />)
+                        }
+                      </Block>
+                    ))
+                }
+              </Block>
+            ))
+        }
+      </Layer>
+    </Stage>
+  );
+}
