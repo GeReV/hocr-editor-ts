@@ -1,6 +1,6 @@
 import { Bbox, RecognizeResult } from "tesseract.js";
 import { createAction } from '@reduxjs/toolkit';
-import { BaseTreeItem, BlockTreeItem, ElementType, PageTreeItem, Position } from "./types";
+import { BaseTreeItem, BlockTreeItem, ElementType, Position } from "./types";
 import { buildTree, walkChildren } from "./treeBuilder";
 
 export type TreeMap = { [id: number]: BaseTreeItem<ElementType, any> };

@@ -1,7 +1,7 @@
 import React from "react";
 import { NodeRendererProps, isDescendant } from "react-sortable-tree";
 
-import { ReducerAction, createChangeSelected } from "../../pageReducer";
+import { createChangeSelected } from "../../pageReducer";
 import { useAppReducer } from "../../reducerContext";
 
 import styles from "./nodeContentRenderer.module.scss";

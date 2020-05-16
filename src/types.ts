@@ -1,6 +1,4 @@
-import { TreeItem } from "react-sortable-tree";
 import { Word, Line, Paragraph, Block, Symbol, Bbox } from "tesseract.js";
-import * as React from "react";
 
 export interface Position {
   x: number;
