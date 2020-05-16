@@ -46,7 +46,7 @@ export default function PageCanvas(props: Props) {
     setScale(fitScale);
   }, [props.pageImage, height, width]);
 
-  // React.useLayoutEffect(setFitScale, [setFitScale]);
+  React.useLayoutEffect(setFitScale, [setFitScale]);
 
   function handleSelected(itemId: number | null) {
     props.dispatch(createChangeSelected(itemId));

@@ -82,6 +82,11 @@ function updateTreeNodePosition(treeMap: TreeMap | null, nodeId: number, x: numb
     throw new Error(`Could not find node with ID ${nodeId}.`);
   }
   
+  const delta: Position = {
+    x: x - node.parentRelativeOffset.x,
+    y: y - node.parentRelativeOffset.y,
+  };
+  
   const resultMap: TreeMap = {
     ...treeMap,
     [nodeId]: {
@@ -89,25 +94,20 @@ function updateTreeNodePosition(treeMap: TreeMap | null, nodeId: number, x: numb
       parentRelativeOffset: { x, y, },
       value: {
         ...node.value,
-        bbox: offsetBbox(node.value.bbox, { x, y }),
+        bbox: offsetBbox(node.value.bbox, delta),
       },
     },
   };
   
-  // Update children now?
-  //
-  // walkChildren(node.children, treeMap, item => {
-  //   resultMap[item.id] = {
-  //     ...item,
-  //     value: {
-  //       ...item.value,
-  //       bbox: offsetBbox(item.value.bbox, { x, y }),
-  //     },
-  //   };
-  // });
-  
-  console.log(node.id, x, y);
-  console.log(resultMap);
+  walkChildren(node.children, treeMap, item => {
+    resultMap[item.id] = {
+      ...item,
+      value: {
+        ...item.value,
+        bbox: offsetBbox(item.value.bbox, { x, y }),
+      },
+    };
+  });
   
   return resultMap;
 }

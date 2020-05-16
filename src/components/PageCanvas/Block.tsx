@@ -1,111 +1,11 @@
 import React from 'react';
 import { Group, Rect, Transformer } from 'react-konva';
 import Konva from 'konva';
-import { Bbox } from 'tesseract.js';
 
 import { PageTreeItem, Position } from '../../types';
 import { TreeMap } from "../../pageReducer";
-
-interface LayoutProps {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-type BoundsTuple = [number, number, number, number];
-
-const clamp = (x: number, min: number, max: number) => Math.max(min, Math.min(x, max));
-
-export const bboxToRectArray = (bbox: Bbox): BoundsTuple => [
-  bbox.x0,
-  bbox.y0,
-  bbox.x1,
-  bbox.y1,
-];
-
-const INFINITE_BOUNDS = {
-  left: Number.NEGATIVE_INFINITY,
-  top: Number.NEGATIVE_INFINITY,
-  right: Number.POSITIVE_INFINITY,
-  bottom: Number.POSITIVE_INFINITY,
-};
-
-function offsetBounds([left, top, right, bottom]: BoundsTuple, offset: { top: number; left: number }) {
-  return [
-    left + offset.left,
-    top + offset.top,
-    right + offset.left,
-    bottom + offset.top,
-  ];
-}
-
-function calculateDragBounds(node: Konva.Node | null, item: PageTreeItem, treeMap: TreeMap, pageWidth: number, pageHeight: number) {
-  if (!node) {
-    return INFINITE_BOUNDS;
-  }
-
-  const scale = node.getAbsoluteScale();
-
-  const nodeWidth = item.value.bbox.x1 - item.value.bbox.x0;
-  const nodeHeight = item.value.bbox.y1 - item.value.bbox.y0;
-
-  const nodeLeft = item.parentRelativeOffset.x;
-  const nodeTop = item.parentRelativeOffset.y;
-  const nodeRight = nodeLeft + nodeWidth;
-  const nodeBottom = nodeTop + nodeHeight;
-
-  const stage = node.getStage();
-
-  if (!stage) {
-    return INFINITE_BOUNDS;
-  }
-
-  const stageOffset = {
-    left: stage.x() / scale.x,
-    top: stage.y() / scale.y,
-  };
-
-  const pageBounds: BoundsTuple = [0, 0, pageWidth, pageHeight];
-
-  const parent = item.parentId && treeMap[item.parentId];
-
-  const parentBounds = parent ?
-    [
-      parent.parentRelativeOffset.x,
-      parent.parentRelativeOffset.y,
-      parent.parentRelativeOffset.x + parent.value.bbox.x1 - parent.value.bbox.x0,
-      parent.parentRelativeOffset.y + parent.value.bbox.y1 - parent.value.bbox.y0
-    ] :
-    offsetBounds(pageBounds, stageOffset);
-  
-  console.log(parentBounds);
-
-  const [
-    parentLeft,
-    parentTop,
-    parentRight,
-    parentBottom
-  ] = parentBounds;
-
-  return {
-    left: (parentLeft) * scale.x,
-    top: (parentTop) * scale.y,
-    right: (parentRight - nodeWidth) * scale.x,
-    bottom: (parentBottom - nodeHeight) * scale.y,
-  };
-}
-
-export function getLayoutPropsFromBbox(bbox: Bbox): LayoutProps {
-  const [left, top, right, bottom] = bboxToRectArray(bbox);
-
-  return {
-    x: left,
-    y: top,
-    width: right - left,
-    height: bottom - top,
-  };
-}
+import { calculateDragBounds } from "./utils";
+import { clamp } from "../../utils";
 
 export interface ChangeCallbackParams extends Position {
   nodeId: number;
@@ -147,7 +47,24 @@ export function Block(props: BlockProps): React.ReactElement | null {
     props.onSelected?.(props.item.id);
   }, [props]);
 
-  // console.log(props.item.id, props.item.value.bbox);
+  const dragBoundFunc = React.useCallback<(pos: Position) => Position>((pos) => {
+    const bounds = calculateDragBounds(groupRef.current, props.item, props.treeMap, props.pageWidth, props.pageHeight);
+
+    return {
+      x: clamp(pos.x, bounds.left, bounds.right),
+      y: clamp(pos.y, bounds.top, bounds.bottom),
+    };
+  }, [props.item, props.pageHeight, props.pageWidth, props.treeMap]);
+
+  const handleDragEnd = React.useCallback<(evt: Konva.KonvaEventObject<DragEvent>) => void>((evt) => {
+    evt.cancelBubble = true;
+
+    props.onChange?.({
+      nodeId: props.item.id,
+      x: evt.target.x(),
+      y: evt.target.y()
+    });
+  }, [props.item.id, props.onChange])
 
   return (
     <Group
@@ -156,21 +73,8 @@ export function Block(props: BlockProps): React.ReactElement | null {
       draggable={props.draggable}
       x={props.item.parentRelativeOffset.x}
       y={props.item.parentRelativeOffset.y}
-      dragBoundFunc={pos => {
-        const bounds = calculateDragBounds(groupRef.current, props.item, props.treeMap, props.pageWidth, props.pageHeight);
-
-        return {
-          x: clamp(pos.x, bounds.left, bounds.right),
-          y: clamp(pos.y, bounds.top, bounds.bottom),
-        };
-      }}
-      onDragEnd={e => {
-        props.onChange?.({
-          nodeId: props.item.id,
-          x: e.target.x(),
-          y: e.target.y()
-        });
-      }}
+      dragBoundFunc={dragBoundFunc}
+      onDragEnd={handleDragEnd}
     >
       <Rect
         ref={shapeRef}
@@ -209,6 +113,7 @@ export function Block(props: BlockProps): React.ReactElement | null {
         <Transformer
           ref={trRef}
           rotateEnabled={false}
+          anchorSize={7}
           boundBoxFunc={(oldBox, newBox) => {
             // limit resize
             if (newBox.width < 5 || newBox.height < 5) {
