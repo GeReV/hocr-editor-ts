@@ -104,7 +104,7 @@ function updateTreeNodePosition(treeMap: TreeMap | null, nodeId: number, x: numb
       ...item,
       value: {
         ...item.value,
-        bbox: offsetBbox(item.value.bbox, { x, y }),
+        bbox: offsetBbox(item.value.bbox, delta),
       },
     };
   });
