@@ -1,5 +1,6 @@
 import { TreeItem } from "react-sortable-tree";
 import { Word, Line, Paragraph, Block, Symbol, Bbox } from "tesseract.js";
+import * as React from "react";
 
 export interface Position {
   x: number;
@@ -24,32 +25,31 @@ export enum ElementType {
   Symbol,
 }
 
-export interface BaseTreeItem<T extends ElementType, V, C extends BaseTreeItem<ElementType, any, any>> extends TreeItem {
+export enum BlockType {
+  CAPTION_TEXT = 'CAPTION_TEXT',
+  FLOWING_IMAGE = 'FLOWING_IMAGE',
+  FLOWING_TEXT = 'FLOWING_TEXT',
+  HORZ_LINE = 'HORZ_LINE',
+  PULLOUT_IMAGE = 'PULLOUT_IMAGE',
+  PULLOUT_TEXT = 'PULLOUT_TEXT',
+  VERT_LINE = 'VERT_LINE',
+  VERTICAL_TEXT = 'VERTICAL_TEXT',
+}
+
+export interface BaseTreeItem<T extends ElementType, V> {
   id: number;
   type: T;
   value: V;
-  parent: BaseTreeItem<ElementType, any, any> | null;
+  parentId: number | null;
   parentRelativeOffset: Position,
-  children?: C[];
+  children: number[];
 }
 
-export type SymbolTreeItem = BaseTreeItem<ElementType.Symbol, Symbol, BaseTreeItem<ElementType, any, any>>
-export type WordTreeItem = BaseTreeItem<ElementType.Word, Word, SymbolTreeItem>;
-export type LineTreeItem = BaseTreeItem<
-  ElementType.Line,
-  Line,
-  WordTreeItem
->;
-export type ParagraphTreeItem = BaseTreeItem<
-  ElementType.Paragraph,
-  Paragraph,
-  LineTreeItem
->;
-export type BlockTreeItem = BaseTreeItem<
-  ElementType.Block,
-  Block,
-  ParagraphTreeItem
->;
+export type SymbolTreeItem = BaseTreeItem<ElementType.Symbol, Symbol>
+export type WordTreeItem = BaseTreeItem<ElementType.Word, Word>;
+export type LineTreeItem = BaseTreeItem<ElementType.Line, Line>;
+export type ParagraphTreeItem = BaseTreeItem<ElementType.Paragraph, Paragraph>;
+export type BlockTreeItem = BaseTreeItem<ElementType.Block, Block>;
 
 export type PageTreeItem =
   | BlockTreeItem

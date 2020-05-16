@@ -1,18 +1,13 @@
-import { Bbox, Block, RecognizeResult } from "tesseract.js";
+import { Bbox, RecognizeResult } from "tesseract.js";
 import { createAction } from '@reduxjs/toolkit';
-import {
-  BaseTreeItem,
-  BlockTreeItem,
-  ElementType,
-  LineTreeItem,
-  PageTreeItem,
-  ParagraphTreeItem,
-  Position
-} from "./types";
+import { BaseTreeItem, BlockTreeItem, ElementType, PageTreeItem, Position } from "./types";
+import { buildTree, walkChildren } from "./treeBuilder";
 
+export type TreeMap = { [id: number]: BaseTreeItem<ElementType, any> };
 
 export interface State {
   tree: BlockTreeItem[] | null;
+  treeMap: TreeMap | null;
   selectedId: number | null;
   hoveredId: number | null;
 }
@@ -47,19 +42,6 @@ export const createUpdateTreeNodePosition = createAction<(nodeId: number, positi
 export const createChangeSelected = createAction<number | null, ActionType.ChangeSelected>(ActionType.ChangeSelected);
 export const createChangeHovered = createAction<number | null, ActionType.ChangeHovered>(ActionType.ChangeHovered);
 
-enum BlockType {
-  CAPTION_TEXT = 'CAPTION_TEXT',
-  FLOWING_IMAGE = 'FLOWING_IMAGE',
-  FLOWING_TEXT = 'FLOWING_TEXT',
-  HORZ_LINE = 'HORZ_LINE',
-  PULLOUT_IMAGE = 'PULLOUT_IMAGE',
-  PULLOUT_TEXT = 'PULLOUT_TEXT',
-  VERT_LINE = 'VERT_LINE',
-  VERTICAL_TEXT = 'VERTICAL_TEXT',
-}
-
-const INCLUDES_PARAGRAPHS: string[] = [BlockType.CAPTION_TEXT, BlockType.FLOWING_TEXT, BlockType.PULLOUT_TEXT, BlockType.VERTICAL_TEXT];
-
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
   y0: bbox.y0 + offset.y,
@@ -67,162 +49,77 @@ const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   y1: bbox.y1 + offset.y,
 });
 
-function buildTree(recognitionResult: RecognizeResult): BlockTreeItem[] {
-  let id = 0;
-
-  return recognitionResult.data.blocks.map(block => {
-    const blockTreeItem: BlockTreeItem = {
-      id: id++,
-      type: ElementType.Block,
-      title: `Block (${block.blocktype})`,
-      parent: null,
-      value: block,
-      parentRelativeOffset: {
-        x: block.bbox.x0,
-        y: block.bbox.y0,
-      },
-      expanded: true,
-    };
-
-    function buildParagraphTree(block: Block): ParagraphTreeItem[] {
-      return block.paragraphs.map((para) => {
-        const paragraphTreeItem: ParagraphTreeItem = {
-          id: id++,
-          type: ElementType.Paragraph,
-          title: para.text,
-          subtitle: "Paragraph",
-          parent: blockTreeItem,
-          value: para,
-          parentRelativeOffset: {
-            x: para.bbox.x0 -block.bbox.x0,
-            y: para.bbox.y0 -block.bbox.y0 
-          },
-          expanded: true,
-        };
-
-        paragraphTreeItem.children = para.lines.map((line) => {
-          const lineTreeItem: LineTreeItem = {
-            id: id++,
-            type: ElementType.Line,
-            title: line.text,
-            subtitle: "Line",
-            parent: paragraphTreeItem,
-            value: line,
-            parentRelativeOffset: { 
-              x: line.bbox.x0-para.bbox.x0,
-              y: line.bbox.y0-para.bbox.y0 
-            },
-            expanded: true,
-          };
-
-          lineTreeItem.children = line.words.map((word) => ({
-            id: id++,
-            type: ElementType.Word,
-            title: word.text,
-            parent: lineTreeItem,
-            value: word,
-            parentRelativeOffset: {
-              x: word.bbox.x0 - line.bbox.x0,
-              y: word.bbox.y0 - line.bbox.y0,
-            },
-            children: [],
-          }));
-
-          return lineTreeItem;
-        });
-
-        return paragraphTreeItem;
-      });
-    }
-
-    blockTreeItem.children = INCLUDES_PARAGRAPHS.includes(block.blocktype) ? buildParagraphTree(block) : [];
-
-    return blockTreeItem;
-  });
-}
-
-function walkTreeMap<T extends BaseTreeItem<ElementType, any, any>>(tree: T[], transform: (item: T) => T): T[] {
-  function walk(item: T): T {
-    const transformedItem = transform(item);
-
-    if (transformedItem.children && typeof transformedItem.children !== 'function') {
-      transformedItem.children = walkTreeMap(item.children ?? [], transform);
-    }
-
-    return transformedItem;
-  }
-
-  return tree.map(block => walk(block));
-}
-
-function walkTree(tree: PageTreeItem[], action: (item: PageTreeItem) => void): void {
-  walkTreeMap(tree, item => {
-    action(item);
-    return item;
-  });
-}
-
-// function flattenTree(tree: PageTreeItem[]): Map<number, PageTreeItem> {
-//   const items = new Map<number, PageTreeItem>();
+// function walkTreeMap<T extends BaseTreeItem<ElementType, any>>(tree: T[], transform: (item: T) => T): T[] {
+//   function walk(item: T): T {
+//     const transformedItem = transform(item);
 //
-//   walkTree(tree, item => items.set(item.id, item));
+//     if (transformedItem.children && typeof transformedItem.children !== 'function') {
+//       transformedItem.children = walkTreeMap(item.children ?? [], transform);
+//     }
 //
-//   return items;
+//     return transformedItem;
+//   }
+//
+//   return tree.map(block => walk(block));
 // }
 
 export const initialState: State = {
   tree: null,
+  treeMap: null,
   selectedId: null,
   hoveredId: null,
 };
 
 
-function updateTreeNodePosition(tree: BlockTreeItem[] | null, nodeId: number, x: number, y: number) {
-  if (!tree) {
-    return tree;
+function updateTreeNodePosition(treeMap: TreeMap | null, nodeId: number, x: number, y: number): TreeMap | null {
+  if (!treeMap) {
+    return treeMap;
   }
-
-  function transform<T extends PageTreeItem>(item: T): T {
-    const bbox = item.value.bbox;
-    const newBbox = {
-      x0: x + bbox.x0,
-      y0: y + bbox.y0,
-      x1: x + bbox.x1,
-      y1: y + bbox.y1,
-    };
-    
-    const newBounds: Position = {
-      x,
-      y,
-    };
-    
-    return {
-      ...item,
+  
+  const node = treeMap[nodeId];
+  
+  if (!node) {
+    throw new Error(`Could not find node with ID ${nodeId}.`);
+  }
+  
+  const resultMap: TreeMap = {
+    ...treeMap,
+    [nodeId]: {
+      ...node,
+      parentRelativeOffset: { x, y, },
       value: {
-        ...item.value,
-        bbox: newBbox,
+        ...node.value,
+        bbox: offsetBbox(node.value.bbox, { x, y }),
       },
-      parentRelativeOffset: newBounds,
-      children: item.children && walkTreeMap(item.children, transform),
-    }
-  }
-
-  return walkTreeMap(tree, (item) => {
-    if (item.id !== nodeId) {
-      return item;
-    }
-
-    return transform(item)
-  });
+    },
+  };
+  
+  // Update children now?
+  //
+  // walkChildren(node.children, treeMap, item => {
+  //   resultMap[item.id] = {
+  //     ...item,
+  //     value: {
+  //       ...item.value,
+  //       bbox: offsetBbox(item.value.bbox, { x, y }),
+  //     },
+  //   };
+  // });
+  
+  console.log(node.id, x, y);
+  console.log(resultMap);
+  
+  return resultMap;
 }
 
 export function reducer(state: State, action: ReducerAction): State {
   switch (action.type) {
     case ActionType.Init: {
-      const tree = buildTree(action.payload)
+      const [blockTreeItems, treeMap] = buildTree(action.payload);
 
       return {
-        tree,
+        tree: blockTreeItems,
+        treeMap,
         selectedId: null,
         hoveredId: null,
       };
@@ -239,16 +136,16 @@ export function reducer(state: State, action: ReducerAction): State {
         hoveredId: action.payload,
       };
     }
-    case ActionType.UpdateTree: {
-      return {
-        ...state,
-        tree: action.payload,
-      };
-    }
+    // case ActionType.UpdateTree: {
+    //   return {
+    //     ...state,
+    //     treeMap: action.payload,
+    //   };
+    // }
     case ActionType.UpdateTreeNodePosition: {
       return {
         ...state,
-        tree: updateTreeNodePosition(state.tree, action.payload.nodeId, action.payload.x, action.payload.y),
+        treeMap: updateTreeNodePosition(state.treeMap, action.payload.nodeId, action.payload.x, action.payload.y),
       }
     }
     default:

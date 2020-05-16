@@ -4,6 +4,7 @@ import Konva from 'konva';
 import { Bbox } from 'tesseract.js';
 
 import { PageTreeItem, Position } from '../../types';
+import { TreeMap } from "../../pageReducer";
 
 interface LayoutProps {
   x: number;
@@ -39,7 +40,7 @@ function offsetBounds([left, top, right, bottom]: BoundsTuple, offset: { top: nu
   ];
 }
 
-function calculateDragBounds(node: Konva.Node | null, item: PageTreeItem, pageWidth: number, pageHeight: number) {
+function calculateDragBounds(node: Konva.Node | null, item: PageTreeItem, treeMap: TreeMap, pageWidth: number, pageHeight: number) {
   if (!node) {
     return INFINITE_BOUNDS;
   }
@@ -48,7 +49,7 @@ function calculateDragBounds(node: Konva.Node | null, item: PageTreeItem, pageWi
 
   const nodeWidth = item.value.bbox.x1 - item.value.bbox.x0;
   const nodeHeight = item.value.bbox.y1 - item.value.bbox.y0;
-  
+
   const nodeLeft = item.parentRelativeOffset.x;
   const nodeTop = item.parentRelativeOffset.y;
   const nodeRight = nodeLeft + nodeWidth;
@@ -67,17 +68,18 @@ function calculateDragBounds(node: Konva.Node | null, item: PageTreeItem, pageWi
 
   const pageBounds: BoundsTuple = [0, 0, pageWidth, pageHeight];
 
-  const parentBounds = item.parent ?
-    offsetBounds(
-      [
-        item.parent.parentRelativeOffset.x,
-        item.parent.parentRelativeOffset.y,
-        item.parent.parentRelativeOffset.x + item.parent.value.bbox.x1 - item.parent.value.bbox.x0,
-        item.parent.parentRelativeOffset.y + item.parent.value.bbox.y1 - item.parent.value.bbox.y0
-      ],
-      stageOffset
-    ) :
+  const parent = item.parentId && treeMap[item.parentId];
+
+  const parentBounds = parent ?
+    [
+      parent.parentRelativeOffset.x,
+      parent.parentRelativeOffset.y,
+      parent.parentRelativeOffset.x + parent.value.bbox.x1 - parent.value.bbox.x0,
+      parent.parentRelativeOffset.y + parent.value.bbox.y1 - parent.value.bbox.y0
+    ] :
     offsetBounds(pageBounds, stageOffset);
+  
+  console.log(parentBounds);
 
   const [
     parentLeft,
@@ -121,6 +123,7 @@ export interface BlockProps {
   children?: React.ReactNode
   pageWidth: number;
   pageHeight: number;
+  treeMap: TreeMap;
 }
 
 export function Block(props: BlockProps): React.ReactElement | null {
@@ -154,7 +157,7 @@ export function Block(props: BlockProps): React.ReactElement | null {
       x={props.item.parentRelativeOffset.x}
       y={props.item.parentRelativeOffset.y}
       dragBoundFunc={pos => {
-        const bounds = calculateDragBounds(groupRef.current, props.item, props.pageWidth, props.pageHeight);
+        const bounds = calculateDragBounds(groupRef.current, props.item, props.treeMap, props.pageWidth, props.pageHeight);
 
         return {
           x: clamp(pos.x, bounds.left, bounds.right),

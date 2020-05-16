@@ -5,7 +5,7 @@ import { ReducerAction, createChangeSelected } from "../../pageReducer";
 import { useAppReducer } from "../../reducerContext";
 
 import styles from "./nodeContentRenderer.module.scss";
-import { PageTreeItem } from "../../types";
+import { ExtendedTreeItem } from "./index";
 
 // function isDescendant(older: TreeItem, younger: TreeItem): boolean {
 //   return (
@@ -18,11 +18,10 @@ import { PageTreeItem } from "../../types";
 // }
 
 export interface Props extends NodeRendererProps {
-  node: PageTreeItem;
-  dispatch: (action: ReducerAction) => void;
-  isSelected: boolean;
-  onMouseEnter: (evt: React.MouseEvent, node: PageTreeItem) => void;
-  onMouseLeave: (evt: React.MouseEvent) => void;
+  node: ExtendedTreeItem;
+  isSelected?: boolean;
+  onMouseEnter?: (evt: React.MouseEvent, node: ExtendedTreeItem) => void;
+  onMouseLeave?: (evt: React.MouseEvent) => void;
 }
 
 function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
@@ -140,7 +139,7 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
           (isSelected ? ` ${styles.rowWrapperHighlight}` : "")
         }
         onClick={handleClick}
-        onMouseEnter={(evt) => onMouseEnter(evt, node)}
+        onMouseEnter={(evt) => onMouseEnter?.(evt, node)}
         onMouseLeave={onMouseLeave}
       >
         {/* Set the row preview to be used during drag and drop */}

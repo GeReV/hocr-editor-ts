@@ -1,5 +1,5 @@
 ﻿import { Image, Layer, Stage } from "react-konva";
-import { BlockTreeItem, LineTreeItem, PageImage, ParagraphTreeItem, Position } from "../../types";
+import { BlockTreeItem, PageImage, Position } from "../../types";
 import { Block, ChangeCallbackParams } from "./Block";
 import React from "react";
 import { useAppReducer } from "../../reducerContext";
@@ -18,7 +18,9 @@ export interface Props {
 }
 
 export default function PageGraphics({ width, height, onSelect, scale, onDeselect, hoveredId, pageImage, selectedId, tree }: Props) {
-  const [, dispatch] = useAppReducer();
+  const [state, dispatch] = useAppReducer();
+  
+  const treeMap = state.treeMap;
   
   function handleChange(args: ChangeCallbackParams) {
     const pos: Position = {
@@ -29,7 +31,7 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
     dispatch(createUpdateTreeNodePosition(args.nodeId, pos));
   }
   
-  if (!pageImage) {
+  if (!pageImage || !treeMap) {
     return null;
   }
   
@@ -64,11 +66,18 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
                 isSelected={selectedId === block.id}
                 isHovered={hoveredId === block.id}
                 draggable
+                treeMap={treeMap}
                 {...pageProps}
               >
                 {
-                  block.children?.map((para: ParagraphTreeItem) =>
-                    (
+                  block.children?.map((paraId) => {
+                    const para = treeMap[paraId];
+                  
+                    if (!para) {
+                      return null;
+                    }
+                  
+                    return (
                       <Block
                         key={`paragraph-${para.id}`}
                         fill="green"
@@ -79,25 +88,37 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
                         isSelected={selectedId === para.id}
                         isHovered={hoveredId === para.id}
                         draggable
+                        treeMap={treeMap}
                         {...pageProps}
                       >
                         {
-                          para.children?.map((line: LineTreeItem) =>
-                            <Block
-                              key={`line-${line.id}`}
-                              fill="red"
-                              opacity={0.2}
-                              item={line}
-                              onChange={handleChange}
-                              onSelected={onSelect}
-                              isSelected={selectedId === line.id}
-                              isHovered={hoveredId === line.id}
-                              draggable
-                              {...pageProps}
-                            />)
+                          para.children?.map((lineId: number) => {
+                            const line = treeMap[lineId];
+
+                            if (!line) {
+                              return null;
+                            }
+                            
+                            return (
+                              <Block
+                                key={`line-${line.id}`}
+                                fill="red"
+                                opacity={0.2}
+                                item={line}
+                                onChange={handleChange}
+                                onSelected={onSelect}
+                                isSelected={selectedId === line.id}
+                                isHovered={hoveredId === line.id}
+                                draggable
+                                treeMap={treeMap}
+                                {...pageProps}
+                              />
+                            );
+                          })
                         }
                       </Block>
-                    ))
+                    );
+                  })
                 }
               </Block>
             ))
