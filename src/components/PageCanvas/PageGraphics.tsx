@@ -1,9 +1,9 @@
 ﻿import { Image, Layer, Stage } from "react-konva";
-import { BlockTreeItem, PageImage, Position } from "../../types";
+import { BlockTreeItem, PageImage } from "../../types";
 import { Block, ChangeCallbackParams } from "./Block";
 import React from "react";
 import { useAppReducer } from "../../reducerContext";
-import { createUpdateTreeNodePosition } from "../../pageReducer";
+import { createUpdateTreeNodeRect } from "../../pageReducer";
 
 export interface Props {
   width: number;
@@ -23,12 +23,7 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
   const treeMap = state.treeMap;
   
   function handleChange(args: ChangeCallbackParams) {
-    const pos: Position = {
-      x: args.x,
-      y: args.y,
-    };
-    
-    dispatch(createUpdateTreeNodePosition(args.nodeId, pos));
+    dispatch(createUpdateTreeNodeRect(args));
   }
   
   if (!pageImage || !treeMap) {
