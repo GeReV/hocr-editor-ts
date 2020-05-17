@@ -86,6 +86,7 @@ function updateTreeNodePosition(treeMap: TreeMap | null, nodeId: number, x: numb
     y: node.value.bbox.y0 + delta.y,
   };
   
+  // TODO: Round and clamp to parent bounds.
   const newBbox: Bbox = {
     x0: newPosition.x,
     y0: newPosition.y,
