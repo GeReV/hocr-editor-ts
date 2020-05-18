@@ -13,11 +13,10 @@ export interface Props {
   onDeselect: () => void;
   hoveredId?: number | null;
   selectedId?: number | null;
-  tree: BlockTreeItem[] | null;
   pageImage?: PageImage;
 }
 
-export default function PageGraphics({ width, height, onSelect, scale, onDeselect, hoveredId, pageImage, selectedId, tree }: Props) {
+export default function PageGraphics({ width, height, onSelect, scale, onDeselect, hoveredId, pageImage, selectedId }: Props) {
   const [state, dispatch] = useAppReducer();
   
   const treeMap = state.treeMap;
@@ -49,7 +48,9 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
       </Layer>
       <Layer>
         {
-          tree?.map((block: BlockTreeItem) =>
+          state.tree
+            .map(item => treeMap[item] as BlockTreeItem)
+            .map((block: BlockTreeItem) =>
             (
               <Block
                 key={`block-${block.id}`}

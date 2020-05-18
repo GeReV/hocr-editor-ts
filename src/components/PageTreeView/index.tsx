@@ -1,11 +1,18 @@
 import React from "react";
-import SortableTree, { ExtendedNodeData, NodeData, OnDragPreviousAndNextLocation, TreeItem } from "react-sortable-tree";
+import SortableTree, {
+  ExtendedNodeData,
+  FullTree,
+  NodeData,
+  OnDragPreviousAndNextLocation, OnMovePreviousAndNextLocation, TreeIndex,
+  TreeItem, TreeNode,
+  getNodeAtPath,
+} from "react-sortable-tree";
 import { useTimeoutFn } from "react-use";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import theme from "./theme";
 import { BaseTreeItem, BlockTreeItem, ElementType, PageTreeItem } from "../../types";
-import { createChangeHovered, TreeMap } from "../../pageReducer";
+import { createChangeHovered, createMoveNode, TreeMap } from "../../pageReducer";
 import { useAppReducer } from "../../reducerContext";
 
 import "react-sortable-tree/style.css";
@@ -62,16 +69,18 @@ function getTypeSpec(node: PageTreeItem): { icon: IconName | null; iconTitle?: s
   }
 }
 
-function reconstructTree<T extends BaseTreeItem<ElementType, any>, R extends ExtendedTreeItem>(tree: T[], resolveChild: (childId: number) => T, transform: (item: T) => R): R[] {
+function reconstructTree<T extends BaseTreeItem<ElementType, any>, R extends ExtendedTreeItem>(tree: number[], resolveChild: (childId: number) => T, transform: (item: T) => R): R[] {
   function walk(item: T): R {
     const transformedItem = transform(item);
 
-    transformedItem.children = reconstructTree(item.children.map(resolveChild), resolveChild, transform);
+    transformedItem.children = reconstructTree(item.children, resolveChild, transform);
 
     return transformedItem;
   }
 
-  return tree.map(block => walk(block));
+  return tree
+    .map(resolveChild)
+    .map(block => walk(block));
 }
 
 function truncate(s: string, len: number = 20): string {
@@ -83,8 +92,8 @@ function truncate(s: string, len: number = 20): string {
   return `${s.slice(0, len).trim()}\u2026`;
 }
 
-function buildTree(tree: BlockTreeItem[], treeMap: TreeMap): ExtendedTreeItem[] {
-  if (!tree || !treeMap) {
+function buildTree(tree: number[], treeMap: TreeMap | null): ExtendedTreeItem[] {
+  if (!treeMap) {
     return [];
   }
 
@@ -148,18 +157,30 @@ export default function PageTreeView(props: Props) {
   const [state, dispatch] = useAppReducer();
   const [, cancel, reset] = useTimeoutFn(() => dispatch(createChangeHovered(null)), 50);
   
-  const [tree, setTree] = React.useState<TreeItem[]>([]);
-  
-  React.useEffect(() => {
-    if (!state.tree || !state.treeMap) {
-      return;
-    }
-
-    setTree(buildTree(state.tree, state.treeMap));
-  }, [state.tree, state.treeMap])
+  const tree = React.useMemo<TreeItem[]>(() => buildTree(state.tree, state.treeMap), [state]);
 
   function handleChange(newData: ExtendedTreeItem[]): void {
     // dispatch(createUpdateTree(newData));
+  }
+
+  function handleMoveNode(data: NodeData & FullTree & OnMovePreviousAndNextLocation) {
+    let siblings: TreeItem[] = data.treeData;
+    
+    if (data.nextParentNode) {
+      if (typeof data.nextParentNode.children === "function") {
+        throw new Error('Cannot handle GetTreeItemChildrenFn here.');
+      }
+      
+      siblings = data.nextParentNode.children ?? [];
+    }
+    
+    const newIndex = siblings.indexOf(data.node) ?? null;
+    
+    dispatch(createMoveNode({
+      nodeId: data.node.id,
+      nextParentId: data.nextParentNode?.id ?? null,
+      newIndex,
+    }));
   }
 
   function onMouseEnter(evt: React.MouseEvent, node: ExtendedTreeItem) {
@@ -176,27 +197,29 @@ export default function PageTreeView(props: Props) {
     reset();
   }
 
-  function getGenerateNodeProps(data: ExtendedNodeData) {
-    return {
-      isSelected: state.selectedId === data.node.id,
-      onMouseEnter,
-      onMouseLeave,
-    };
-  }
+  const getGenerateNodeProps = (data: ExtendedNodeData) => ({
+    isSelected: state.selectedId === data.node.id,
+    onMouseEnter,
+    onMouseLeave,
+  });
 
-  if (!state.tree) {
+  const getNodeKey = (data: TreeNode & TreeIndex & { node: PageTreeItem }) => data.node.id;
+
+  if (!tree.length) {
     return null;
   }
-
+  
   return (
     <SortableTree
       theme={theme}
       treeData={tree}
+      getNodeKey={getNodeKey}
       generateNodeProps={getGenerateNodeProps}
       onChange={handleChange}
       canDrop={canDrop}
       canNodeHaveChildren={canNodeHaveChildren}
-      onVisibilityToggle={data => setTree(data.treeData)}
+      // onVisibilityToggle={data => setTree(data.treeData)}
+      onMoveNode={handleMoveNode}
     />
   );
 }

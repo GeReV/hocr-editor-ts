@@ -1,13 +1,13 @@
 import { Bbox, RecognizeResult } from "tesseract.js";
 import { createAction } from '@reduxjs/toolkit';
-import { BaseTreeItem, BlockTreeItem, ElementType, Position } from "./types";
+import { BaseTreeItem, ElementType, Position } from "./types";
 import { buildTree, walkChildren } from "./treeBuilder";
 import { ChangeCallbackParams } from "./components/PageCanvas/Block";
 
 export type TreeMap = { [id: number]: BaseTreeItem<ElementType, any> };
 
 export interface State {
-  tree: BlockTreeItem[] | null;
+  tree: number[];
   treeMap: TreeMap | null;
   selectedId: number | null;
   hoveredId: number | null;
@@ -19,22 +19,31 @@ export enum ActionType {
   UpdateTreeNodeRect = 'UpdateTreeNodeRect',
   ChangeSelected = 'ChangeSelected',
   ChangeHovered = 'ChangeHovered',
+  MoveNode = 'MoveNode',
+}
+
+interface MoveNodeParams {
+  nodeId: number;
+  nextParentId: number | null;
+  newIndex: number | null;
 }
 
 export type Action<T extends string, P = void> = { type: T, payload: P };
 
 export type ReducerAction =
   Action<ActionType.Init, RecognizeResult> |
-  Action<ActionType.UpdateTree, BlockTreeItem[]> |
+  // Action<ActionType.UpdateTree, BlockTreeItem[]> |
   Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams> |
   Action<ActionType.ChangeSelected, number | null> |
-  Action<ActionType.ChangeHovered, number | null>;
+  Action<ActionType.ChangeHovered, number | null> |
+  Action<ActionType.MoveNode, MoveNodeParams>;
 
 export const createInit = createAction<RecognizeResult, ActionType.Init>(ActionType.Init);
-export const createUpdateTree = createAction<BlockTreeItem[], ActionType.UpdateTree>(ActionType.UpdateTree);
+// export const createUpdateTree = createAction<BlockTreeItem[], ActionType.UpdateTree>(ActionType.UpdateTree);
 export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, ActionType.UpdateTreeNodeRect>(ActionType.UpdateTreeNodeRect);
 export const createChangeSelected = createAction<number | null, ActionType.ChangeSelected>(ActionType.ChangeSelected);
 export const createChangeHovered = createAction<number | null, ActionType.ChangeHovered>(ActionType.ChangeHovered);
+export const createMoveNode = createAction<MoveNodeParams, ActionType.MoveNode>(ActionType.MoveNode);
 
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
@@ -58,7 +67,7 @@ const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
 // }
 
 export const initialState: State = {
-  tree: null,
+  tree: [],
   treeMap: null,
   selectedId: null,
   hoveredId: null,
@@ -119,6 +128,73 @@ function updateTreeNodePosition(treeMap: TreeMap | null, nodeId: number, x: numb
   return resultMap;
 }
 
+function moveTreeNode(treeMap: TreeMap | null, nodeId: number, nextParentId: number | null, newIndex: number | null) {
+  if (!treeMap || nextParentId === null) {
+    return treeMap;
+  }
+  
+  const node = treeMap[nodeId];
+  
+  if (!node) {
+    throw new Error(`Could not find node with ID ${nodeId}`);
+  }
+  
+  const newParentNode = treeMap[nextParentId];
+  
+  // If node was only swapped, remove it first so we can insert it again.
+  const newParentChildrenWithoutNode = newParentNode.children.filter(id => id !== nodeId);
+  
+  // Rebuild children with node in its new place.
+  const newParentChildren = [
+    ...newParentChildrenWithoutNode.slice(0, newIndex ?? 0), 
+    nodeId, 
+    ...newParentChildrenWithoutNode.slice(newIndex ?? 0, newParentChildrenWithoutNode.length)
+  ];
+
+  // Create tree map again. Give node its new parent, give parent its new children.
+  const updatedTreeMap: TreeMap = {
+    ...treeMap,
+    [nodeId]: {
+      ...node,
+      parentId: nextParentId,
+    },
+    [nextParentId]: {
+      ...newParentNode,
+      children: newParentChildren,
+    },
+  };
+  
+  // If node was moved from a previous, separate parent, remove it from that parent's children list. 
+  if (typeof node.parentId === 'number' && node.parentId !== nextParentId) {
+    const prevParent = treeMap[node.parentId];
+    
+    if (!prevParent) {
+      throw new Error(`Could not find node with ID ${node.parentId}`);
+    }
+    
+    // Since updatedTreeMap is already a new object, it's safe to simply set new values.
+    updatedTreeMap[node.parentId] = {
+      ...prevParent,
+      children: prevParent.children.filter(id => id !== nodeId),
+    };
+  }
+  
+  return updatedTreeMap;
+}
+
+// If node was a top-level Block, it was swapped. Rebuild the root array.
+function moveNodeInTreeRoot(tree: number[], nodeId: number, newIndex: number | null) {
+  const prevIndex = tree.findIndex(item => item === nodeId);
+  
+  if (prevIndex < 0) {
+    return tree;
+  }
+  
+  const itemsWithoutNode = tree.filter(item => item !== nodeId);
+  
+  return [...itemsWithoutNode.slice(0, newIndex ?? 0), nodeId, ...itemsWithoutNode.slice(newIndex ?? 0, itemsWithoutNode.length)];
+}
+
 export function reducer(state: State, action: ReducerAction): State {
   switch (action.type) {
     case ActionType.Init: {
@@ -153,6 +229,13 @@ export function reducer(state: State, action: ReducerAction): State {
       return {
         ...state,
         treeMap: updateTreeNodePosition(state.treeMap, action.payload.nodeId, action.payload.x, action.payload.y, action.payload.width, action.payload.height),
+      }
+    }
+    case ActionType.MoveNode: {
+      return {
+        ...state,
+        tree: moveNodeInTreeRoot(state.tree, action.payload.nodeId, action.payload.newIndex),
+        treeMap: moveTreeNode(state.treeMap, action.payload.nodeId, action.payload.nextParentId, action.payload.newIndex),
       }
     }
     default:

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useMeasure, useTitle } from "react-use";
 
-import { PageImage, BlockTreeItem, RecognizeUpdate } from '../../types';
+import { PageImage, RecognizeUpdate } from '../../types';
 import { ReducerAction, createInit, createChangeSelected } from '../../pageReducer';
 
 import './index.css';
@@ -13,10 +13,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface Props {
   pageImage?: PageImage;
-  tree: BlockTreeItem[] | null;
   selectedId: number | null;
   hoveredId: number | null;
-  dispatch: (action: ReducerAction) => void;
 }
 
 const TITLE = document.title;
@@ -50,7 +48,7 @@ export default function PageCanvas(props: Props) {
   React.useLayoutEffect(setFitScale, [setFitScale]);
 
   function handleSelected(itemId: number | null) {
-    props.dispatch(createChangeSelected(itemId));
+    dispatch(createChangeSelected(itemId));
   }
 
   function handleMouseWheel(evt: React.WheelEvent) {
@@ -123,7 +121,6 @@ export default function PageCanvas(props: Props) {
           height={height}
           onSelect={handleSelected}
           onDeselect={() => handleSelected(null)}
-          tree={props.tree}
           hoveredId={props.hoveredId}
           selectedId={props.selectedId}
           pageImage={props.pageImage}

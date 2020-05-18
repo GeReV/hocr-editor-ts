@@ -32,15 +32,16 @@ const createLineTreeItem = (parent: ParagraphTreeItem, line: Line) => createTree
 
 const createWordTreeItem = (parent: LineTreeItem, word: Word) => createTreeItem(ElementType.Word, parent, word);
 
-export function buildTree(recognitionResult: RecognizeResult): [BlockTreeItem[], TreeMap] {
+export function buildTree(recognitionResult: RecognizeResult): [number[], TreeMap] {
   const map: TreeMap = {};
 
   const blockTreeItems = recognitionResult.data.blocks.map(block => {
     const blockTreeItem: BlockTreeItem = createBlockTreeItem(block);
 
-
+    map[blockTreeItem.id] = blockTreeItem;
+    
     if (!canBlockHostChildren(block)) {
-      return blockTreeItem;
+      return blockTreeItem.id;
     }
     
     blockTreeItem.children = block.paragraphs.map(para => {
@@ -67,87 +68,13 @@ export function buildTree(recognitionResult: RecognizeResult): [BlockTreeItem[],
       return paragraphTreeItem.id;
     });
 
-    map[blockTreeItem.id] = blockTreeItem;
-
-    return blockTreeItem;
+    return blockTreeItem.id;
   });
+  
+  console.log(blockTreeItems, map);
 
   return [blockTreeItems, map];
 }
-
-// function buildTree(recognitionResult: RecognizeResult): BlockTreeItem[] {
-//   let id = 0;
-//
-//   return recognitionResult.data.blocks.map(block => {
-//     const blockTreeItem: BlockTreeItem = {
-//       id: id++,
-//       type: ElementType.Block,
-//       title: `Block (${block.blocktype})`,
-//       parent: null,
-//       value: block,
-//       parentRelativeOffset: {
-//         x: block.bbox.x0,
-//         y: block.bbox.y0,
-//       },
-//       expanded: true,
-//     };
-//
-//     function buildParagraphTree(block: Block): ParagraphTreeItem[] {
-//       return block.paragraphs.map((para) => {
-//         const paragraphTreeItem: ParagraphTreeItem = {
-//           id: id++,
-//           type: ElementType.Paragraph,
-//           title: para.text,
-//           subtitle: "Paragraph",
-//           parent: blockTreeItem,
-//           value: para,
-//           parentRelativeOffset: {
-//             x: para.bbox.x0 -block.bbox.x0,
-//             y: para.bbox.y0 -block.bbox.y0
-//           },
-//           expanded: true,
-//         };
-//
-//         paragraphTreeItem.children = para.lines.map((line) => {
-//           const lineTreeItem: LineTreeItem = {
-//             id: id++,
-//             type: ElementType.Line,
-//             title: line.text,
-//             subtitle: "Line",
-//             parent: paragraphTreeItem,
-//             value: line,
-//             parentRelativeOffset: {
-//               x: line.bbox.x0-para.bbox.x0,
-//               y: line.bbox.y0-para.bbox.y0
-//             },
-//             expanded: true,
-//           };
-//
-//           lineTreeItem.children = line.words.map((word) => ({
-//             id: id++,
-//             type: ElementType.Word,
-//             title: word.text,
-//             parent: lineTreeItem,
-//             value: word,
-//             parentRelativeOffset: {
-//               x: word.bbox.x0 - line.bbox.x0,
-//               y: word.bbox.y0 - line.bbox.y0,
-//             },
-//             children: [],
-//           }));
-//
-//           return lineTreeItem;
-//         });
-//
-//         return paragraphTreeItem;
-//       });
-//     }
-//
-//     blockTreeItem.children = INCLUDES_PARAGRAPHS.includes(block.blocktype) ? buildParagraphTree(block) : [];
-//
-//     return blockTreeItem;
-//   });
-// }
 
 export function walkChildren(children: number[], map: TreeMap, action: (item: PageTreeItem) => void): void {
   function resolveChild(childId: number): PageTreeItem {
@@ -164,7 +91,6 @@ export function walkChildren(children: number[], map: TreeMap, action: (item: Pa
 }
 
 export function walkTree(tree: PageTreeItem[], map: TreeMap, action: (item: PageTreeItem) => void): void {
-
 
   function walk(item: PageTreeItem): void {
     action(item);
