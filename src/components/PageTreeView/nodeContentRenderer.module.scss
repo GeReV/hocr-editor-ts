@@ -129,11 +129,11 @@
   &::after {
     content: "";
     position: absolute;
-    transform-origin: 7px 4px;
+    transform-origin: 5px 4px;
     transform: translate3d(-50%, -20%, 0);
-    border: solid transparent 10px;
-    border-left-width: 7px;
-    border-right-width: 7px;
+    border: solid transparent 7px;
+    border-left-width: 5px;
+    border-right-width: 5px;
     border-top-color: gray;
   }
 
