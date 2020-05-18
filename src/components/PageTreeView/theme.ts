@@ -1,6 +1,6 @@
-import { ThemeProps, NodeRendererProps } from 'react-sortable-tree';
+import { ThemeProps } from 'react-sortable-tree';
 
-import nodeContentRenderer, { Props } from './nodeContentRenderer';
+import nodeContentRenderer from './nodeContentRenderer';
 import treeNodeRenderer from './treeNodeRenderer';
 
 const theme: ThemeProps = {

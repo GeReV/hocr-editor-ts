@@ -2,7 +2,6 @@
 import {
   BaseTreeItem,
   BlockTreeItem,
-  BlockType,
   ElementType,
   LineTreeItem,
   PageTreeItem,

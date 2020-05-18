@@ -7,16 +7,6 @@ import { useAppReducer } from "../../reducerContext";
 import styles from "./nodeContentRenderer.module.scss";
 import { ExtendedTreeItem } from "./index";
 
-// function isDescendant(older: TreeItem, younger: TreeItem): boolean {
-//   return (
-//     !!older.children &&
-//     typeof older.children !== 'function' &&
-//     older.children.some(
-//       child => child === younger || isDescendant(child, younger)
-//     )
-//   );
-// }
-
 export interface Props extends NodeRendererProps {
   isSelected?: boolean;
   onMouseEnter?: (evt: React.MouseEvent, node: ExtendedTreeItem) => void;
