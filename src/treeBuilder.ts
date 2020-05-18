@@ -71,8 +71,6 @@ export function buildTree(recognitionResult: RecognizeResult): [number[], TreeMa
     return blockTreeItem.id;
   });
   
-  console.log(blockTreeItems, map);
-
   return [blockTreeItems, map];
 }
 

@@ -10,7 +10,6 @@ import { ExtendedTreeItem } from "./index";
 export interface Props extends NodeRendererProps {
   isSelected?: boolean;
   onMouseEnter?: (evt: React.MouseEvent, node: ExtendedTreeItem) => void;
-  onMouseLeave?: (evt: React.MouseEvent) => void;
 }
 
 function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
@@ -45,7 +44,6 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
     // rowDirection,
     isSelected,
     onMouseEnter,
-    onMouseLeave,
   } = props;
   
   const [, dispatch] = useAppReducer();
@@ -129,7 +127,6 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
         }
         onClick={handleClick}
         onMouseEnter={(evt) => onMouseEnter?.(evt, node as ExtendedTreeItem)}
-        onMouseLeave={onMouseLeave}
       >
         {/* Set the row preview to be used during drag and drop */}
         {connectDragPreview(
@@ -157,16 +154,16 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
                   (!canDrag ? ` ${styles.rowContentsDragDisabled}` : "")
                 }
               >
-                <div className={styles.rowToolbar}>
-                  {icons?.map((icon, index) => (
-                    <div
-                      key={index} // eslint-disable-line react/no-array-index-key
-                      className={styles.toolbarButton}
-                    >
-                      {icon}
-                    </div>
-                  ))}
-                </div>
+                {/*<div className={styles.rowToolbar}>*/}
+                {/*  {icons?.map((icon, index) => (*/}
+                {/*    <div*/}
+                {/*      key={index} // eslint-disable-line react/no-array-index-key*/}
+                {/*      className={styles.toolbarButton}*/}
+                {/*    >*/}
+                {/*      {icon}*/}
+                {/*    </div>*/}
+                {/*  ))}*/}
+                {/*</div>*/}
                 <div className={styles.rowLabel}>
                   <span className={styles.rowTitle}>
                     {typeof nodeTitle === "function"
@@ -179,16 +176,16 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
                   </span>
                 </div>
 
-                <div className={styles.rowToolbar}>
-                  {buttons?.map((btn, index) => (
-                    <div
-                      key={index} // eslint-disable-line react/no-array-index-key
-                      className={styles.toolbarButton}
-                    >
-                      {btn}
-                    </div>
-                  ))}
-                </div>
+                {/*<div className={styles.rowToolbar}>*/}
+                {/*  {buttons?.map((btn, index) => (*/}
+                {/*    <div*/}
+                {/*      key={index} // eslint-disable-line react/no-array-index-key*/}
+                {/*      className={styles.toolbarButton}*/}
+                {/*    >*/}
+                {/*      {btn}*/}
+                {/*    </div>*/}
+                {/*  ))}*/}
+                {/*</div>*/}
               </div>
             </div>
           </div>

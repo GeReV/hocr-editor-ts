@@ -5,16 +5,15 @@ import SortableTree, {
   NodeData,
   OnDragPreviousAndNextLocation, OnMovePreviousAndNextLocation, TreeIndex,
   TreeItem, TreeNode,
-  getNodeAtPath,
 } from "react-sortable-tree";
-import { useTimeoutFn } from "react-use";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import theme from "./theme";
-import { BaseTreeItem, BlockTreeItem, ElementType, PageTreeItem } from "../../types";
+import { BaseTreeItem, ElementType, PageTreeItem } from "../../types";
 import { createChangeHovered, createMoveNode, TreeMap } from "../../pageReducer";
 import { useAppReducer } from "../../reducerContext";
 
+import './index.css';
 import "react-sortable-tree/style.css";
 import { IconName } from "@fortawesome/free-solid-svg-icons";
 import { canBlockHostChildren } from "../../utils";
@@ -31,7 +30,7 @@ const canNodeHaveChildren = (node: ExtendedTreeItem): boolean => {
   if (node.type === ElementType.Block) {
     return canBlockHostChildren(node.value);
   }
-  
+
   return node.type !== ElementType.Word && node.type !== ElementType.Symbol;
 };
 
@@ -87,7 +86,7 @@ function truncate(s: string, len: number = 20): string {
   if (s.length <= len) {
     return s;
   }
-  
+
   // Slice and add ellipsis.
   return `${s.slice(0, len).trim()}\u2026`;
 }
@@ -144,19 +143,18 @@ function canDrop(data: OnDragPreviousAndNextLocation & NodeData & { node: PageTr
   // Nodes can only move under a parent of the same type.
   // For example, lines can only go under paragraphs.
   const canMoveUnderParent = data.nextParent.type === data.node.type - 1;
-  
+
   if (canMoveUnderParent && data.nextParent.type === ElementType.Block) {
     // Only certain type of blocks can have children.
     return canBlockHostChildren(data.nextParent.value);
   }
-  
+
   return canMoveUnderParent;
 }
 
 export default function PageTreeView(props: Props) {
   const [state, dispatch] = useAppReducer();
-  const [, cancel, reset] = useTimeoutFn(() => dispatch(createChangeHovered(null)), 50);
-  
+
   const tree = React.useMemo<TreeItem[]>(() => buildTree(state.tree, state.treeMap), [state]);
 
   function handleChange(newData: ExtendedTreeItem[]): void {
@@ -165,17 +163,17 @@ export default function PageTreeView(props: Props) {
 
   function handleMoveNode(data: NodeData & FullTree & OnMovePreviousAndNextLocation) {
     let siblings: TreeItem[] = data.treeData;
-    
+
     if (data.nextParentNode) {
       if (typeof data.nextParentNode.children === "function") {
         throw new Error('Cannot handle GetTreeItemChildrenFn here.');
       }
-      
+
       siblings = data.nextParentNode.children ?? [];
     }
-    
+
     const newIndex = siblings.indexOf(data.node) ?? null;
-    
+
     dispatch(createMoveNode({
       nodeId: data.node.id,
       nextParentId: data.nextParentNode?.id ?? null,
@@ -186,21 +184,18 @@ export default function PageTreeView(props: Props) {
   function onMouseEnter(evt: React.MouseEvent, node: ExtendedTreeItem) {
     evt.stopPropagation();
 
-    cancel();
-
     dispatch(createChangeHovered(node.id));
   }
 
   function onMouseLeave(evt: React.MouseEvent) {
     evt.stopPropagation();
 
-    reset();
+    dispatch(createChangeHovered(null));
   }
 
   const getGenerateNodeProps = (data: ExtendedNodeData) => ({
     isSelected: state.selectedId === data.node.id,
     onMouseEnter,
-    onMouseLeave,
   });
 
   const getNodeKey = (data: TreeNode & TreeIndex & { node: PageTreeItem }) => data.node.id;
@@ -208,18 +203,20 @@ export default function PageTreeView(props: Props) {
   if (!tree.length) {
     return null;
   }
-  
+
   return (
-    <SortableTree
-      theme={theme}
-      treeData={tree}
-      getNodeKey={getNodeKey}
-      generateNodeProps={getGenerateNodeProps}
-      onChange={handleChange}
-      canDrop={canDrop}
-      canNodeHaveChildren={canNodeHaveChildren}
-      // onVisibilityToggle={data => setTree(data.treeData)}
-      onMoveNode={handleMoveNode}
-    />
+    <div className="Tree" onMouseLeave={onMouseLeave}>
+      <SortableTree
+        theme={theme}
+        treeData={tree}
+        getNodeKey={getNodeKey}
+        generateNodeProps={getGenerateNodeProps}
+        onChange={handleChange}
+        canDrop={canDrop}
+        canNodeHaveChildren={canNodeHaveChildren}
+        // onVisibilityToggle={data => setTree(data.treeData)}
+        onMoveNode={handleMoveNode}
+      />
+    </div>
   );
 }
