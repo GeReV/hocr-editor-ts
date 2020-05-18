@@ -21,9 +21,7 @@ function rebuildTree<T extends BaseTreeItem<ElementType, any>, R extends Extende
   function walk(item: T): R {
     const transformedItem = transform(item);
 
-    if (transformedItem.children && typeof transformedItem.children !== 'function') {
-      transformedItem.children = rebuildTree(item.children.map(resolveChild), resolveChild, transform);
-    }
+    transformedItem.children = rebuildTree(item.children.map(resolveChild), resolveChild, transform);
 
     return transformedItem;
   }
