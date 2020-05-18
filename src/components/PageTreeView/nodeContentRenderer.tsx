@@ -18,7 +18,6 @@ import { ExtendedTreeItem } from "./index";
 // }
 
 export interface Props extends NodeRendererProps {
-  node: ExtendedTreeItem;
   isSelected?: boolean;
   onMouseEnter?: (evt: React.MouseEvent, node: ExtendedTreeItem) => void;
   onMouseLeave?: (evt: React.MouseEvent) => void;
@@ -139,7 +138,7 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
           (isSelected ? ` ${styles.rowWrapperHighlight}` : "")
         }
         onClick={handleClick}
-        onMouseEnter={(evt) => onMouseEnter?.(evt, node)}
+        onMouseEnter={(evt) => onMouseEnter?.(evt, node as ExtendedTreeItem)}
         onMouseLeave={onMouseLeave}
       >
         {/* Set the row preview to be used during drag and drop */}

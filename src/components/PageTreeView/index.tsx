@@ -1,5 +1,5 @@
 import React from "react";
-import SortableTree, { ExtendedNodeData, TreeItem } from "react-sortable-tree";
+import SortableTree, { ExtendedNodeData, NodeData, OnDragPreviousAndNextLocation, TreeItem } from "react-sortable-tree";
 import { useTimeoutFn } from "react-use";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -10,14 +10,23 @@ import { useAppReducer } from "../../reducerContext";
 
 import "react-sortable-tree/style.css";
 import { IconName } from "@fortawesome/free-solid-svg-icons";
+import { canBlockHostChildren } from "../../utils";
 
 export interface ExtendedTreeItem extends TreeItem {
+  id: number;
+  type: ElementType;
 }
 
 interface Props {
 }
 
-const canNodeHaveChildren = (node: TreeItem): boolean => node.type !== ElementType.Word;
+const canNodeHaveChildren = (node: ExtendedTreeItem): boolean => {
+  if (node.type === ElementType.Block) {
+    return canBlockHostChildren(node.value);
+  }
+  
+  return node.type !== ElementType.Word && node.type !== ElementType.Symbol;
+};
 
 function getTypeSpec(node: PageTreeItem): { icon: IconName | null; iconTitle?: string; title: string; } {
   switch (node.type) {
@@ -53,11 +62,11 @@ function getTypeSpec(node: PageTreeItem): { icon: IconName | null; iconTitle?: s
   }
 }
 
-function rebuildTree<T extends BaseTreeItem<ElementType, any>, R extends ExtendedTreeItem>(tree: T[], resolveChild: (childId: number) => T, transform: (item: T) => R): R[] {
+function reconstructTree<T extends BaseTreeItem<ElementType, any>, R extends ExtendedTreeItem>(tree: T[], resolveChild: (childId: number) => T, transform: (item: T) => R): R[] {
   function walk(item: T): R {
     const transformedItem = transform(item);
 
-    transformedItem.children = rebuildTree(item.children.map(resolveChild), resolveChild, transform);
+    transformedItem.children = reconstructTree(item.children.map(resolveChild), resolveChild, transform);
 
     return transformedItem;
   }
@@ -74,12 +83,12 @@ function truncate(s: string, len: number = 20): string {
   return `${s.slice(0, len).trim()}\u2026`;
 }
 
-function buildTree(tree: BlockTreeItem[], treeMap: TreeMap) {
+function buildTree(tree: BlockTreeItem[], treeMap: TreeMap): ExtendedTreeItem[] {
   if (!tree || !treeMap) {
     return [];
   }
 
-  return rebuildTree<PageTreeItem, ExtendedTreeItem>(
+  return reconstructTree<PageTreeItem, ExtendedTreeItem>(
     tree,
     childId => {
       const child = treeMap[childId];
@@ -99,6 +108,8 @@ function buildTree(tree: BlockTreeItem[], treeMap: TreeMap) {
 
       return {
         id: child.id,
+        type: child.type,
+        value: child.value,
         title: (
           <span title={title}>
               {icon && <FontAwesomeIcon
@@ -115,11 +126,29 @@ function buildTree(tree: BlockTreeItem[], treeMap: TreeMap) {
   );
 }
 
+function canDrop(data: OnDragPreviousAndNextLocation & NodeData & { node: PageTreeItem; prevParent: PageTreeItem | null; nextParent: PageTreeItem | null; }): boolean {
+  if (!data.nextParent) {
+    // Moving to/within root level. Only blocks can do that.
+    return data.node.type === ElementType.Block;
+  }
+
+  // Nodes can only move under a parent of the same type.
+  // For example, lines can only go under paragraphs.
+  const canMoveUnderParent = data.nextParent.type === data.node.type - 1;
+  
+  if (canMoveUnderParent && data.nextParent.type === ElementType.Block) {
+    // Only certain type of blocks can have children.
+    return canBlockHostChildren(data.nextParent.value);
+  }
+  
+  return canMoveUnderParent;
+}
+
 export default function PageTreeView(props: Props) {
   const [state, dispatch] = useAppReducer();
   const [, cancel, reset] = useTimeoutFn(() => dispatch(createChangeHovered(null)), 50);
   
-  const [tree, setTree] = React.useState<ExtendedTreeItem[]>([]);
+  const [tree, setTree] = React.useState<TreeItem[]>([]);
   
   React.useEffect(() => {
     if (!state.tree || !state.treeMap) {
@@ -165,6 +194,7 @@ export default function PageTreeView(props: Props) {
       treeData={tree}
       generateNodeProps={getGenerateNodeProps}
       onChange={handleChange}
+      canDrop={canDrop}
       canNodeHaveChildren={canNodeHaveChildren}
       onVisibilityToggle={data => setTree(data.treeData)}
     />

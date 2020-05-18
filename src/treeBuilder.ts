@@ -9,8 +9,7 @@ import {
   ParagraphTreeItem
 } from "./types";
 import { TreeMap } from "./pageReducer";
-
-const INCLUDES_PARAGRAPHS: string[] = [BlockType.CAPTION_TEXT, BlockType.FLOWING_TEXT, BlockType.PULLOUT_TEXT, BlockType.VERTICAL_TEXT];
+import { canBlockHostChildren } from "./utils";
 
 let id = 0;
 
@@ -40,37 +39,40 @@ export function buildTree(recognitionResult: RecognizeResult): [BlockTreeItem[],
   const blockTreeItems = recognitionResult.data.blocks.map(block => {
     const blockTreeItem: BlockTreeItem = createBlockTreeItem(block);
 
-    if (INCLUDES_PARAGRAPHS.includes(block.blocktype)) {
-      blockTreeItem.children = block.paragraphs.map(para => {
-        const paragraphTreeItem: ParagraphTreeItem = createParagraphTreeItem(blockTreeItem, para);
 
-        paragraphTreeItem.children = para.lines.map((line) => {
-          const lineTreeItem: LineTreeItem = createLineTreeItem(paragraphTreeItem, line);
+    if (!canBlockHostChildren(block)) {
+      return blockTreeItem;
+    }
+    
+    blockTreeItem.children = block.paragraphs.map(para => {
+      const paragraphTreeItem: ParagraphTreeItem = createParagraphTreeItem(blockTreeItem, para);
 
-          lineTreeItem.children = line.words.map((word) => {
-            const wordTreeItem = createWordTreeItem(lineTreeItem, word)
+      paragraphTreeItem.children = para.lines.map((line) => {
+        const lineTreeItem: LineTreeItem = createLineTreeItem(paragraphTreeItem, line);
 
-            map[wordTreeItem.id] = wordTreeItem;
+        lineTreeItem.children = line.words.map((word) => {
+          const wordTreeItem = createWordTreeItem(lineTreeItem, word)
 
-            return wordTreeItem.id;
-          });
+          map[wordTreeItem.id] = wordTreeItem;
 
-          map[lineTreeItem.id] = lineTreeItem;
-
-          return lineTreeItem.id;
+          return wordTreeItem.id;
         });
 
-        map[paragraphTreeItem.id] = paragraphTreeItem;
+        map[lineTreeItem.id] = lineTreeItem;
 
-        return paragraphTreeItem.id;
+        return lineTreeItem.id;
       });
-    }
+
+      map[paragraphTreeItem.id] = paragraphTreeItem;
+
+      return paragraphTreeItem.id;
+    });
 
     map[blockTreeItem.id] = blockTreeItem;
-    
+
     return blockTreeItem;
   });
-  
+
   return [blockTreeItems, map];
 }
 
@@ -163,7 +165,7 @@ export function walkChildren(children: number[], map: TreeMap, action: (item: Pa
 }
 
 export function walkTree(tree: PageTreeItem[], map: TreeMap, action: (item: PageTreeItem) => void): void {
-  
+
 
   function walk(item: PageTreeItem): void {
     action(item);
