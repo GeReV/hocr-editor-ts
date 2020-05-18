@@ -9,6 +9,7 @@ import { Button, Spinner } from 'react-bootstrap';
 import PageGraphics from "./PageGraphics";
 import { recognize } from "../../ocr";
 import { useAppReducer } from "../../reducerContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface Props {
   pageImage?: PageImage;
@@ -108,8 +109,9 @@ export default function PageCanvas(props: Props) {
           onClick={setFitScale}
           disabled={!props.pageImage}
           variant="outline-dark"
+          title="Fit image"
         >
-          Fit
+          <FontAwesomeIcon icon="expand" />
         </Button>
       </div>
       <div

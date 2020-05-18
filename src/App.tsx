@@ -7,17 +7,20 @@ import {
   FormFile,
   Image as BsImage,
 } from "react-bootstrap";
-
-import PageTreeView from "./components/PageTreeView";
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fas } from '@fortawesome/free-solid-svg-icons'
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import { PageImage } from "./types";
 import PageCanvas from "./components/PageCanvas";
+import PageTreeView from "./components/PageTreeView";
 import { useAppReducer } from "./reducerContext";
 
 const THUMBNAIL_MAX_WIDTH = 120;
 const THUMBNAIL_MAX_HEIGHT = 160;
+
+library.add(fas);
 
 function resizeImage(
   image: ImageBitmap,
