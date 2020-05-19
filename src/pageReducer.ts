@@ -1,8 +1,11 @@
 import { Bbox, RecognizeResult } from "tesseract.js";
 import { createAction } from '@reduxjs/toolkit';
+import produce from 'immer';
+
 import { BaseTreeItem, ElementType, Position } from "./types";
 import { buildTree, walkChildren } from "./treeBuilder";
 import { ChangeCallbackParams } from "./components/PageCanvas/Block";
+
 
 export type TreeMap = { [id: number]: BaseTreeItem<ElementType, any> };
 
@@ -74,150 +77,118 @@ export const initialState: State = {
 };
 
 
-function updateTreeNodePosition(treeMap: TreeMap | null, nodeId: number, x: number, y: number, width: number | undefined, height: number | undefined): TreeMap | null {
-  if (!treeMap) {
-    return treeMap;
-  }
-  
-  const node = treeMap[nodeId];
-  
-  if (!node) {
-    throw new Error(`Could not find node with ID ${nodeId}.`);
-  }
-  
-  const delta: Position = {
-    x: x - node.parentRelativeOffset.x,
-    y: y - node.parentRelativeOffset.y,
-  };
+function updateTreeNodePosition(state: State, nodeId: number, x: number, y: number, width: number | undefined, height: number | undefined): State {
+  return produce(state, (draft) => {
+    const treeMap = draft.treeMap;
 
-  const newPosition: Position = {
-    x: node.value.bbox.x0 + delta.x,
-    y: node.value.bbox.y0 + delta.y,
-  };
-  
-  // TODO: Round and clamp to parent bounds.
-  const newBbox: Bbox = {
-    x0: newPosition.x,
-    y0: newPosition.y,
-    x1: typeof width === 'undefined' ? node.value.bbox.x1 + delta.x : newPosition.x + width,
-    y1: typeof height === 'undefined' ? node.value.bbox.y1 + delta.y : newPosition.y + height,
-  };
-  
-  const resultMap: TreeMap = {
-    ...treeMap,
-    [nodeId]: {
-      ...node,
-      parentRelativeOffset: { x, y, },
-      value: {
-        ...node.value,
-        bbox: newBbox,
-      },
-    },
-  };
-  
-  walkChildren(node.children, treeMap, item => {
-    resultMap[item.id] = {
-      ...item,
-      value: {
-        ...item.value,
-        bbox: offsetBbox(item.value.bbox, delta),
-      },
+    if (!treeMap) {
+      return;
+    }
+
+    const node = treeMap[nodeId];
+
+    if (!node) {
+      throw new Error(`Could not find node with ID ${nodeId}.`);
+    }
+
+    const delta: Position = {
+      x: x - node.parentRelativeOffset.x,
+      y: y - node.parentRelativeOffset.y,
     };
+
+    const newPosition: Position = {
+      x: node.value.bbox.x0 + delta.x,
+      y: node.value.bbox.y0 + delta.y,
+    };
+
+    // TODO: Round and clamp to parent bounds.
+    const newBbox: Bbox = {
+      x0: newPosition.x,
+      y0: newPosition.y,
+      x1: typeof width === 'undefined' ? node.value.bbox.x1 + delta.x : newPosition.x + width,
+      y1: typeof height === 'undefined' ? node.value.bbox.y1 + delta.y : newPosition.y + height,
+    };
+
+    node.parentRelativeOffset = { x, y, };
+    node.value.bbox = newBbox;
+
+    walkChildren(node.children, treeMap, item => {
+      treeMap[item.id].value.bbox = offsetBbox(item.value.bbox, delta);
+    });
   });
-  
-  return resultMap;
 }
 
-function moveTreeNode(treeMap: TreeMap | null, nodeId: number, nextParentId: number | null, newIndex: number | null) {
-  if (!treeMap || nextParentId === null) {
-    return treeMap;
-  }
-  
-  const node = treeMap[nodeId];
-  
-  if (!node) {
-    throw new Error(`Could not find node with ID ${nodeId}`);
-  }
-  
-  const newParentNode = treeMap[nextParentId];
-  
-  // If node was only swapped, remove it first so we can insert it again.
-  const newParentChildrenWithoutNode = newParentNode.children.filter(id => id !== nodeId);
-  
-  // Rebuild children with node in its new place.
-  const newParentChildren = [
-    ...newParentChildrenWithoutNode.slice(0, newIndex ?? 0), 
-    nodeId, 
-    ...newParentChildrenWithoutNode.slice(newIndex ?? 0, newParentChildrenWithoutNode.length)
-  ];
+function moveTreeNode(state: State, nodeId: number, nextParentId: number | null, newIndex: number | null): State {
+  return produce(state, (draft) => {
+    const treeMap = draft.treeMap;
 
-  // Create tree map again. Give node its new parent, give parent its new children.
-  const updatedTreeMap: TreeMap = {
-    ...treeMap,
-    [nodeId]: {
-      ...node,
-      parentId: nextParentId,
-    },
-    [nextParentId]: {
-      ...newParentNode,
-      children: newParentChildren,
-    },
-  };
-  
-  // If node was moved from a previous, separate parent, remove it from that parent's children list. 
-  if (typeof node.parentId === 'number' && node.parentId !== nextParentId) {
-    const prevParent = treeMap[node.parentId];
-    
-    if (!prevParent) {
-      throw new Error(`Could not find node with ID ${node.parentId}`);
+    if (!treeMap || nextParentId === null) {
+      return;
+    }
+
+    const node = treeMap[nodeId];
+
+    if (!node) {
+      throw new Error(`Could not find node with ID ${nodeId}`);
     }
     
-    // Since updatedTreeMap is already a new object, it's safe to simply set new values.
-    updatedTreeMap[node.parentId] = {
-      ...prevParent,
-      children: prevParent.children.filter(id => id !== nodeId),
-    };
-  }
-  
-  return updatedTreeMap;
-}
+    const prevParentId = node.parentId;
 
-// If node was a top-level Block, it was swapped. Rebuild the root array.
-function moveNodeInTreeRoot(tree: number[], nodeId: number, newIndex: number | null) {
-  const prevIndex = tree.findIndex(item => item === nodeId);
-  
-  if (prevIndex < 0) {
-    return tree;
-  }
-  
-  const itemsWithoutNode = tree.filter(item => item !== nodeId);
-  
-  return [...itemsWithoutNode.slice(0, newIndex ?? 0), nodeId, ...itemsWithoutNode.slice(newIndex ?? 0, itemsWithoutNode.length)];
+    const newParentNode = treeMap[nextParentId];
+
+    // If node was only swapped, remove it first so we can insert it again.
+    const newParentChildren = newParentNode.children.filter(id => id !== nodeId);
+
+    // Insert node in its new place.
+    newParentChildren.splice(newIndex ?? 0, 0, nodeId);
+
+    // Create tree map again. Give node its new parent, give parent its new children.
+    treeMap[nodeId].parentId = nextParentId;
+    treeMap[nextParentId].children = newParentChildren;
+
+    // If node was moved from a previous, separate parent, remove it from that parent's children list. 
+    if (typeof prevParentId === 'number' && prevParentId !== nextParentId) {
+      const prevParent = treeMap[prevParentId];
+
+      if (!prevParent) {
+        throw new Error(`Could not find node with ID ${prevParentId}`);
+      }
+
+      // Since updatedTreeMap is already a new object, it's safe to simply set new values.
+      prevParent.children = prevParent.children.filter(id => id !== nodeId);
+    }
+    
+    // If node was a top-level Block, it was swapped. Rebuild the root array.
+    const prevIndex = draft.tree.findIndex(item => item === nodeId);
+
+    if (prevIndex < 0) {
+      return;
+    }
+
+    draft.tree.splice(prevIndex, 1);
+    draft.tree.splice(newIndex ?? 0, 0, nodeId);
+  });
 }
 
 export function reducer(state: State, action: ReducerAction): State {
   switch (action.type) {
     case ActionType.Init: {
-      const [blockTreeItems, treeMap] = buildTree(action.payload);
-
-      return {
-        tree: blockTreeItems,
-        treeMap,
-        selectedId: null,
-        hoveredId: null,
-      };
+      return produce(state, (draft) => {
+        const [blockTreeItems, treeMap] = buildTree(action.payload);
+        
+        draft.tree = blockTreeItems;
+        draft.treeMap = treeMap;
+      });
     }
     case ActionType.ChangeSelected: {
-      return {
-        ...state,
-        selectedId: action.payload,
-      };
+      return produce(state, (draft) => {
+        draft.selectedId = action.payload;
+      });
     }
     case ActionType.ChangeHovered: {
-      return {
-        ...state,
-        hoveredId: action.payload,
-      };
+      return produce(state, (draft) => {
+        draft.hoveredId = action.payload;
+      });
     }
     // case ActionType.UpdateTree: {
     //   return {
@@ -226,17 +197,10 @@ export function reducer(state: State, action: ReducerAction): State {
     //   };
     // }
     case ActionType.UpdateTreeNodeRect: {
-      return {
-        ...state,
-        treeMap: updateTreeNodePosition(state.treeMap, action.payload.nodeId, action.payload.x, action.payload.y, action.payload.width, action.payload.height),
-      }
+      return updateTreeNodePosition(state, action.payload.nodeId, action.payload.x, action.payload.y, action.payload.width, action.payload.height);
     }
     case ActionType.MoveNode: {
-      return {
-        ...state,
-        tree: moveNodeInTreeRoot(state.tree, action.payload.nodeId, action.payload.newIndex),
-        treeMap: moveTreeNode(state.treeMap, action.payload.nodeId, action.payload.nextParentId, action.payload.newIndex),
-      }
+      return moveTreeNode(state, action.payload.nodeId, action.payload.nextParentId, action.payload.newIndex);
     }
     default:
       throw new Error(`Unknown action ${action}`);
