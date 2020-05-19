@@ -47,4 +47,4 @@ FileThemeTreeNodeRenderer.defaultProps = {
   canDrop: false,
 };
 
-export default FileThemeTreeNodeRenderer;
+export default React.memo(FileThemeTreeNodeRenderer);

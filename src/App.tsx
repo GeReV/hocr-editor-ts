@@ -10,12 +10,12 @@ import {
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 
-import "bootstrap/dist/css/bootstrap.min.css";
-import "./App.css";
 import { PageImage } from "./types";
 import PageCanvas from "./components/PageCanvas";
 import PageTreeView from "./components/PageTreeView";
-import { useAppReducer } from "./reducerContext";
+
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./App.css";
 
 const THUMBNAIL_MAX_WIDTH = 120;
 const THUMBNAIL_MAX_HEIGHT = 160;
@@ -85,9 +85,6 @@ function App() {
   const [pageImage, setPageImage] = React.useState<PageImage | undefined>(
     undefined
   );
-  
-  const [state, dispatch] = useAppReducer();
-
 
   async function onFileSelect(evt: React.ChangeEvent<HTMLInputElement>) {
     if (!evt.currentTarget.files?.length) {
@@ -141,13 +138,9 @@ function App() {
             xl={9}
             className="App-canvas"
           >
-              <PageCanvas
-                pageImage={pageImage}
-                tree={state.tree}
-                dispatch={dispatch}
-                selectedId={state.selectedId}
-                hoveredId={state.hoveredId}
-              />
+            <PageCanvas
+              pageImage={pageImage}
+            />
           </Col>
           <Col xl={2}>
             <PageTreeView />

@@ -1,20 +1,18 @@
 import React from 'react';
 import { useMeasure, useTitle } from "react-use";
+import { Button, Spinner } from 'react-bootstrap';
 
 import { PageImage, RecognizeUpdate } from '../../types';
-import { ReducerAction, createInit, createChangeSelected } from '../../pageReducer';
-
-import './index.css';
-import { Button, Spinner } from 'react-bootstrap';
+import { createInit, createChangeSelected } from '../../pageReducer';
 import PageGraphics from "./PageGraphics";
 import { recognize } from "../../ocr";
 import { useAppReducer } from "../../reducerContext";
+
+import './index.css';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface Props {
   pageImage?: PageImage;
-  selectedId: number | null;
-  hoveredId: number | null;
 }
 
 const TITLE = document.title;
@@ -29,7 +27,7 @@ export default function PageCanvas(props: Props) {
   const [processing, setProcessing] = React.useState<boolean>(false);
   const [progress, setProgress] = React.useState(0);
 
-  const [, dispatch] = useAppReducer();
+  const [state, dispatch] = useAppReducer();
 
   useTitle(processing ? `(${(progress * 100).toFixed(1)}%) ${TITLE}` : TITLE);
 
@@ -121,8 +119,8 @@ export default function PageCanvas(props: Props) {
           height={height}
           onSelect={handleSelected}
           onDeselect={() => handleSelected(null)}
-          hoveredId={props.hoveredId}
-          selectedId={props.selectedId}
+          hoveredId={state.hoveredId}
+          selectedId={state.selectedId}
           pageImage={props.pageImage}
           scale={scale}
         />

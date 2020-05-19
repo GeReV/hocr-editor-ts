@@ -12,11 +12,11 @@ import theme from "./theme";
 import { BaseTreeItem, ElementType, PageTreeItem } from "../../types";
 import { createChangeHovered, createMoveNode, TreeMap } from "../../pageReducer";
 import { useAppReducer } from "../../reducerContext";
+import { canBlockHostChildren } from "../../utils";
 
 import './index.css';
 import "react-sortable-tree/style.css";
 import { IconName } from "@fortawesome/free-solid-svg-icons";
-import { canBlockHostChildren } from "../../utils";
 
 export interface ExtendedTreeItem extends TreeItem {
   id: number;
@@ -126,7 +126,7 @@ function buildTree(tree: number[], treeMap: TreeMap | null): ExtendedTreeItem[] 
               />}
             {icon && ' '}
             {truncate(title)}
-            </span>
+          </span>
         ),
         expanded: child.type === ElementType.Block || child.type === ElementType.Paragraph,
       };
@@ -154,11 +154,17 @@ function canDrop(data: OnDragPreviousAndNextLocation & NodeData & { node: PageTr
 
 export default function PageTreeView(props: Props) {
   const [state, dispatch] = useAppReducer();
-
-  const tree = React.useMemo<TreeItem[]>(() => buildTree(state.tree, state.treeMap), [state]);
+  
+  const [tree, setTree] = React.useState<TreeItem[]>(() => buildTree(state.tree, state.treeMap));
+  
+  React.useEffect(() => {
+    if (!tree.length && state.tree.length) {
+      setTree(buildTree(state.tree, state.treeMap));
+    }
+  }, [state.tree, state.treeMap, tree.length]);
 
   function handleChange(newData: ExtendedTreeItem[]): void {
-    // dispatch(createUpdateTree(newData));
+    setTree(newData);
   }
 
   function handleMoveNode(data: NodeData & FullTree & OnMovePreviousAndNextLocation) {
