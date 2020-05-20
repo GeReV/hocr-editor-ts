@@ -18,16 +18,25 @@ import { canBlockHostChildren } from "../../utils";
 import './index.css';
 import "react-sortable-tree/style.css";
 import { IconName } from "@fortawesome/free-solid-svg-icons";
+import { Block, Line, Paragraph, Word, Symbol } from "tesseract.js";
 
-export interface ExtendedTreeItem extends TreeItem {
+export interface ExtendedTreeItem<T extends ElementType, V> extends TreeItem {
   id: number;
-  type: ElementType;
+  type: T;
+  value: V;
 }
+
+export type TesseractTreeItem =
+  ExtendedTreeItem<ElementType.Block, Block> |
+  ExtendedTreeItem<ElementType.Paragraph, Paragraph> |
+  ExtendedTreeItem<ElementType.Line, Line> |
+  ExtendedTreeItem<ElementType.Word, Word> |
+  ExtendedTreeItem<ElementType.Symbol, Symbol>;
 
 interface Props {
 }
 
-const canNodeHaveChildren = (node: ExtendedTreeItem): boolean => {
+const canNodeHaveChildren = (node: TesseractTreeItem): boolean => {
   if (node.type === ElementType.Block) {
     return canBlockHostChildren(node.value);
   }
@@ -106,9 +115,9 @@ function buildTree(tree: number[], treeMap: TreeMap): TesseractTreeItem[] {
     },
     (child) => {
       const {
+        title,
         icon,
         iconTitle,
-        title
       } = getTypeSpec(child);
 
       return {
@@ -117,11 +126,14 @@ function buildTree(tree: number[], treeMap: TreeMap): TesseractTreeItem[] {
         value: child.value,
         title: (
           <span title={title}>
-              {icon && <FontAwesomeIcon
-                icon={icon}
-                title={iconTitle}
-              />}
-            {icon && ' '}
+            {
+              icon ? (
+                <>
+                  <FontAwesomeIcon icon={icon} title={iconTitle} />
+                  {' '}
+                </>
+              ): null
+            }
             {truncate(title)}
           </span>
         ),

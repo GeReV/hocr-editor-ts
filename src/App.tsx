@@ -16,76 +16,28 @@ import PageTreeView from "./components/PageTreeView";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
-
-const THUMBNAIL_MAX_WIDTH = 120;
-const THUMBNAIL_MAX_HEIGHT = 160;
+import { loadImage } from "./utils";
+import { useKey } from "react-use";
+import { useAppReducer } from "./reducerContext";
+import { createDeleteNode } from "./reducer/actions";
 
 library.add(fas);
-
-function resizeImage(
-  image: ImageBitmap,
-  width: number,
-  height: number
-): string | null {
-  const canvas = document.createElement("canvas");
-
-  canvas.width = width;
-  canvas.height = height;
-
-  const ctx = canvas.getContext("2d");
-
-  if (!ctx) {
-    return null;
-  }
-
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(image, 0, 0, width, height);
-
-  return canvas.toDataURL();
-}
-
-async function loadImage(
-  buffer: ArrayBuffer,
-  mimeType: string
-): Promise<PageImage | null> {
-  const blob = new Blob([buffer], { type: mimeType });
-
-  const img = await createImageBitmap(blob);
-
-  let width = img.width;
-  let height = img.height;
-
-  if (width > height) {
-    const ratio = THUMBNAIL_MAX_WIDTH / width;
-
-    width = THUMBNAIL_MAX_WIDTH;
-    height *= ratio;
-  } else {
-    const ratio = THUMBNAIL_MAX_HEIGHT / height;
-
-    width *= ratio;
-    height = THUMBNAIL_MAX_HEIGHT;
-  }
-
-  const thumbnailUrlObject = resizeImage(img, width, height);
-
-  if (!thumbnailUrlObject) {
-    return null;
-  }
-
-  return {
-    image: img,
-    urlObject: URL.createObjectURL(blob),
-    thumbnailUrlObject,
-  };
-}
 
 function App() {
   const [pageImage, setPageImage] = React.useState<PageImage | undefined>(
     undefined
   );
+  
+  const [state, dispatch] = useAppReducer();
+  
+  useKey('Delete', () => {
+    if (typeof state.selectedId !== "number") {
+      return;
+    }
 
+    dispatch(createDeleteNode(state.selectedId));
+  }, undefined, [state.selectedId]);
+  
   async function onFileSelect(evt: React.ChangeEvent<HTMLInputElement>) {
     if (!evt.currentTarget.files?.length) {
       return;

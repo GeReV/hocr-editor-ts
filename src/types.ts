@@ -43,11 +43,11 @@ export interface BaseTreeItem<T extends ElementType, V> {
   children: number[];
 }
 
-export type SymbolTreeItem = BaseTreeItem<ElementType.Symbol, Symbol>
-export type WordTreeItem = BaseTreeItem<ElementType.Word, Word>;
-export type LineTreeItem = BaseTreeItem<ElementType.Line, Line>;
-export type ParagraphTreeItem = BaseTreeItem<ElementType.Paragraph, Paragraph>;
 export type BlockTreeItem = BaseTreeItem<ElementType.Block, Block>;
+export type ParagraphTreeItem = BaseTreeItem<ElementType.Paragraph, Paragraph>;
+export type LineTreeItem = BaseTreeItem<ElementType.Line, Line>;
+export type WordTreeItem = BaseTreeItem<ElementType.Word, Word>;
+export type SymbolTreeItem = BaseTreeItem<ElementType.Symbol, Symbol>;
 
 export type PageTreeItem =
   | BlockTreeItem

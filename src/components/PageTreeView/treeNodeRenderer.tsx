@@ -3,7 +3,7 @@ import { TreeRendererProps } from 'react-sortable-tree';
 
 import styles from './treeNodeRenderer.module.scss';
 
-function FileThemeTreeNodeRenderer(props: TreeRendererProps): React.ReactElement | null {
+function TreeNodeRenderer(props: TreeRendererProps): React.ReactElement | null {
     const {
       children,
       listIndex,
@@ -43,8 +43,8 @@ function FileThemeTreeNodeRenderer(props: TreeRendererProps): React.ReactElement
     );
 }
 
-FileThemeTreeNodeRenderer.defaultProps = {
+TreeNodeRenderer.defaultProps = {
   canDrop: false,
 };
 
-export default React.memo(FileThemeTreeNodeRenderer);
+export default TreeNodeRenderer;

@@ -6,9 +6,9 @@ import treeNodeRenderer from './treeNodeRenderer';
 const theme: ThemeProps = {
   nodeContentRenderer,
   treeNodeRenderer,
-  scaffoldBlockPxWidth: 25,
-  rowHeight: 25,
-  slideRegionSize: 50,
+  scaffoldBlockPxWidth: 24,
+  rowHeight: 24,
+  slideRegionSize: 48,
 };
 
 export default theme;
