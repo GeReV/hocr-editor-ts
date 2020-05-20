@@ -2,7 +2,7 @@ import React from 'react';
 import { useMeasure, useTitle } from "react-use";
 import { Button, Spinner } from 'react-bootstrap';
 
-import { PageImage, RecognizeUpdate } from '../../types';
+import { ItemId, PageImage, RecognizeUpdate } from '../../types';
 import { createInit, createChangeSelected } from '../../reducer/actions';
 import PageGraphics from "./PageGraphics";
 import { recognize } from "../../ocr";
@@ -45,7 +45,7 @@ export default function PageCanvas(props: Props) {
 
   React.useLayoutEffect(setFitScale, [setFitScale]);
 
-  function handleSelected(itemId: number | null) {
+  function handleSelected(itemId: ItemId | null) {
     dispatch(createChangeSelected(itemId));
   }
 

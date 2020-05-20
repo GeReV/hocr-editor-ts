@@ -1,14 +1,14 @@
 ﻿import { RecognizeResult } from "tesseract.js";
 import { ChangeCallbackParams } from "../components/PageCanvas/Block";
-import { BaseTreeItem, ElementType } from "../types";
+import { DocumentTreeItem, ItemId } from "../types";
 
-export type TreeMap = { [id: number]: BaseTreeItem<ElementType, any> };
+export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
 export interface State {
-  tree: number[];
-  treeMap: TreeMap;
-  selectedId: number | null;
-  hoveredId: number | null;
+  treeRootId: ItemId | null;
+  treeItems: TreeItems;
+  selectedId: ItemId | null;
+  hoveredId: ItemId | null;
 }
 
 export enum ActionType {
@@ -22,8 +22,8 @@ export enum ActionType {
 }
 
 export interface MoveNodeParams {
-  nodeId: number;
-  nextParentId: number | null;
+  nodeId: ItemId;
+  nextParentId: ItemId | null;
   newIndex: number | null;
 }
 
@@ -33,7 +33,7 @@ export type ReducerAction =
   Action<ActionType.Init, RecognizeResult> |
   // Action<ActionType.UpdateTree, BlockTreeItem[]> |
   Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams> |
-  Action<ActionType.ChangeSelected, number | null> |
-  Action<ActionType.ChangeHovered, number | null> |
-  Action<ActionType.DeleteNode, number> |
+  Action<ActionType.ChangeSelected, ItemId | null> |
+  Action<ActionType.ChangeHovered, ItemId | null> |
+  Action<ActionType.DeleteNode, ItemId> |
   Action<ActionType.MoveNode, MoveNodeParams>;

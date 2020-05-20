@@ -1,4 +1,4 @@
-import { Word, Line, Paragraph, Block, Symbol, Bbox } from "tesseract.js";
+import { Word, Line, Paragraph, Block, Symbol, Bbox, Page } from "tesseract.js";
 
 export interface Position {
   x: number;
@@ -16,6 +16,7 @@ export interface PageElement {
 }
 
 export enum ElementType {
+  Page,
   Block,
   Paragraph,
   Line,
@@ -34,22 +35,27 @@ export enum BlockType {
   VERTICAL_TEXT = 'VERTICAL_TEXT',
 }
 
+export type ItemId = string | number;
+
 export interface BaseTreeItem<T extends ElementType, V> {
-  id: number;
+  id: ItemId;
   type: T;
-  value: V;
-  parentId: number | null;
+  data: V;
+  parentId: ItemId | null;
   parentRelativeOffset: Position,
-  children: number[];
+  children: ItemId[];
+  isExpanded: boolean;
 }
 
+export type PageTreeItem = BaseTreeItem<ElementType.Page, Page>;
 export type BlockTreeItem = BaseTreeItem<ElementType.Block, Block>;
 export type ParagraphTreeItem = BaseTreeItem<ElementType.Paragraph, Paragraph>;
 export type LineTreeItem = BaseTreeItem<ElementType.Line, Line>;
 export type WordTreeItem = BaseTreeItem<ElementType.Word, Word>;
 export type SymbolTreeItem = BaseTreeItem<ElementType.Symbol, Symbol>;
 
-export type PageTreeItem =
+export type DocumentTreeItem =
+  | PageTreeItem
   | BlockTreeItem
   | ParagraphTreeItem
   | LineTreeItem

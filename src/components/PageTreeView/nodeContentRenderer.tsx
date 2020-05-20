@@ -125,7 +125,7 @@ function NodeContentRenderer(props: Props): React.ReactElement | null {
           (isSelected ? ` ${styles.rowWrapperHighlight}` : "")
         }
         onClick={handleClick}
-        onMouseEnter={(evt) => onMouseEnter?.(evt, node as TesseractTreeItem)}
+        // onMouseEnter={(evt) => onMouseEnter?.(evt, node as TesseractTreeItem)}
       >
         {/* Set the row preview to be used during drag and drop */}
         {connectDragPreview(

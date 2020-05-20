@@ -21,5 +21,8 @@
   },
   "include": [
     "src"
+  ],
+  "files": [
+    "./typings/react-beautiful-dnd-next.d.ts"
   ]
 }

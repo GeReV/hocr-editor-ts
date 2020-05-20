@@ -31,7 +31,7 @@ function App() {
   const [state, dispatch] = useAppReducer();
   
   useKey('Delete', () => {
-    if (typeof state.selectedId !== "number") {
+    if (state.selectedId === null) {
       return;
     }
 
@@ -94,7 +94,10 @@ function App() {
               pageImage={pageImage}
             />
           </Col>
-          <Col xl={2}>
+          <Col 
+            xl={2}
+            className="App-tree"
+          >
             <PageTreeView />
           </Col>
         </Row>

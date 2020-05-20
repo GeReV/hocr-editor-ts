@@ -1,9 +1,9 @@
 import { Bbox } from "tesseract.js";
 import produce from 'immer';
 
-import { BaseTreeItem, ElementType, Position } from "../types";
+import { BaseTreeItem, ElementType, ItemId, Position } from "../types";
 import { buildTree, walkChildren } from "../treeBuilder";
-import { ActionType, ReducerAction, State, TreeMap } from "./types";
+import { ActionType, ReducerAction, State, TreeItems } from "./types";
 
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
@@ -27,14 +27,14 @@ const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
 // }
 
 export const initialState: State = {
-  tree: [],
-  treeMap: {},
+  treeRootId: null,
+  treeItems: {},
   selectedId: null,
   hoveredId: null,
 };
 
-function getNodeOrThrow(treeMap: TreeMap, nodeId: number): BaseTreeItem<ElementType, any> {
-  const node = treeMap[nodeId];
+export function getNodeOrThrow(treeItems: TreeItems, nodeId: ItemId): BaseTreeItem<ElementType, any> {
+  const node = treeItems[nodeId];
 
   if (!node) {
     throw new Error(`Could not find node with ID ${nodeId}.`);
@@ -43,11 +43,11 @@ function getNodeOrThrow(treeMap: TreeMap, nodeId: number): BaseTreeItem<ElementT
   return node;
 }
 
-function updateTreeNodePosition(state: State, nodeId: number, x: number, y: number, width: number | undefined, height: number | undefined): State {
+function updateTreeNodePosition(state: State, nodeId: ItemId, x: number, y: number, width: number | undefined, height: number | undefined): State {
   return produce(state, (draft) => {
-    const treeMap = draft.treeMap;
+    const treeItems = draft.treeItems;
 
-    const node = getNodeOrThrow(treeMap, nodeId);
+    const node = getNodeOrThrow(treeItems, nodeId);
 
     const delta: Position = {
       x: x - node.parentRelativeOffset.x,
@@ -55,40 +55,44 @@ function updateTreeNodePosition(state: State, nodeId: number, x: number, y: numb
     };
 
     const newPosition: Position = {
-      x: node.value.bbox.x0 + delta.x,
-      y: node.value.bbox.y0 + delta.y,
+      x: node.data.bbox.x0 + delta.x,
+      y: node.data.bbox.y0 + delta.y,
     };
 
     // TODO: Round and clamp to parent bounds.
     const newBbox: Bbox = {
       x0: newPosition.x,
       y0: newPosition.y,
-      x1: typeof width === 'undefined' ? node.value.bbox.x1 + delta.x : newPosition.x + width,
-      y1: typeof height === 'undefined' ? node.value.bbox.y1 + delta.y : newPosition.y + height,
+      x1: typeof width === 'undefined' ? node.data.bbox.x1 + delta.x : newPosition.x + width,
+      y1: typeof height === 'undefined' ? node.data.bbox.y1 + delta.y : newPosition.y + height,
     };
 
     node.parentRelativeOffset = { x, y, };
-    node.value.bbox = newBbox;
+    node.data.bbox = newBbox;
 
-    walkChildren(node.children, treeMap, item => {
-      treeMap[item.id].value.bbox = offsetBbox(item.value.bbox, delta);
+    walkChildren(node.children, treeItems, (item) => {
+      if (item.type === ElementType.Page) {
+        return;
+      }
+      
+      item.data.bbox = offsetBbox(item.data.bbox, delta);
     });
   });
 }
 
-function moveTreeNode(state: State, nodeId: number, nextParentId: number | null, newIndex: number | null): State {
+function moveTreeNode(state: State, nodeId: ItemId, nextParentId: ItemId | null, newIndex: number | null): State {
   return produce(state, (draft) => {
-    const treeMap = draft.treeMap;
+    const treeItems = draft.treeItems;
 
     if (nextParentId === null) {
       return;
     }
 
-    const node = getNodeOrThrow(treeMap, nodeId);
+    const node = getNodeOrThrow(treeItems, nodeId);
     
     const prevParentId = node.parentId;
 
-    const newParentNode = treeMap[nextParentId];
+    const newParentNode = treeItems[nextParentId];
 
     // If node was only swapped, remove it first so we can insert it again.
     const newParentChildren = newParentNode.children.filter(id => id !== nodeId);
@@ -97,12 +101,12 @@ function moveTreeNode(state: State, nodeId: number, nextParentId: number | null,
     newParentChildren.splice(newIndex ?? 0, 0, nodeId);
 
     // Create tree map again. Give node its new parent, give parent its new children.
-    treeMap[nodeId].parentId = nextParentId;
-    treeMap[nextParentId].children = newParentChildren;
+    treeItems[nodeId].parentId = nextParentId;
+    treeItems[nextParentId].children = newParentChildren;
 
     // If node was moved from a previous, separate parent, remove it from that parent's children list. 
-    if (typeof prevParentId === 'number' && prevParentId !== nextParentId) {
-      const prevParent = treeMap[prevParentId];
+    if (prevParentId !== null && prevParentId !== nextParentId) {
+      const prevParent = treeItems[prevParentId];
 
       if (!prevParent) {
         throw new Error(`Could not find node with ID ${prevParentId}`);
@@ -111,25 +115,15 @@ function moveTreeNode(state: State, nodeId: number, nextParentId: number | null,
       // Since updatedTreeMap is already a new object, it's safe to simply set new values.
       prevParent.children = prevParent.children.filter(id => id !== nodeId);
     }
-    
-    // If node was a top-level Block, it was swapped. Rebuild the root array.
-    const prevIndex = draft.tree.findIndex(item => item === nodeId);
-
-    if (prevIndex < 0) {
-      return;
-    }
-
-    draft.tree.splice(prevIndex, 1);
-    draft.tree.splice(newIndex ?? 0, 0, nodeId);
   });
 }
 
-function deleteTreeNode(state: State, nodeId: number): State {
+function deleteTreeNode(state: State, nodeId: ItemId): State {
   return produce(state, (draft) => {
-    const node = getNodeOrThrow(draft.treeMap, nodeId);
+    const node = getNodeOrThrow(draft.treeItems, nodeId);
     
     if (node.parentId) {
-      const parent = getNodeOrThrow(draft.treeMap, node.parentId);
+      const parent = getNodeOrThrow(draft.treeItems, node.parentId);
       
       const nodeIndex = parent.children.indexOf(nodeId);
       
@@ -138,18 +132,9 @@ function deleteTreeNode(state: State, nodeId: number): State {
       }
       
       parent.children.splice(nodeIndex, 1);
-    } else {
-      // Node is a block and should be in root.
-      const nodeIndex = draft.tree.indexOf(nodeId);
-
-      if (nodeIndex < 0) {
-        throw new Error(`Node with ID ${nodeId} was expected to be a child root.`);
-      }
-      
-      draft.tree.splice(nodeIndex, 1);
     }
     
-    delete draft.treeMap[nodeId];
+    delete draft.treeItems[nodeId];
   });
 }
 
@@ -157,10 +142,10 @@ export function reducer(state: State, action: ReducerAction): State {
   switch (action.type) {
     case ActionType.Init: {
       return produce(state, (draft) => {
-        const [blockTreeItems, treeMap] = buildTree(action.payload);
+        const [rootId, treeItems] = buildTree(action.payload);
         
-        draft.tree = blockTreeItems;
-        draft.treeMap = treeMap;
+        draft.treeRootId = rootId;
+        draft.treeItems = treeItems;
       });
     }
     case ActionType.ChangeSelected: {

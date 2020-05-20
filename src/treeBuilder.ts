@@ -1,30 +1,48 @@
-﻿import { Bbox, Block, Line, Paragraph, RecognizeResult, Word } from "tesseract.js";
+﻿import { Bbox, Block, Line, Page, Paragraph, RecognizeResult, Word } from "tesseract.js";
 import {
   BaseTreeItem,
   BlockTreeItem,
-  ElementType,
+  DocumentTreeItem,
+  ElementType, ItemId,
   LineTreeItem,
   PageTreeItem,
   ParagraphTreeItem
 } from "./types";
-import { TreeMap } from "./reducer/types";
+import { TreeItems } from "./reducer/types";
 import { canBlockHostChildren } from "./utils";
 
 let id = 0;
 
-const createTreeItem = <T extends ElementType, V extends { bbox: Bbox }, P extends BaseTreeItem<ElementType, any>>(type: T, parent: P | null, value: V): BaseTreeItem<T, V> => ({
+const createTreeItem = <T extends ElementType, V extends { bbox: Bbox }, P extends BaseTreeItem<ElementType, any>>(type: T, parent: P | null, data: V): BaseTreeItem<T, V> => ({
   id: id++,
   type,
   parentId: parent?.id ?? null,
-  value,
-  parentRelativeOffset: {
-    x: value.bbox.x0 - (parent?.value.bbox.x0 ?? 0),
-    y: value.bbox.y0 - (parent?.value.bbox.y0 ?? 0),
+  data: data,
+  parentRelativeOffset: parent?.type === ElementType.Page ? {
+    x: data.bbox.x0,
+    y: data.bbox.y0,
+  } : {
+    x: data.bbox.x0 - (parent?.data.bbox.x0 ?? 0),
+    y: data.bbox.y0 - (parent?.data.bbox.y0 ?? 0),
   },
   children: [],
+  isExpanded: type === ElementType.Block || type === ElementType.Paragraph
 });
 
-const createBlockTreeItem = (block: Block) => createTreeItem(ElementType.Block, null, block);
+const createRootTreeItem = (page: Page): PageTreeItem => ({
+  id: id++,
+  type: ElementType.Page,
+  parentId: null,
+  data: page,
+  parentRelativeOffset: {
+    x: 0,
+    y: 0,
+  },
+  children: [],
+  isExpanded: true,
+});
+
+const createBlockTreeItem = (parent: PageTreeItem, block: Block) => createTreeItem(ElementType.Block, parent, block);
 
 const createParagraphTreeItem = (parent: BlockTreeItem, para: Paragraph) => createTreeItem(ElementType.Paragraph, parent, para);
 
@@ -32,11 +50,15 @@ const createLineTreeItem = (parent: ParagraphTreeItem, line: Line) => createTree
 
 const createWordTreeItem = (parent: LineTreeItem, word: Word) => createTreeItem(ElementType.Word, parent, word);
 
-export function buildTree(recognitionResult: RecognizeResult): [number[], TreeMap] {
-  const map: TreeMap = {};
+export function buildTree(recognitionResult: RecognizeResult): [ItemId, TreeItems] {
+  const map: TreeItems = {};
+  
+  const root = createRootTreeItem(recognitionResult.data);
+  
+  map[root.id] = root;
 
-  const blockTreeItems = recognitionResult.data.blocks.map(block => {
-    const blockTreeItem: BlockTreeItem = createBlockTreeItem(block);
+  root.children = recognitionResult.data.blocks.map(block => {
+    const blockTreeItem: BlockTreeItem = createBlockTreeItem(root, block);
 
     map[blockTreeItem.id] = blockTreeItem;
     
@@ -71,11 +93,11 @@ export function buildTree(recognitionResult: RecognizeResult): [number[], TreeMa
     return blockTreeItem.id;
   });
   
-  return [blockTreeItems, map];
+  return [root.id, map];
 }
 
-export function walkChildren(children: number[], map: TreeMap, action: (item: PageTreeItem) => void): void {
-  function resolveChild(childId: number): PageTreeItem {
+export function walkChildren(children: ItemId[], map: TreeItems, action: (item: DocumentTreeItem) => void): void {
+  function resolveChild(childId: ItemId): DocumentTreeItem {
     const child = map[childId];
 
     if (!child) {
@@ -88,9 +110,9 @@ export function walkChildren(children: number[], map: TreeMap, action: (item: Pa
   walkTree(children.map(resolveChild), map, action);
 }
 
-export function walkTree(tree: PageTreeItem[], map: TreeMap, action: (item: PageTreeItem) => void): void {
+export function walkTree(tree: DocumentTreeItem[], map: TreeItems, action: (item: DocumentTreeItem) => void): void {
 
-  function walk(item: PageTreeItem): void {
+  function walk(item: DocumentTreeItem): void {
     action(item);
 
     walkChildren(item.children, map, action);
