@@ -3,7 +3,7 @@ import { Group, Rect, Transformer } from 'react-konva';
 import Konva from 'konva';
 
 import { PageTreeItem, Position } from '../../types';
-import { TreeMap } from "../../pageReducer";
+import { TreeMap } from "../../reducer/types";
 import { calculateDragBounds } from "./utils";
 import { clamp } from "../../utils";
 import { IRect } from "konva/types/types";

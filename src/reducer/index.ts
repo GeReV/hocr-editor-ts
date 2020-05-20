@@ -1,52 +1,9 @@
-import { Bbox, RecognizeResult } from "tesseract.js";
-import { createAction } from '@reduxjs/toolkit';
+import { Bbox } from "tesseract.js";
 import produce from 'immer';
 
-import { BaseTreeItem, ElementType, Position } from "./types";
-import { buildTree, walkChildren } from "./treeBuilder";
-import { ChangeCallbackParams } from "./components/PageCanvas/Block";
-
-
-export type TreeMap = { [id: number]: BaseTreeItem<ElementType, any> };
-
-export interface State {
-  tree: number[];
-  treeMap: TreeMap | null;
-  selectedId: number | null;
-  hoveredId: number | null;
-}
-
-export enum ActionType {
-  Init = 'Init',
-  UpdateTree = 'UpdateTree',
-  UpdateTreeNodeRect = 'UpdateTreeNodeRect',
-  ChangeSelected = 'ChangeSelected',
-  ChangeHovered = 'ChangeHovered',
-  MoveNode = 'MoveNode',
-}
-
-interface MoveNodeParams {
-  nodeId: number;
-  nextParentId: number | null;
-  newIndex: number | null;
-}
-
-export type Action<T extends string, P = void> = { type: T, payload: P };
-
-export type ReducerAction =
-  Action<ActionType.Init, RecognizeResult> |
-  // Action<ActionType.UpdateTree, BlockTreeItem[]> |
-  Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams> |
-  Action<ActionType.ChangeSelected, number | null> |
-  Action<ActionType.ChangeHovered, number | null> |
-  Action<ActionType.MoveNode, MoveNodeParams>;
-
-export const createInit = createAction<RecognizeResult, ActionType.Init>(ActionType.Init);
-// export const createUpdateTree = createAction<BlockTreeItem[], ActionType.UpdateTree>(ActionType.UpdateTree);
-export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, ActionType.UpdateTreeNodeRect>(ActionType.UpdateTreeNodeRect);
-export const createChangeSelected = createAction<number | null, ActionType.ChangeSelected>(ActionType.ChangeSelected);
-export const createChangeHovered = createAction<number | null, ActionType.ChangeHovered>(ActionType.ChangeHovered);
-export const createMoveNode = createAction<MoveNodeParams, ActionType.MoveNode>(ActionType.MoveNode);
+import { BaseTreeItem, ElementType, Position } from "../types";
+import { buildTree, walkChildren } from "../treeBuilder";
+import { ActionType, ReducerAction, State, TreeMap } from "./types";
 
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
@@ -71,25 +28,26 @@ const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
 
 export const initialState: State = {
   tree: [],
-  treeMap: null,
+  treeMap: {},
   selectedId: null,
   hoveredId: null,
 };
 
+function getNodeOrThrow(treeMap: TreeMap, nodeId: number): BaseTreeItem<ElementType, any> {
+  const node = treeMap[nodeId];
+
+  if (!node) {
+    throw new Error(`Could not find node with ID ${nodeId}.`);
+  }
+  
+  return node;
+}
 
 function updateTreeNodePosition(state: State, nodeId: number, x: number, y: number, width: number | undefined, height: number | undefined): State {
   return produce(state, (draft) => {
     const treeMap = draft.treeMap;
 
-    if (!treeMap) {
-      return;
-    }
-
-    const node = treeMap[nodeId];
-
-    if (!node) {
-      throw new Error(`Could not find node with ID ${nodeId}.`);
-    }
+    const node = getNodeOrThrow(treeMap, nodeId);
 
     const delta: Position = {
       x: x - node.parentRelativeOffset.x,
@@ -122,15 +80,11 @@ function moveTreeNode(state: State, nodeId: number, nextParentId: number | null,
   return produce(state, (draft) => {
     const treeMap = draft.treeMap;
 
-    if (!treeMap || nextParentId === null) {
+    if (nextParentId === null) {
       return;
     }
 
-    const node = treeMap[nodeId];
-
-    if (!node) {
-      throw new Error(`Could not find node with ID ${nodeId}`);
-    }
+    const node = getNodeOrThrow(treeMap, nodeId);
     
     const prevParentId = node.parentId;
 
@@ -170,6 +124,35 @@ function moveTreeNode(state: State, nodeId: number, nextParentId: number | null,
   });
 }
 
+function deleteTreeNode(state: State, nodeId: number): State {
+  return produce(state, (draft) => {
+    const node = getNodeOrThrow(draft.treeMap, nodeId);
+    
+    if (node.parentId) {
+      const parent = getNodeOrThrow(draft.treeMap, node.parentId);
+      
+      const nodeIndex = parent.children.indexOf(nodeId);
+      
+      if (nodeIndex < 0) {
+        throw new Error(`Node with ID ${nodeId} was expected to be a child of node with ID ${parent.id}.`);
+      }
+      
+      parent.children.splice(nodeIndex, 1);
+    } else {
+      // Node is a block and should be in root.
+      const nodeIndex = draft.tree.indexOf(nodeId);
+
+      if (nodeIndex < 0) {
+        throw new Error(`Node with ID ${nodeId} was expected to be a child root.`);
+      }
+      
+      draft.tree.splice(nodeIndex, 1);
+    }
+    
+    delete draft.treeMap[nodeId];
+  });
+}
+
 export function reducer(state: State, action: ReducerAction): State {
   switch (action.type) {
     case ActionType.Init: {
@@ -198,6 +181,9 @@ export function reducer(state: State, action: ReducerAction): State {
     // }
     case ActionType.UpdateTreeNodeRect: {
       return updateTreeNodePosition(state, action.payload.nodeId, action.payload.x, action.payload.y, action.payload.width, action.payload.height);
+    }
+    case ActionType.DeleteNode: {
+      return deleteTreeNode(state, action.payload);
     }
     case ActionType.MoveNode: {
       return moveTreeNode(state, action.payload.nodeId, action.payload.nextParentId, action.payload.newIndex);

@@ -3,7 +3,7 @@ import { useMeasure, useTitle } from "react-use";
 import { Button, Spinner } from 'react-bootstrap';
 
 import { PageImage, RecognizeUpdate } from '../../types';
-import { createInit, createChangeSelected } from '../../pageReducer';
+import { createInit, createChangeSelected } from '../../reducer/actions';
 import PageGraphics from "./PageGraphics";
 import { recognize } from "../../ocr";
 import { useAppReducer } from "../../reducerContext";

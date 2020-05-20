@@ -1,6 +1,6 @@
 ﻿import Konva from "konva";
 import { BaseTreeItem, ElementType, PageTreeItem, Position } from "../../types";
-import { TreeMap } from "../../pageReducer";
+import { TreeMap } from "../../reducer/types";
 import { Bbox } from "tesseract.js";
 
 type BoundsTuple = [number, number, number, number];

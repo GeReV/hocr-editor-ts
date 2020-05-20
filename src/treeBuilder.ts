@@ -7,7 +7,7 @@ import {
   PageTreeItem,
   ParagraphTreeItem
 } from "./types";
-import { TreeMap } from "./pageReducer";
+import { TreeMap } from "./reducer/types";
 import { canBlockHostChildren } from "./utils";
 
 let id = 0;

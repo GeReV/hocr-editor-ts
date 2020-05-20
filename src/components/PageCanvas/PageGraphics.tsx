@@ -3,7 +3,7 @@ import { BlockTreeItem, PageImage } from "../../types";
 import { Block, ChangeCallbackParams } from "./Block";
 import React from "react";
 import { useAppReducer } from "../../reducerContext";
-import { createUpdateTreeNodeRect } from "../../pageReducer";
+import { createUpdateTreeNodeRect } from "../../reducer/actions";
 
 export interface Props {
   width: number;
@@ -25,7 +25,7 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
     dispatch(createUpdateTreeNodeRect(args));
   }
   
-  if (!pageImage || !treeMap) {
+  if (!pageImage) {
     return null;
   }
   

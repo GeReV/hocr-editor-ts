@@ -10,7 +10,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import theme from "./theme";
 import { BaseTreeItem, ElementType, PageTreeItem } from "../../types";
-import { createChangeHovered, createMoveNode, TreeMap } from "../../pageReducer";
+import { TreeMap } from "../../reducer/types";
+import { createChangeHovered, createMoveNode } from "../../reducer/actions";
 import { useAppReducer } from "../../reducerContext";
 import { canBlockHostChildren } from "../../utils";
 
@@ -68,7 +69,7 @@ function getTypeSpec(node: PageTreeItem): { icon: IconName | null; iconTitle?: s
   }
 }
 
-function reconstructTree<T extends BaseTreeItem<ElementType, any>, R extends ExtendedTreeItem>(tree: number[], resolveChild: (childId: number) => T, transform: (item: T) => R): R[] {
+function reconstructTree<T extends BaseTreeItem<ElementType, any>, R extends TesseractTreeItem>(tree: number[], resolveChild: (childId: number) => T, transform: (item: T) => R): R[] {
   function walk(item: T): R {
     const transformedItem = transform(item);
 
@@ -91,12 +92,8 @@ function truncate(s: string, len: number = 20): string {
   return `${s.slice(0, len).trim()}\u2026`;
 }
 
-function buildTree(tree: number[], treeMap: TreeMap | null): ExtendedTreeItem[] {
-  if (!treeMap) {
-    return [];
-  }
-
-  return reconstructTree<PageTreeItem, ExtendedTreeItem>(
+function buildTree(tree: number[], treeMap: TreeMap): TesseractTreeItem[] {
+  return reconstructTree<PageTreeItem, ExtendedTreeItem<ElementType, any>>(
     tree,
     childId => {
       const child = treeMap[childId];
@@ -163,7 +160,7 @@ export default function PageTreeView(props: Props) {
     }
   }, [state.tree, state.treeMap, tree.length]);
 
-  function handleChange(newData: ExtendedTreeItem[]): void {
+  function handleChange(newData: TesseractTreeItem[]): void {
     setTree(newData);
   }
 
@@ -187,7 +184,7 @@ export default function PageTreeView(props: Props) {
     }));
   }
 
-  function onMouseEnter(evt: React.MouseEvent, node: ExtendedTreeItem) {
+  function onMouseEnter(evt: React.MouseEvent, node: TesseractTreeItem) {
     evt.stopPropagation();
 
     dispatch(createChangeHovered(node.id));
@@ -199,12 +196,12 @@ export default function PageTreeView(props: Props) {
     dispatch(createChangeHovered(null));
   }
 
-  const getGenerateNodeProps = (data: ExtendedNodeData) => ({
+  const getGenerateNodeProps = (data: ExtendedNodeData & { node: TesseractTreeItem }) => ({
     isSelected: state.selectedId === data.node.id,
     onMouseEnter,
   });
 
-  const getNodeKey = (data: TreeNode & TreeIndex & { node: PageTreeItem }) => data.node.id;
+  const getNodeKey = (data: TreeNode & TreeIndex & { node: TesseractTreeItem }) => data.node.id;
 
   if (!tree.length) {
     return null;
@@ -220,7 +217,6 @@ export default function PageTreeView(props: Props) {
         onChange={handleChange}
         canDrop={canDrop}
         canNodeHaveChildren={canNodeHaveChildren}
-        // onVisibilityToggle={data => setTree(data.treeData)}
         onMoveNode={handleMoveNode}
       />
     </div>

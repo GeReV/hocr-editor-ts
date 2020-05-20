@@ -1,18 +1,18 @@
 import React from "react";
 import { NodeRendererProps, isDescendant } from "react-sortable-tree";
 
-import { createChangeSelected } from "../../pageReducer";
+import { createChangeSelected } from "../../reducer/actions";
 import { useAppReducer } from "../../reducerContext";
 
 import styles from "./nodeContentRenderer.module.scss";
-import { ExtendedTreeItem } from "./index";
+import { TesseractTreeItem } from "./index";
 
 export interface Props extends NodeRendererProps {
   isSelected?: boolean;
-  onMouseEnter?: (evt: React.MouseEvent, node: ExtendedTreeItem) => void;
+  onMouseEnter?: (evt: React.MouseEvent, node: TesseractTreeItem) => void;
 }
 
-function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
+function NodeContentRenderer(props: Props): React.ReactElement | null {
   const {
     scaffoldBlockPxWidth,
     toggleChildrenVisibility,
@@ -28,7 +28,6 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
     treeIndex,
     isSearchMatch,
     isSearchFocus,
-    icons,
     buttons,
     className,
     style,
@@ -126,7 +125,7 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
           (isSelected ? ` ${styles.rowWrapperHighlight}` : "")
         }
         onClick={handleClick}
-        onMouseEnter={(evt) => onMouseEnter?.(evt, node as ExtendedTreeItem)}
+        onMouseEnter={(evt) => onMouseEnter?.(evt, node as TesseractTreeItem)}
       >
         {/* Set the row preview to be used during drag and drop */}
         {connectDragPreview(
@@ -154,16 +153,6 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
                   (!canDrag ? ` ${styles.rowContentsDragDisabled}` : "")
                 }
               >
-                {/*<div className={styles.rowToolbar}>*/}
-                {/*  {icons?.map((icon, index) => (*/}
-                {/*    <div*/}
-                {/*      key={index} // eslint-disable-line react/no-array-index-key*/}
-                {/*      className={styles.toolbarButton}*/}
-                {/*    >*/}
-                {/*      {icon}*/}
-                {/*    </div>*/}
-                {/*  ))}*/}
-                {/*</div>*/}
                 <div className={styles.rowLabel}>
                   <span className={styles.rowTitle}>
                     {typeof nodeTitle === "function"
@@ -176,16 +165,16 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
                   </span>
                 </div>
 
-                {/*<div className={styles.rowToolbar}>*/}
-                {/*  {buttons?.map((btn, index) => (*/}
-                {/*    <div*/}
-                {/*      key={index} // eslint-disable-line react/no-array-index-key*/}
-                {/*      className={styles.toolbarButton}*/}
-                {/*    >*/}
-                {/*      {btn}*/}
-                {/*    </div>*/}
-                {/*  ))}*/}
-                {/*</div>*/}
+                <div className={styles.rowToolbar}>
+                  {buttons?.map((btn, index) => (
+                    <div
+                      key={index} // eslint-disable-line react/no-array-index-key
+                      className={styles.toolbarButton}
+                    >
+                      {btn}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -199,15 +188,14 @@ function FileThemeNodeContentRenderer(props: Props): React.ReactElement | null {
     : nodeContent;
 }
 
-FileThemeNodeContentRenderer.defaultProps = {
+NodeContentRenderer.defaultProps = {
   buttons: [],
   canDrag: false,
   canDrop: false,
   className: "",
-  icons: [],
   isSearchFocus: false,
   isSearchMatch: false,
   style: {},
 };
 
-export default FileThemeNodeContentRenderer;
+export default NodeContentRenderer;
