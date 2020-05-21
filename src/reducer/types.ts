@@ -1,6 +1,7 @@
 ﻿import { RecognizeResult } from "tesseract.js";
 import { ChangeCallbackParams } from "../components/PageCanvas/Block";
 import { DocumentTreeItem, ItemId } from "../types";
+import { TreeItem } from "../components/SortableTree";
 
 export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
@@ -17,6 +18,7 @@ export enum ActionType {
   UpdateTreeNodeRect = 'UpdateTreeNodeRect',
   ChangeSelected = 'ChangeSelected',
   ChangeHovered = 'ChangeHovered',
+  ModifyNode = 'ModifyNode',
   DeleteNode = 'DeleteNode',
   MoveNode = 'MoveNode',
 }
@@ -27,6 +29,11 @@ export interface MoveNodeParams {
   newIndex: number | null;
 }
 
+export interface ModifyNodePayload {
+  itemId: ItemId;
+  changes: Partial<TreeItem>
+}
+
 export type Action<T extends string, P = void> = { type: T, payload: P };
 
 export type ReducerAction =
@@ -35,5 +42,6 @@ export type ReducerAction =
   Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams> |
   Action<ActionType.ChangeSelected, ItemId | null> |
   Action<ActionType.ChangeHovered, ItemId | null> |
+  Action<ActionType.ModifyNode, ModifyNodePayload> |
   Action<ActionType.DeleteNode, ItemId> |
   Action<ActionType.MoveNode, MoveNodeParams>;

@@ -6,11 +6,11 @@ import { Block, Line, Paragraph, Word, Symbol } from "tesseract.js";
 import { Row } from 'react-bootstrap';
 
 import { ElementType, DocumentTreeItem } from "../../types";
-import { createChangeHovered, createChangeSelected, createMoveNode } from "../../reducer/actions";
+import { createChangeHovered, createChangeSelected, createModifyNode, createMoveNode } from "../../reducer/actions";
 import { useAppReducer } from "../../reducerContext";
 import { canBlockHostChildren } from "../../utils";
 import Tree from "../SortableTree/components/Tree";
-import { ItemId, RenderItemParams, TreeData, TreeItem } from "../SortableTree";
+import { ItemId, Path, RenderItemParams, TreeData, TreeItem } from "../SortableTree";
 
 import './index.scss';
 
@@ -271,6 +271,14 @@ export default function PageTreeView(props: Props) {
     
     dispatch(createChangeSelected(nodeId));
   }
+  
+  function onCollapse(itemId: ItemId, path: Path) {
+    dispatch(createModifyNode(itemId, { isExpanded: false }));
+  }
+
+  function onExpand(itemId: ItemId, path: Path) {
+    dispatch(createModifyNode(itemId, { isExpanded: true }));
+  }
 
   if (!tree) {
     return null;
@@ -283,6 +291,8 @@ export default function PageTreeView(props: Props) {
     >
       <Tree
         tree={tree}
+        onExpand={onExpand}
+        onCollapse={onCollapse}
         renderItem={(params) => (
           <TreeNode
             onMouseEnter={onMouseEnter}

@@ -3,7 +3,7 @@ import produce from 'immer';
 
 import { BaseTreeItem, ElementType, ItemId, Position } from "../types";
 import { buildTree, walkChildren } from "../treeBuilder";
-import { ActionType, ReducerAction, State, TreeItems } from "./types";
+import { ActionType, ModifyNodePayload, ReducerAction, State, TreeItems } from "./types";
 
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
@@ -138,6 +138,22 @@ function deleteTreeNode(state: State, nodeId: ItemId): State {
   });
 }
 
+function modifyTreeNode(state: State, payload: ModifyNodePayload) {
+  return produce(state, (draft) => {
+    const node = getNodeOrThrow(draft.treeItems, payload.itemId);
+
+    const changes = payload.changes;
+    
+    if (typeof changes.isExpanded !== "undefined") {
+      node.isExpanded = changes.isExpanded;
+    }
+    
+    if (typeof changes.data !== "undefined") {
+      node.data = changes.data;
+    }
+  });
+}
+
 export function reducer(state: State, action: ReducerAction): State {
   switch (action.type) {
     case ActionType.Init: {
@@ -167,6 +183,9 @@ export function reducer(state: State, action: ReducerAction): State {
     case ActionType.UpdateTreeNodeRect: {
       return updateTreeNodePosition(state, action.payload.nodeId, action.payload.x, action.payload.y, action.payload.width, action.payload.height);
     }
+    case ActionType.ModifyNode: {
+      return modifyTreeNode(state, action.payload);
+    }
     case ActionType.DeleteNode: {
       return deleteTreeNode(state, action.payload);
     }
@@ -174,6 +193,6 @@ export function reducer(state: State, action: ReducerAction): State {
       return moveTreeNode(state, action.payload.nodeId, action.payload.nextParentId, action.payload.newIndex);
     }
     default:
-      throw new Error(`Unknown action ${action}`);
+      throw new Error(`Unknown action ${JSON.stringify(action)}`);
   }
 }
