@@ -20,13 +20,17 @@ export interface Props {
 export default function PageGraphics({ width, height, onSelect, scale, onDeselect, hoveredId, pageImage, selectedId }: Props) {
   const [state, dispatch] = useAppReducer();
   
-  const treeItems = state.treeItems;
+  if (!state.tree) {
+    return null;
+  }
+  
+  const treeItems = state.tree.items;
   
   function handleChange(args: ChangeCallbackParams) {
     dispatch(createUpdateTreeNodeRect(args));
   }
   
-  if (!pageImage || state.treeRootId === null) {
+  if (!pageImage) {
     return null;
   }
   
@@ -49,9 +53,9 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
       </Layer>
       <Layer>
         {
-          state.treeItems[state.treeRootId]
+          treeItems[state.tree.rootId]
             .children
-            .map(item => getNodeOrThrow(state.treeItems, item) as BlockTreeItem)
+            .map(item => getNodeOrThrow(treeItems, item) as BlockTreeItem)
             .map((block: BlockTreeItem) =>
             (
               <Block

@@ -1,13 +1,15 @@
 ﻿import { RecognizeResult } from "tesseract.js";
 import { ChangeCallbackParams } from "../components/PageCanvas/Block";
 import { DocumentTreeItem, ItemId } from "../types";
-import { TreeItem } from "../components/SortableTree";
+import { TreeDestinationPosition, TreeItem, TreeSourcePosition } from "../components/SortableTree";
 
 export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
 export interface State {
-  treeRootId: ItemId | null;
-  treeItems: TreeItems;
+  tree: {
+    rootId: ItemId;
+    items: TreeItems;
+  } | null
   selectedId: ItemId | null;
   hoveredId: ItemId | null;
 }
@@ -24,9 +26,8 @@ export enum ActionType {
 }
 
 export interface MoveNodeParams {
-  nodeId: ItemId;
-  nextParentId: ItemId | null;
-  newIndex: number | null;
+  source: TreeSourcePosition;
+  destination: TreeDestinationPosition;
 }
 
 export interface ModifyNodePayload {

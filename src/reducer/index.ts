@@ -4,6 +4,8 @@ import produce from 'immer';
 import { BaseTreeItem, ElementType, ItemId, Position } from "../types";
 import { buildTree, walkChildren } from "../treeBuilder";
 import { ActionType, ModifyNodePayload, ReducerAction, State, TreeItems } from "./types";
+import { TreeDestinationPosition, TreeSourcePosition } from "../components/SortableTree";
+import { isLeafItem } from "../components/SortableTree/utils/tree";
 
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
@@ -27,8 +29,7 @@ const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
 // }
 
 export const initialState: State = {
-  treeRootId: null,
-  treeItems: {},
+  tree: null,
   selectedId: null,
   hoveredId: null,
 };
@@ -45,7 +46,11 @@ export function getNodeOrThrow(treeItems: TreeItems, nodeId: ItemId): BaseTreeIt
 
 function updateTreeNodePosition(state: State, nodeId: ItemId, x: number, y: number, width: number | undefined, height: number | undefined): State {
   return produce(state, (draft) => {
-    const treeItems = draft.treeItems;
+    if (!draft.tree) {
+      return;
+    }
+    
+    const treeItems = draft.tree.items;
 
     const node = getNodeOrThrow(treeItems, nodeId);
 
@@ -80,50 +85,41 @@ function updateTreeNodePosition(state: State, nodeId: ItemId, x: number, y: numb
   });
 }
 
-function moveTreeNode(state: State, nodeId: ItemId, nextParentId: ItemId | null, newIndex: number | null): State {
+function moveTreeNode(state: State, source: TreeSourcePosition, destination: TreeDestinationPosition): State {
   return produce(state, (draft) => {
-    const treeItems = draft.treeItems;
-
-    if (nextParentId === null) {
-      return;
+    if (!draft.tree) {
+      throw new Error('Cannot move node when no tree exists. This should never happen.');
     }
 
-    const node = getNodeOrThrow(treeItems, nodeId);
+    const sourceParent = draft.tree.items[source.parentId];
+    const destinationParent = draft.tree.items[destination.parentId];
     
-    const prevParentId = node.parentId;
+    const item = sourceParent.children.splice(source.index, 1)[0];
+    
+    sourceParent.isExpanded = sourceParent.children.length > 0 && sourceParent.isExpanded;
 
-    const newParentNode = treeItems[nextParentId];
-
-    // If node was only swapped, remove it first so we can insert it again.
-    const newParentChildren = newParentNode.children.filter(id => id !== nodeId);
-
-    // Insert node in its new place.
-    newParentChildren.splice(newIndex ?? 0, 0, nodeId);
-
-    // Create tree map again. Give node its new parent, give parent its new children.
-    treeItems[nodeId].parentId = nextParentId;
-    treeItems[nextParentId].children = newParentChildren;
-
-    // If node was moved from a previous, separate parent, remove it from that parent's children list. 
-    if (prevParentId !== null && prevParentId !== nextParentId) {
-      const prevParent = treeItems[prevParentId];
-
-      if (!prevParent) {
-        throw new Error(`Could not find node with ID ${prevParentId}`);
+    if (typeof destination.index === 'undefined') {
+      if (isLeafItem(destinationParent)) {
+        destinationParent.children.push(item);
       }
-
-      // Since updatedTreeMap is already a new object, it's safe to simply set new values.
-      prevParent.children = prevParent.children.filter(id => id !== nodeId);
+    } else {
+      destinationParent.children.splice(destination.index, 0, item);
     }
   });
 }
 
 function deleteTreeNode(state: State, nodeId: ItemId): State {
   return produce(state, (draft) => {
-    const node = getNodeOrThrow(draft.treeItems, nodeId);
+    if (!draft.tree) {
+      return;
+    }
+    
+    const treeItems = draft.tree.items;
+    
+    const node = getNodeOrThrow(treeItems, nodeId);
     
     if (node.parentId) {
-      const parent = getNodeOrThrow(draft.treeItems, node.parentId);
+      const parent = getNodeOrThrow(treeItems, node.parentId);
       
       const nodeIndex = parent.children.indexOf(nodeId);
       
@@ -134,13 +130,19 @@ function deleteTreeNode(state: State, nodeId: ItemId): State {
       parent.children.splice(nodeIndex, 1);
     }
     
-    delete draft.treeItems[nodeId];
+    delete treeItems[nodeId];
   });
 }
 
 function modifyTreeNode(state: State, payload: ModifyNodePayload) {
   return produce(state, (draft) => {
-    const node = getNodeOrThrow(draft.treeItems, payload.itemId);
+    if (!draft.tree) {
+      return;
+    }
+    
+    const treeItems = draft.tree.items;
+    
+    const node = getNodeOrThrow(treeItems, payload.itemId);
 
     const changes = payload.changes;
     
@@ -158,10 +160,12 @@ export function reducer(state: State, action: ReducerAction): State {
   switch (action.type) {
     case ActionType.Init: {
       return produce(state, (draft) => {
-        const [rootId, treeItems] = buildTree(action.payload);
+        const [rootId, items] = buildTree(action.payload);
         
-        draft.treeRootId = rootId;
-        draft.treeItems = treeItems;
+        draft.tree = {
+          rootId,
+          items,
+        };
       });
     }
     case ActionType.ChangeSelected: {
@@ -190,7 +194,7 @@ export function reducer(state: State, action: ReducerAction): State {
       return deleteTreeNode(state, action.payload);
     }
     case ActionType.MoveNode: {
-      return moveTreeNode(state, action.payload.nodeId, action.payload.nextParentId, action.payload.newIndex);
+      return moveTreeNode(state, action.payload.source, action.payload.destination);
     }
     default:
       throw new Error(`Unknown action ${JSON.stringify(action)}`);

@@ -23,6 +23,16 @@ import {
   getIndexById,
 } from '../../utils/flat-tree';
 import DelayedFunction from '../../utils/delayed-function';
+import { DocumentTreeItem, ElementType } from "../../../../types";
+import { canBlockHostChildren } from "../../../../utils";
+
+const canNodeHaveChildren = (node: DocumentTreeItem): boolean => {
+  if (node.type === ElementType.Block) {
+    return canBlockHostChildren(node.data);
+  }
+
+  return node.type !== ElementType.Word && node.type !== ElementType.Symbol;
+};
 
 export default class Tree extends Component<Props, State> {
   static defaultProps = {
@@ -97,7 +107,7 @@ export default class Tree extends Component<Props, State> {
     if (!this.dragState) {
       return;
     }
-
+    
     this.expandTimer.stop();
     if (update.combine) {
       const { draggableId } = update.combine;
@@ -114,6 +124,19 @@ export default class Tree extends Component<Props, State> {
       destination: update.destination,
       combine: update.combine,
     };
+
+    const {
+      sourcePosition,
+      destinationPosition,
+    } = calculateFinalDropPositions(this.props.tree, flattenedTree, this.dragState);
+
+    const node = this.props.tree.items[+sourcePosition.parentId] as DocumentTreeItem;
+    
+    if (destinationPosition) {
+      const parent = this.props.tree.items[+destinationPosition.parentId] as DocumentTreeItem;
+      
+      const canMoveNode = parent.type === node.type + 1 && canNodeHaveChildren(parent);
+    }
   };
 
   onDropAnimating = () => {
@@ -314,6 +337,7 @@ export default class Tree extends Component<Props, State> {
                 {...finalProvided.droppableProps}
               >
                 {renderedItems}
+                {provided.placeholder}
               </div>
             );
           }}

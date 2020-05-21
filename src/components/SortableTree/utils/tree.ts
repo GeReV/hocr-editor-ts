@@ -123,7 +123,7 @@ export const getTreePosition = (
 const hasLoadedChildren = (item: TreeItem): boolean =>
   !!item.hasChildren && item.children.length > 0;
 
-const isLeafItem = (item: TreeItem): boolean => !item.hasChildren;
+export const isLeafItem = (item: TreeItem): boolean => !item.hasChildren;
 
 const removeItemFromTree = (
   tree: TreeData,

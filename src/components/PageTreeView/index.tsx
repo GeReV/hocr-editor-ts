@@ -10,33 +10,19 @@ import { createChangeHovered, createChangeSelected, createModifyNode, createMove
 import { useAppReducer } from "../../reducerContext";
 import { canBlockHostChildren } from "../../utils";
 import Tree from "../SortableTree/components/Tree";
-import { ItemId, Path, RenderItemParams, TreeData, TreeItem } from "../SortableTree";
+import {
+  ItemId,
+  Path,
+  RenderItemParams,
+  TreeDestinationPosition,
+  TreeItem,
+  TreeSourcePosition
+} from "../SortableTree";
 
 import './index.scss';
 
-export interface ExtendedTreeItem<T extends ElementType, V> extends TreeItem {
-  id: ItemId;
-  type: T;
-  value: V;
-}
-
-export type TesseractTreeItem =
-  ExtendedTreeItem<ElementType.Block, Block> |
-  ExtendedTreeItem<ElementType.Paragraph, Paragraph> |
-  ExtendedTreeItem<ElementType.Line, Line> |
-  ExtendedTreeItem<ElementType.Word, Word> |
-  ExtendedTreeItem<ElementType.Symbol, Symbol>;
-
 interface Props {
 }
-
-const canNodeHaveChildren = (node: TesseractTreeItem): boolean => {
-  if (node.type === ElementType.Block) {
-    return canBlockHostChildren(node.data);
-  }
-
-  return node.type !== ElementType.Word && node.type !== ElementType.Symbol;
-};
 
 function getTypeSpec(node: DocumentTreeItem): { icon: IconName | null; iconTitle?: string; title: string; } {
   switch (node.type) {
@@ -220,39 +206,19 @@ const TreeNode = React.memo(function TreeNode({ item, provided, onCollapse, onEx
 export default function PageTreeView(props: Props) {
   const [state, dispatch] = useAppReducer();
 
-  const tree = React.useMemo<TreeData | null>(() => {
-    if (state.treeRootId === null) {
-      return null;
-    }
-
-    return {
-      rootId: state.treeRootId,
-      items: state.treeItems,
-    };
-  }, [state.treeRootId, state.treeItems]);
-
   // function handleChange(newData: TesseractTreeItem[]): void {
   // }
   //
-  // function handleMoveNode(data: NodeData & FullTree & OnMovePreviousAndNextLocation) {
-  //   let siblings: TreeItem[] = data.treeData;
-  //
-  //   if (data.nextParentNode) {
-  //     if (typeof data.nextParentNode.children === "function") {
-  //       throw new Error('Cannot handle GetTreeItemChildrenFn here.');
-  //     }
-  //
-  //     siblings = data.nextParentNode.children ?? [];
-  //   }
-  //
-  //   const newIndex = siblings.indexOf(data.node) ?? null;
-  //
-  //   dispatch(createMoveNode({
-  //     nodeId: data.node.id,
-  //     nextParentId: data.nextParentNode?.id ?? null,
-  //     newIndex,
-  //   }));
-  // }
+  function handleDragEnd(source: TreeSourcePosition, destination?: TreeDestinationPosition) {
+    if (!destination) {
+      return;
+    }
+    
+    dispatch(createMoveNode({
+      source, 
+      destination
+    }));
+  }
   
   function onMouseEnter(evt: React.MouseEvent, nodeId: ItemId) {
     evt.stopPropagation();
@@ -272,15 +238,15 @@ export default function PageTreeView(props: Props) {
     dispatch(createChangeSelected(nodeId));
   }
   
-  function onCollapse(itemId: ItemId, path: Path) {
+  function handleCollapse(itemId: ItemId, path: Path) {
     dispatch(createModifyNode(itemId, { isExpanded: false }));
   }
 
-  function onExpand(itemId: ItemId, path: Path) {
+  function handleExpand(itemId: ItemId, path: Path) {
     dispatch(createModifyNode(itemId, { isExpanded: true }));
   }
 
-  if (!tree) {
+  if (!state.tree) {
     return null;
   }
 
@@ -290,9 +256,10 @@ export default function PageTreeView(props: Props) {
       onMouseLeave={onMouseLeave}
     >
       <Tree
-        tree={tree}
-        onExpand={onExpand}
-        onCollapse={onCollapse}
+        tree={state.tree}
+        onExpand={handleExpand}
+        onCollapse={handleCollapse}
+        onDragEnd={handleDragEnd}
         renderItem={(params) => (
           <TreeNode
             onMouseEnter={onMouseEnter}
