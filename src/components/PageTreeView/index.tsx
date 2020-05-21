@@ -1,11 +1,12 @@
 import React from "react";
+import cx from 'classnames';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconName } from "@fortawesome/free-solid-svg-icons";
 import { Block, Line, Paragraph, Word, Symbol } from "tesseract.js";
 import { Row } from 'react-bootstrap';
 
 import { ElementType, DocumentTreeItem } from "../../types";
-import { createChangeHovered, createMoveNode } from "../../reducer/actions";
+import { createChangeHovered, createChangeSelected, createMoveNode } from "../../reducer/actions";
 import { useAppReducer } from "../../reducerContext";
 import { canBlockHostChildren } from "../../utils";
 import Tree from "../SortableTree/components/Tree";
@@ -163,9 +164,10 @@ function truncate(s: string, len: number = 20): string {
 interface TreeNodeProps {
   isSelected?: boolean;
   onMouseEnter?: (evt: React.MouseEvent, nodeId: ItemId) => void;
+  onClick?: (evt: React.MouseEvent, nodeId: ItemId) => void;
 }
 
-function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter }: RenderItemParams & TreeNodeProps) {
+const TreeNode = React.memo(function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter, onClick, isSelected }: RenderItemParams & TreeNodeProps) {
   let button: React.ReactElement | null = null;
 
   if (item.children && item.children.length > 0) {
@@ -192,9 +194,10 @@ function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter }: Render
 
   return (
     <div
-      className="Tree-rowContents"
+      className={cx('Tree-rowContents', isSelected && 'Tree-rowContents--selected')}
       ref={provided.innerRef}
       onMouseEnter={(evt) => onMouseEnter?.(evt, item.id)}
+      onClick={(evt) => onClick?.(evt, item.id)}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
     >
@@ -212,7 +215,7 @@ function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter }: Render
       </div>
     </div>
   )
-}
+});
 
 export default function PageTreeView(props: Props) {
   const [state, dispatch] = useAppReducer();
@@ -262,6 +265,12 @@ export default function PageTreeView(props: Props) {
 
     dispatch(createChangeHovered(null));
   }
+  
+  function onSelect(evt: React.MouseEvent, nodeId: ItemId) {
+    evt.stopPropagation();
+    
+    dispatch(createChangeSelected(nodeId));
+  }
 
   if (!tree) {
     return null;
@@ -272,21 +281,20 @@ export default function PageTreeView(props: Props) {
       className="Tree"
       onMouseLeave={onMouseLeave}
     >
-      <div className="Tree-scrollWrapper">
-        <Tree
-          tree={tree}
-          renderItem={(params) => (
-            <TreeNode
-              onMouseEnter={onMouseEnter}
-              isSelected={state.selectedId === params.item.id} 
-              {...params} 
-            />
-          )}
-          offsetPerLevel={24}
-          isDragEnabled
-          isNestingEnabled
-        />
-      </div>
+      <Tree
+        tree={tree}
+        renderItem={(params) => (
+          <TreeNode
+            onMouseEnter={onMouseEnter}
+            onClick={onSelect}
+            isSelected={state.selectedId === params.item.id} 
+            {...params} 
+          />
+        )}
+        offsetPerLevel={24}
+        isDragEnabled
+        isNestingEnabled
+      />
     </Row>
   );
 }
