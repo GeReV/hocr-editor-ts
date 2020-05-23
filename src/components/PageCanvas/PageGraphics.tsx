@@ -1,5 +1,5 @@
 ﻿import { Image, Layer, Stage } from "react-konva";
-import { BlockTreeItem, ItemId, PageImage } from "../../types";
+import { BlockTreeItem, ItemId, PageImage, Position } from "../../types";
 import { Block, ChangeCallbackParams } from "./Block";
 import React from "react";
 import { useAppReducer } from "../../reducerContext";
@@ -10,6 +10,8 @@ export interface Props {
   width: number;
   height: number;
   scale: number;
+  position: Position;
+  setPosition: (pos: Position) => void;
   onSelect: (id: ItemId) => void;
   onDeselect: () => void;
   hoveredId?: ItemId | null;
@@ -17,7 +19,7 @@ export interface Props {
   pageImage?: PageImage;
 }
 
-export default function PageGraphics({ width, height, onSelect, scale, onDeselect, hoveredId, pageImage, selectedId }: Props) {
+export default function PageGraphics({ width, height, onSelect, onDeselect, scale, position, setPosition, hoveredId, pageImage, selectedId }: Props) {
   const [state, dispatch] = useAppReducer();
   
   if (!state.tree) {
@@ -46,6 +48,16 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
       height={height}
       scaleX={scale}
       scaleY={scale}
+      x={position.x}
+      y={position.y}
+      onDragEnd={(evt) => {
+        const stage = evt.target.getStage();
+        
+        setPosition({
+          x: stage?.x() ?? 0,
+          y: stage?.y() ?? 0,
+        });
+      }}
       draggable
     >
       <Layer>

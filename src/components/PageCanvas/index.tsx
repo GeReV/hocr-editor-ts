@@ -2,7 +2,7 @@ import React from 'react';
 import { useMeasure, useTitle } from "react-use";
 import { Button, Spinner } from 'react-bootstrap';
 
-import { ItemId, PageImage, RecognizeUpdate } from '../../types';
+import { ItemId, PageImage, Position, RecognizeUpdate } from '../../types';
 import { createInit, createChangeSelected } from '../../reducer/actions';
 import PageGraphics from "./PageGraphics";
 import { recognize } from "../../ocr";
@@ -23,6 +23,7 @@ const SCALE_MIN = 0.05;
 export default function PageCanvas(props: Props) {
   const [ref, { width, height }] = useMeasure();
   const [scale, setScale] = React.useState(1);
+  const [position, setPosition] = React.useState<Position>({ x: 0, y: 0 });
 
   const [processing, setProcessing] = React.useState<boolean>(false);
   const [progress, setProgress] = React.useState(0);
@@ -41,6 +42,10 @@ export default function PageCanvas(props: Props) {
       (height / props.pageImage.image.height);
 
     setScale(fitScale);
+    setPosition({
+      x: (width - props.pageImage.image.width * fitScale) * .5,
+      y: (height - props.pageImage.image.height * fitScale) * .5,
+    });
   }, [props.pageImage, height, width]);
 
   React.useLayoutEffect(setFitScale, [setFitScale]);
@@ -123,6 +128,8 @@ export default function PageCanvas(props: Props) {
           selectedId={state.selectedId}
           pageImage={props.pageImage}
           scale={scale}
+          position={position}
+          setPosition={setPosition}
         />
       </div>
     </div>
