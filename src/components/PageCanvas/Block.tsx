@@ -117,14 +117,14 @@ export function Block(props: BlockProps): React.ReactElement | null {
     const scale = groupRef.current.getAbsoluteScale();
     
     const parent: DocumentTreeItem | null = props.item.parentId ? props.treeItems[props.item.parentId] : null;
-
+    
     const bbox = (!parent || parent.type === ElementType.Page) ? {
       x0: 0,
       y0: 0,
       x1: props.pageWidth,
       y1: props.pageHeight,
     } : parent.data.bbox;
-
+    
     const scaledBbox = {
       left: bbox.x0 * scale.x,
       top: bbox.y0 * scale.y,

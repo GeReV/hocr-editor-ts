@@ -130,6 +130,10 @@ function deleteTreeNode(state: State, nodeId: ItemId): State {
       parent.children.splice(nodeIndex, 1);
     }
     
+    walkChildren(node.children, treeItems, (item) => {
+      delete treeItems[item.id];
+    });
+    
     delete treeItems[nodeId.toString()];
   });
 }

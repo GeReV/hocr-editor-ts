@@ -14,7 +14,7 @@ import { canBlockHostChildren } from "./utils";
 let id = 0;
 
 const createTreeItem = <T extends ElementType, V extends { bbox: Bbox }, P extends BaseTreeItem<ElementType, any>>(type: T, parent: P | null, data: V): BaseTreeItem<T, V> => ({
-  id: id++,
+  id: String(id++),
   type,
   parentId: parent?.id.toString() ?? null,
   data: data,
@@ -30,7 +30,7 @@ const createTreeItem = <T extends ElementType, V extends { bbox: Bbox }, P exten
 });
 
 const createRootTreeItem = (page: Page): PageTreeItem => ({
-  id: id++,
+  id: String(id++),
   type: ElementType.Page,
   parentId: null,
   data: page,
@@ -55,15 +55,15 @@ export function buildTree(recognitionResult: RecognizeResult): [ItemId, TreeItem
   
   const root = createRootTreeItem(recognitionResult.data);
   
-  map[root.id.toString()] = root;
+  map[root.id] = root;
 
   root.children = recognitionResult.data.blocks.map(block => {
     const blockTreeItem: BlockTreeItem = createBlockTreeItem(root, block);
 
-    map[blockTreeItem.id.toString()] = blockTreeItem;
+    map[blockTreeItem.id] = blockTreeItem;
     
     if (!canBlockHostChildren(block)) {
-      return blockTreeItem.id.toString();
+      return blockTreeItem.id;
     }
     
     blockTreeItem.children = block.paragraphs.map(para => {
@@ -75,25 +75,25 @@ export function buildTree(recognitionResult: RecognizeResult): [ItemId, TreeItem
         lineTreeItem.children = line.words.map((word) => {
           const wordTreeItem = createWordTreeItem(lineTreeItem, word)
 
-          map[wordTreeItem.id.toString()] = wordTreeItem;
+          map[wordTreeItem.id] = wordTreeItem;
 
-          return wordTreeItem.id.toString();
+          return wordTreeItem.id;
         });
 
-        map[lineTreeItem.id.toString()] = lineTreeItem;
+        map[lineTreeItem.id] = lineTreeItem;
 
-        return lineTreeItem.id.toString();
+        return lineTreeItem.id;
       });
 
-      map[paragraphTreeItem.id.toString()] = paragraphTreeItem;
+      map[paragraphTreeItem.id] = paragraphTreeItem;
 
-      return paragraphTreeItem.id.toString();
+      return paragraphTreeItem.id;
     });
 
-    return blockTreeItem.id.toString();
+    return blockTreeItem.id;
   });
   
-  return [root.id.toString(), map];
+  return [root.id, map];
 }
 
 export function walkChildren(children: ItemId[], map: TreeItems, action: (item: DocumentTreeItem) => void): void {
