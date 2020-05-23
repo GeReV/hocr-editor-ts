@@ -35,7 +35,7 @@ export const initialState: State = {
 };
 
 export function getNodeOrThrow(treeItems: TreeItems, nodeId: ItemId): BaseTreeItem<ElementType, any> {
-  const node = treeItems[nodeId];
+  const node = treeItems[nodeId.toString()];
 
   if (!node) {
     throw new Error(`Could not find node with ID ${nodeId}.`);
@@ -118,10 +118,10 @@ function deleteTreeNode(state: State, nodeId: ItemId): State {
     
     const node = getNodeOrThrow(treeItems, nodeId);
     
-    if (node.parentId) {
+    if (node.parentId !== null) {
       const parent = getNodeOrThrow(treeItems, node.parentId);
       
-      const nodeIndex = parent.children.indexOf(nodeId);
+      const nodeIndex = parent.children.indexOf(nodeId.toString());
       
       if (nodeIndex < 0) {
         throw new Error(`Node with ID ${nodeId} was expected to be a child of node with ID ${parent.id}.`);
@@ -130,7 +130,7 @@ function deleteTreeNode(state: State, nodeId: ItemId): State {
       parent.children.splice(nodeIndex, 1);
     }
     
-    delete treeItems[nodeId];
+    delete treeItems[nodeId.toString()];
   });
 }
 

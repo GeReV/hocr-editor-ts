@@ -2,20 +2,17 @@ import React from "react";
 import cx from 'classnames';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconName } from "@fortawesome/free-solid-svg-icons";
-import { Block, Line, Paragraph, Word, Symbol } from "tesseract.js";
 import { Row } from 'react-bootstrap';
 
 import { ElementType, DocumentTreeItem } from "../../types";
 import { createChangeHovered, createChangeSelected, createModifyNode, createMoveNode } from "../../reducer/actions";
 import { useAppReducer } from "../../reducerContext";
-import { canBlockHostChildren } from "../../utils";
 import Tree from "../SortableTree/components/Tree";
 import {
   ItemId,
   Path,
   RenderItemParams,
   TreeDestinationPosition,
-  TreeItem,
   TreeSourcePosition
 } from "../SortableTree";
 

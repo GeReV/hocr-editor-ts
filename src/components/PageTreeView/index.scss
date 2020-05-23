@@ -22,9 +22,17 @@
   display: flex;
   align-items: center;
   font-size: 0.8rem;
+  transition: background-color .1s ease-in-out;
   
   &--selected {
     background-color: rgba(255, 255, 0, 0.2);
+  }
+
+  &.Tree-drag--legal {
+    background-color: #8fd19e;
+  }
+  &.Tree-drag--illegal {
+    background-color: #ed969e;
   }
 }
 

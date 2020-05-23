@@ -15,7 +15,7 @@ import { calculateFinalDropPositions } from './Tree-utils';
 import { Props, State, DragState } from './Tree-types';
 import { noop } from '../../utils/handy';
 import { flattenTree, mutateTree } from '../../utils/tree';
-import { FlattenedItem, ItemId, Path, TreeData } from '../../types';
+import { FlattenedItem, ItemId, Path, TreeData, TreeDestinationPosition, TreeSourcePosition } from '../../types';
 import TreeItem from '../TreeItem';
 import {
   getDestinationPath,
@@ -26,6 +26,9 @@ import DelayedFunction from '../../utils/delayed-function';
 import { DocumentTreeItem, ElementType } from "../../../../types";
 import { canBlockHostChildren } from "../../../../utils";
 
+const TREE_DRAG_STATE_LEGAL = 'Tree-drag--legal';
+const TREE_DRAG_STATE_ILLEGAL = 'Tree-drag--illegal';
+
 const canNodeHaveChildren = (node: DocumentTreeItem): boolean => {
   if (node.type === ElementType.Block) {
     return canBlockHostChildren(node.data);
@@ -33,6 +36,18 @@ const canNodeHaveChildren = (node: DocumentTreeItem): boolean => {
 
   return node.type !== ElementType.Word && node.type !== ElementType.Symbol;
 };
+
+function canMoveNode(tree: TreeData, sourcePosition: TreeSourcePosition, destinationPosition: TreeDestinationPosition | undefined): boolean {
+  if (!destinationPosition) {
+    return false;
+  }
+
+  const sourceParent = tree.items[+sourcePosition.parentId] as DocumentTreeItem;
+
+  const destinationParent = tree.items[+destinationPosition.parentId] as DocumentTreeItem;
+
+  return destinationParent.type === sourceParent.type && canNodeHaveChildren(destinationParent);
+}
 
 export default class Tree extends Component<Props, State> {
   static defaultProps = {
@@ -102,12 +117,12 @@ export default class Tree extends Component<Props, State> {
   };
 
   onDragUpdate = (update: DragUpdate) => {
-    const { onExpand } = this.props;
+    const { onExpand, tree } = this.props;
     const { flattenedTree } = this.state;
     if (!this.dragState) {
       return;
     }
-    
+
     this.expandTimer.stop();
     if (update.combine) {
       const { draggableId } = update.combine;
@@ -128,15 +143,14 @@ export default class Tree extends Component<Props, State> {
     const {
       sourcePosition,
       destinationPosition,
-    } = calculateFinalDropPositions(this.props.tree, flattenedTree, this.dragState);
-
-    const node = this.props.tree.items[+sourcePosition.parentId] as DocumentTreeItem;
+    } = calculateFinalDropPositions(tree, flattenedTree, this.dragState);
     
-    if (destinationPosition) {
-      const parent = this.props.tree.items[+destinationPosition.parentId] as DocumentTreeItem;
-      
-      const canMoveNode = parent.type === node.type + 1 && canNodeHaveChildren(parent);
-    }
+    const moveLegal = canMoveNode(tree, sourcePosition, destinationPosition);
+
+    const draggedElement = this.getDraggedElement();
+
+    draggedElement?.classList.toggle(TREE_DRAG_STATE_LEGAL, moveLegal);
+    draggedElement?.classList.toggle(TREE_DRAG_STATE_ILLEGAL, !moveLegal);
   };
 
   onDropAnimating = () => {
@@ -165,10 +179,27 @@ export default class Tree extends Component<Props, State> {
       finalDragState,
     );
 
-    onDragEnd(sourcePosition, destinationPosition);
+    if (canMoveNode(tree, sourcePosition, destinationPosition)) {
+      onDragEnd(sourcePosition, destinationPosition);
+    } else {
+      // Still trigger onDragEnd, but without a destination, so move is canceled.
+      onDragEnd(sourcePosition, undefined);
+    }
+    
+    this.getDraggedElement()?.classList.remove(TREE_DRAG_STATE_LEGAL, TREE_DRAG_STATE_ILLEGAL);
 
     this.dragState = undefined;
   };
+  
+  getDraggedElement = (): HTMLElement | undefined => {
+    const draggedItemId = this.state.draggedItemId;
+
+    if (!draggedItemId) {
+      return undefined;
+    }
+
+    return this.itemsElement[draggedItemId];
+  }
 
   onPointerMove = () => {
     if (this.dragState) {
@@ -293,6 +324,7 @@ export default class Tree extends Component<Props, State> {
     if (snapshot.isDropAnimating) {
       this.onDropAnimating();
     }
+
     return (
       <TreeItem
         key={flatItem.item.id}

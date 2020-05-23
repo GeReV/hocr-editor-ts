@@ -16,7 +16,7 @@ let id = 0;
 const createTreeItem = <T extends ElementType, V extends { bbox: Bbox }, P extends BaseTreeItem<ElementType, any>>(type: T, parent: P | null, data: V): BaseTreeItem<T, V> => ({
   id: id++,
   type,
-  parentId: parent?.id ?? null,
+  parentId: parent?.id.toString() ?? null,
   data: data,
   parentRelativeOffset: parent?.type === ElementType.Page ? {
     x: data.bbox.x0,
@@ -55,15 +55,15 @@ export function buildTree(recognitionResult: RecognizeResult): [ItemId, TreeItem
   
   const root = createRootTreeItem(recognitionResult.data);
   
-  map[root.id] = root;
+  map[root.id.toString()] = root;
 
   root.children = recognitionResult.data.blocks.map(block => {
     const blockTreeItem: BlockTreeItem = createBlockTreeItem(root, block);
 
-    map[blockTreeItem.id] = blockTreeItem;
+    map[blockTreeItem.id.toString()] = blockTreeItem;
     
     if (!canBlockHostChildren(block)) {
-      return blockTreeItem.id;
+      return blockTreeItem.id.toString();
     }
     
     blockTreeItem.children = block.paragraphs.map(para => {
@@ -75,30 +75,30 @@ export function buildTree(recognitionResult: RecognizeResult): [ItemId, TreeItem
         lineTreeItem.children = line.words.map((word) => {
           const wordTreeItem = createWordTreeItem(lineTreeItem, word)
 
-          map[wordTreeItem.id] = wordTreeItem;
+          map[wordTreeItem.id.toString()] = wordTreeItem;
 
-          return wordTreeItem.id;
+          return wordTreeItem.id.toString();
         });
 
-        map[lineTreeItem.id] = lineTreeItem;
+        map[lineTreeItem.id.toString()] = lineTreeItem;
 
-        return lineTreeItem.id;
+        return lineTreeItem.id.toString();
       });
 
-      map[paragraphTreeItem.id] = paragraphTreeItem;
+      map[paragraphTreeItem.id.toString()] = paragraphTreeItem;
 
-      return paragraphTreeItem.id;
+      return paragraphTreeItem.id.toString();
     });
 
-    return blockTreeItem.id;
+    return blockTreeItem.id.toString();
   });
   
-  return [root.id, map];
+  return [root.id.toString(), map];
 }
 
 export function walkChildren(children: ItemId[], map: TreeItems, action: (item: DocumentTreeItem) => void): void {
   function resolveChild(childId: ItemId): DocumentTreeItem {
-    const child = map[childId];
+    const child = map[childId.toString()];
 
     if (!child) {
       throw new Error(`Could not find child with ID ${childId} in tree.`);
