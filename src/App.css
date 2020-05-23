@@ -21,7 +21,3 @@
   display: flex;
   flex-direction: column;
 }
-
-.App-tree {
-  overflow: auto;
-}
