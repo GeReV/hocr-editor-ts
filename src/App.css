@@ -16,7 +16,8 @@
   flex-direction: row;
 }
 
-.App-canvas {
+.App-canvas,
+.App-tree {
   display: flex;
   flex-direction: column;
 }

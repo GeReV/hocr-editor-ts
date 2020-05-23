@@ -1,25 +1,30 @@
 ﻿import { Image, Layer, Stage } from "react-konva";
-import { BlockTreeItem, PageImage } from "../../types";
+import { BlockTreeItem, ItemId, PageImage } from "../../types";
 import { Block, ChangeCallbackParams } from "./Block";
 import React from "react";
 import { useAppReducer } from "../../reducerContext";
 import { createUpdateTreeNodeRect } from "../../reducer/actions";
+import { getNodeOrThrow } from "../../reducer";
 
 export interface Props {
   width: number;
   height: number;
   scale: number;
-  onSelect: (id: number) => void;
+  onSelect: (id: ItemId) => void;
   onDeselect: () => void;
-  hoveredId?: number | null;
-  selectedId?: number | null;
+  hoveredId?: ItemId | null;
+  selectedId?: ItemId | null;
   pageImage?: PageImage;
 }
 
 export default function PageGraphics({ width, height, onSelect, scale, onDeselect, hoveredId, pageImage, selectedId }: Props) {
   const [state, dispatch] = useAppReducer();
   
-  const treeMap = state.treeMap;
+  if (!state.tree) {
+    return null;
+  }
+  
+  const treeItems = state.tree.items;
   
   function handleChange(args: ChangeCallbackParams) {
     dispatch(createUpdateTreeNodeRect(args));
@@ -48,8 +53,9 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
       </Layer>
       <Layer>
         {
-          state.tree
-            .map(item => treeMap[item] as BlockTreeItem)
+          treeItems[state.tree.rootId]
+            .children
+            .map(item => getNodeOrThrow(treeItems, item) as BlockTreeItem)
             .map((block: BlockTreeItem) =>
             (
               <Block
@@ -62,16 +68,12 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
                 isSelected={selectedId === block.id}
                 isHovered={hoveredId === block.id}
                 draggable
-                treeMap={treeMap}
+                treeItems={treeItems}
                 {...pageProps}
               >
                 {
                   block.children?.map((paraId) => {
-                    const para = treeMap[paraId];
-                  
-                    if (!para) {
-                      return null;
-                    }
+                    const para = getNodeOrThrow(treeItems, paraId);
                   
                     return (
                       <Block
@@ -84,16 +86,12 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
                         isSelected={selectedId === para.id}
                         isHovered={hoveredId === para.id}
                         draggable
-                        treeMap={treeMap}
+                        treeItems={treeItems}
                         {...pageProps}
                       >
                         {
-                          para.children?.map((lineId: number) => {
-                            const line = treeMap[lineId];
-
-                            if (!line) {
-                              return null;
-                            }
+                          para.children?.map((lineId: ItemId) => {
+                            const line = getNodeOrThrow(treeItems, lineId);
                             
                             return (
                               <Block
@@ -106,7 +104,7 @@ export default function PageGraphics({ width, height, onSelect, scale, onDeselec
                                 isSelected={selectedId === line.id}
                                 isHovered={hoveredId === line.id}
                                 draggable
-                                treeMap={treeMap}
+                                treeItems={treeItems}
                                 {...pageProps}
                               />
                             );

@@ -2,8 +2,8 @@ import React from 'react';
 import { Group, Rect, Transformer } from 'react-konva';
 import Konva from 'konva';
 
-import { PageTreeItem, Position } from '../../types';
-import { TreeMap } from "../../reducer/types";
+import { DocumentTreeItem, ElementType, ItemId, Position } from '../../types';
+import { TreeItems } from "../../reducer/types";
 import { calculateDragBounds } from "./utils";
 import { clamp } from "../../utils";
 import { IRect } from "konva/types/types";
@@ -13,7 +13,7 @@ interface Box extends IRect {
 }
 
 export interface ChangeCallbackParams extends Position {
-  nodeId: number;
+  nodeId: ItemId;
   width?: number;
   height?: number;
 }
@@ -23,14 +23,14 @@ export interface BlockProps {
   opacity?: number;
   draggable?: boolean;
   onChange?: (args: ChangeCallbackParams) => void;
-  item: PageTreeItem;
+  item: DocumentTreeItem;
   isSelected?: boolean;
   isHovered?: boolean;
-  onSelected?: (itemId: number) => void;
+  onSelected?: (itemId: ItemId) => void;
   children?: React.ReactNode
   pageWidth: number;
   pageHeight: number;
-  treeMap: TreeMap;
+  treeItems: TreeItems;
 }
 
 const MINIMUM_NODE_WIDTH = 5;
@@ -60,13 +60,13 @@ export function Block(props: BlockProps): React.ReactElement | null {
   }, [props]);
 
   const dragBoundFunc = React.useCallback<(pos: Position) => Position>((pos) => {
-    const bounds = calculateDragBounds(groupRef.current, props.item, props.treeMap, props.pageWidth, props.pageHeight);
+    const bounds = calculateDragBounds(groupRef.current, props.item, props.treeItems, props.pageWidth, props.pageHeight);
 
     return {
       x: clamp(pos.x, bounds.left, bounds.right),
       y: clamp(pos.y, bounds.top, bounds.bottom),
     };
-  }, [props.item, props.pageHeight, props.pageWidth, props.treeMap]);
+  }, [props.item, props.pageHeight, props.pageWidth, props.treeItems]);
 
   const handleDragEnd = React.useCallback<(evt: Konva.KonvaEventObject<DragEvent>) => void>((evt) => {
     evt.cancelBubble = true;
@@ -115,14 +115,16 @@ export function Block(props: BlockProps): React.ReactElement | null {
     }
 
     const scale = groupRef.current.getAbsoluteScale();
-
-    const bbox = props.item.parentId ? props.treeMap[props.item.parentId].value.bbox : {
+    
+    const parent: DocumentTreeItem | null = props.item.parentId ? props.treeItems[props.item.parentId] : null;
+    
+    const bbox = (!parent || parent.type === ElementType.Page) ? {
       x0: 0,
       y0: 0,
       x1: props.pageWidth,
       y1: props.pageHeight,
-    };
-
+    } : parent.data.bbox;
+    
     const scaledBbox = {
       left: bbox.x0 * scale.x,
       top: bbox.y0 * scale.y,
@@ -144,7 +146,11 @@ export function Block(props: BlockProps): React.ReactElement | null {
     }
 
     return newBox;
-  }, [props.item.parentId, props.pageHeight, props.pageWidth, props.treeMap]);
+  }, [props.item.parentId, props.pageHeight, props.pageWidth, props.treeItems]);
+  
+  if (props.item.type === ElementType.Page) {
+    throw new Error('Block component cannot handle Page element type.');
+  }
   
   return (
     <Group
@@ -164,8 +170,8 @@ export function Block(props: BlockProps): React.ReactElement | null {
         strokeScaleEnabled={false}
         strokeEnabled={props.isHovered}
         opacity={props.opacity}
-        width={props.item.value.bbox.x1 - props.item.value.bbox.x0}
-        height={props.item.value.bbox.y1 - props.item.value.bbox.y0}
+        width={props.item.data.bbox.x1 - props.item.data.bbox.x0}
+        height={props.item.data.bbox.y1 - props.item.data.bbox.y0}
         onTransformEnd={handleTransformEnd}
       />
       {props.isSelected && (

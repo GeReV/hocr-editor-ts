@@ -1,14 +1,17 @@
 ﻿import { RecognizeResult } from "tesseract.js";
 import { ChangeCallbackParams } from "../components/PageCanvas/Block";
-import { BaseTreeItem, ElementType } from "../types";
+import { DocumentTreeItem, ItemId } from "../types";
+import { TreeDestinationPosition, TreeItem, TreeSourcePosition } from "../components/SortableTree";
 
-export type TreeMap = { [id: number]: BaseTreeItem<ElementType, any> };
+export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
 export interface State {
-  tree: number[];
-  treeMap: TreeMap;
-  selectedId: number | null;
-  hoveredId: number | null;
+  tree: {
+    rootId: ItemId;
+    items: TreeItems;
+  } | null
+  selectedId: ItemId | null;
+  hoveredId: ItemId | null;
 }
 
 export enum ActionType {
@@ -17,14 +20,19 @@ export enum ActionType {
   UpdateTreeNodeRect = 'UpdateTreeNodeRect',
   ChangeSelected = 'ChangeSelected',
   ChangeHovered = 'ChangeHovered',
+  ModifyNode = 'ModifyNode',
   DeleteNode = 'DeleteNode',
   MoveNode = 'MoveNode',
 }
 
 export interface MoveNodeParams {
-  nodeId: number;
-  nextParentId: number | null;
-  newIndex: number | null;
+  source: TreeSourcePosition;
+  destination: TreeDestinationPosition;
+}
+
+export interface ModifyNodePayload {
+  itemId: ItemId;
+  changes: Partial<TreeItem>
 }
 
 export type Action<T extends string, P = void> = { type: T, payload: P };
@@ -33,7 +41,8 @@ export type ReducerAction =
   Action<ActionType.Init, RecognizeResult> |
   // Action<ActionType.UpdateTree, BlockTreeItem[]> |
   Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams> |
-  Action<ActionType.ChangeSelected, number | null> |
-  Action<ActionType.ChangeHovered, number | null> |
-  Action<ActionType.DeleteNode, number> |
+  Action<ActionType.ChangeSelected, ItemId | null> |
+  Action<ActionType.ChangeHovered, ItemId | null> |
+  Action<ActionType.ModifyNode, ModifyNodePayload> |
+  Action<ActionType.DeleteNode, ItemId> |
   Action<ActionType.MoveNode, MoveNodeParams>;
