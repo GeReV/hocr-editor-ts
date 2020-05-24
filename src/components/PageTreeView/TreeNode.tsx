@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect } from "react";
+﻿import React, { useCallback, useEffect, useState } from "react";
 import cx from "classnames";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconName } from "@fortawesome/free-solid-svg-icons";
@@ -60,9 +60,9 @@ function getTypeSpec(node: DocumentTreeItem): { icon: IconName | null; iconTitle
 function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter, onClick, isSelected }: RenderItemParams & TreeNodeProps) {
   const [, dispatch] = useAppReducer();
 
-  const [isEditing, setIsEditing] = React.useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const enableEditingIfPossible = React.useCallback(() => {
+  const enableEditingIfPossible = useCallback(() => {
     if (!isSelected) {
       return;
     }
