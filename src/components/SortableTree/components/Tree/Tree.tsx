@@ -1,4 +1,4 @@
-import React, { Component, ReactElement, ReactNode } from 'react';
+import React, { Component, ReactElement } from 'react';
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer'
 import {
@@ -27,7 +27,6 @@ import {
 import DelayedFunction from '../../utils/delayed-function';
 import { DocumentTreeItem, ElementType } from "../../../../types";
 import { canBlockHostChildren } from "../../../../utils";
-import { TreeDraggableProvided } from "../TreeItem/TreeItem-types";
 
 const TREE_DRAG_STATE_LEGAL = 'Tree-drag--legal';
 const TREE_DRAG_STATE_ILLEGAL = 'Tree-drag--illegal';
