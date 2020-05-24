@@ -1,15 +1,15 @@
-﻿import React from "react";
+﻿import React, { useCallback, useEffect } from "react";
 import cx from "classnames";
-import { Button, Col, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconName } from "@fortawesome/free-solid-svg-icons";
 
 import { ItemId, RenderItemParams } from "../SortableTree";
 import { DocumentTreeItem, ElementType } from "../../types";
-import { truncate } from "../../utils";
+import { canBlockHostChildren, truncate } from "../../utils";
 import { useKey } from "react-use";
 import { useAppReducer } from "../../reducerContext";
 import { createModifyNode } from "../../reducer/actions";
+import TreeNodeTextEditor from "./TreeNodeTextEditor";
 
 interface TreeNodeProps {
   isSelected?: boolean;
@@ -58,57 +58,43 @@ function getTypeSpec(node: DocumentTreeItem): { icon: IconName | null; iconTitle
 }
 
 function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter, onClick, isSelected }: RenderItemParams & TreeNodeProps) {
-  function handleSave() {
-    const text = editorRef.current?.value ?? '';
+  const [, dispatch] = useAppReducer();
 
+  const [isEditing, setIsEditing] = React.useState(false);
+
+  const enableEditingIfPossible = React.useCallback(() => {
+    if (!isSelected) {
+      return;
+    }
+
+    const documentTreeItem = item as DocumentTreeItem;
+
+    if (documentTreeItem.type === ElementType.Block && !canBlockHostChildren(documentTreeItem.data)) {
+      return;
+    }
+
+    setIsEditing(true);
+  }, [isSelected, item]);
+
+  const handleSave = useCallback((text: string) => {
     dispatch(createModifyNode(item.id, { text }));
 
     setIsEditing(false);
-  }
-  
-  const [, dispatch] = useAppReducer();
-  
-  const editorRef = React.useRef<HTMLInputElement | null>(null);
-  
-  const [isEditing, setIsEditing] = React.useState(false);
-  
-  React.useEffect(() => {
+  }, [dispatch, item.id]);
+
+  const handleDoubleClick = useCallback(() => {
+    enableEditingIfPossible();
+  }, [enableEditingIfPossible]);
+
+  useEffect(() => {
     if (!isSelected) {
       setIsEditing(false);
     }
   }, [isSelected]);
 
   useKey('F2', () => {
-    if (!isSelected) {
-      return;
-    }
-
-    setIsEditing(true);
+    enableEditingIfPossible();
   }, undefined, [isSelected]);
-
-  useKey('Escape', () => {
-    if (!isEditing) {
-      return;
-    }
-
-    setIsEditing(false);
-  }, undefined, [isEditing]);
-  
-  useKey('Enter', () => {
-    if (!isEditing) {
-      return;
-    }
-    
-    handleSave();
-  }, undefined, [isEditing]);
-
-  const handleDoubleClick = React.useCallback(() => {
-    if (!isSelected) {
-      return;
-    }
-    
-    setIsEditing(true);
-  }, [isSelected]);
 
   let button: React.ReactElement | null = null;
 
@@ -146,37 +132,11 @@ function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter, onClick,
     >
       {
         isEditing && (
-          <Form className="Tree-rowEditor">
-            <Form.Row>
-              <Col xs={true}>
-                <Form.Control
-                  ref={editorRef}
-                  type="text"
-                  size="sm"
-                  defaultValue={title}
-                  autoFocus
-                />
-              </Col>
-              <Col xs="auto">
-                <Button
-                  type="submit"
-                  variant="success"
-                  size="sm"
-                  onClick={() => handleSave()}
-                >
-                  Save
-                </Button>
-                {' '}
-                <Button
-                  variant="light"
-                  size="sm"
-                  onClick={() => setIsEditing(false)}
-                >
-                  Cancel
-                </Button>
-              </Col>
-            </Form.Row>
-          </Form>
+          <TreeNodeTextEditor
+            defaultValue={title}
+            onCancel={() => setIsEditing(false)}
+            onSave={handleSave}
+          />
         )
       }
       {button}
