@@ -1,9 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactElement } from 'react';
 import {
   DraggableLocation,
   DraggableId,
   DroppableId,
-} from 'react-beautiful-dnd-next';
+} from 'react-beautiful-dnd';
 import {
   TreeData,
   Path,
@@ -29,7 +29,7 @@ export type Props = {
     destinationPosition?: TreeDestinationPosition,
   ) => void;
   /** Function that will be called to render a single item. */
-  renderItem: (item: RenderItemParams) => ReactNode;
+  renderItem: (item: RenderItemParams) => ReactElement<HTMLElement>;
   /** Number of pixel is used to scaffold the tree by the consumer. */
   offsetPerLevel: number;
   /** Boolean to turn on drag&drop re-ordering on the tree */

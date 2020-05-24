@@ -1,11 +1,11 @@
-import { ReactNode } from 'react';
+import { CSSProperties, ReactNode } from 'react';
 import {
   DraggableProvided,
   DraggableStateSnapshot,
   DraggableProvidedDragHandleProps,
   DraggableProvidedDraggableProps,
   DraggingStyle,
-} from 'react-beautiful-dnd-next';
+} from 'react-beautiful-dnd';
 import { ItemId, Path, TreeItem } from '../../types';
 
 export type TreeDraggingStyle = DraggingStyle & {
@@ -42,4 +42,5 @@ export type Props = {
   snapshot: DraggableStateSnapshot;
   itemRef: (itemId: ItemId, element: HTMLElement | null) => void;
   offsetPerLevel: number;
+  style?: CSSProperties;
 };

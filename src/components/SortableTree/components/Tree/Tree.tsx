@@ -1,4 +1,6 @@
-import React, { Component, ReactNode } from 'react';
+import React, { Component, ReactElement, ReactNode } from 'react';
+import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer'
 import {
   Draggable,
   Droppable,
@@ -8,8 +10,8 @@ import {
   DragUpdate,
   DraggableProvided,
   DraggableStateSnapshot,
-  DroppableProvided,
-} from 'react-beautiful-dnd-next';
+  DroppableProvided, DraggableRubric, DroppableStateSnapshot,
+} from 'react-beautiful-dnd';
 import { getBox } from 'css-box-model';
 import { calculateFinalDropPositions } from './Tree-utils';
 import { Props, State, DragState } from './Tree-types';
@@ -25,6 +27,7 @@ import {
 import DelayedFunction from '../../utils/delayed-function';
 import { DocumentTreeItem, ElementType } from "../../../../types";
 import { canBlockHostChildren } from "../../../../utils";
+import { TreeDraggableProvided } from "../TreeItem/TreeItem-types";
 
 const TREE_DRAG_STATE_LEGAL = 'Tree-drag--legal';
 const TREE_DRAG_STATE_ILLEGAL = 'Tree-drag--illegal';
@@ -144,7 +147,7 @@ export default class Tree extends Component<Props, State> {
       sourcePosition,
       destinationPosition,
     } = calculateFinalDropPositions(tree, flattenedTree, this.dragState);
-    
+
     const moveLegal = canMoveNode(tree, sourcePosition, destinationPosition);
 
     const draggedElement = this.getDraggedElement();
@@ -185,12 +188,12 @@ export default class Tree extends Component<Props, State> {
       // Still trigger onDragEnd, but without a destination, so move is canceled.
       onDragEnd(sourcePosition, undefined);
     }
-    
+
     this.getDraggedElement()?.classList.remove(TREE_DRAG_STATE_LEGAL, TREE_DRAG_STATE_ILLEGAL);
 
     this.dragState = undefined;
   };
-  
+
   getDraggedElement = (): HTMLElement | undefined => {
     const draggedItemId = this.state.draggedItemId;
 
@@ -294,13 +297,14 @@ export default class Tree extends Component<Props, State> {
     }
   };
 
-  renderItems = (): Array<ReactNode> => {
-    const { flattenedTree } = this.state;
-    return flattenedTree.map(this.renderItem);
-  };
+  renderItem = ({ data, index, style }: ListChildComponentProps & { data: FlattenedItem; }): ReactElement | null => {
+    const { isDragEnabled, renderItem, onExpand, onCollapse, offsetPerLevel } = this.props;
 
-  renderItem = (flatItem: FlattenedItem, index: number): ReactNode => {
-    const { isDragEnabled } = this.props;
+    const flatItem = data[index];
+    
+    if (!flatItem) {
+      return null;
+    }
 
     return (
       <Draggable
@@ -309,72 +313,121 @@ export default class Tree extends Component<Props, State> {
         index={index}
         isDragDisabled={!isDragEnabled}
       >
-        {this.renderDraggableItem(flatItem)}
+        {
+          (provided: DraggableProvided, snapshot: DraggableStateSnapshot) => {
+            const currentPath: Path = this.calculateEffectivePath(flatItem, snapshot);
+
+            if (snapshot.isDropAnimating) {
+              this.onDropAnimating();
+            }
+
+            return (
+              <TreeItem
+                key={flatItem.item.id}
+                item={flatItem.item}
+                path={currentPath}
+                onExpand={onExpand}
+                onCollapse={onCollapse}
+                renderItem={renderItem}
+                provided={provided}
+                snapshot={snapshot}
+                itemRef={this.setItemRef}
+                offsetPerLevel={offsetPerLevel}
+                style={style}
+              />
+            );
+          }
+        }
       </Draggable>
-    );
-  };
-
-  renderDraggableItem = (flatItem: FlattenedItem) => (
-    provided: DraggableProvided,
-    snapshot: DraggableStateSnapshot,
-  ) => {
-    const { renderItem, onExpand, onCollapse, offsetPerLevel } = this.props;
-
-    const currentPath: Path = this.calculateEffectivePath(flatItem, snapshot);
-    if (snapshot.isDropAnimating) {
-      this.onDropAnimating();
-    }
-
-    return (
-      <TreeItem
-        key={flatItem.item.id}
-        item={flatItem.item}
-        path={currentPath}
-        onExpand={onExpand}
-        onCollapse={onCollapse}
-        renderItem={renderItem}
-        provided={provided}
-        snapshot={snapshot}
-        itemRef={this.setItemRef}
-        offsetPerLevel={offsetPerLevel}
-      />
     );
   };
 
   render() {
     const { isNestingEnabled } = this.props;
-    const renderedItems = this.renderItems();
+    const { flattenedTree } = this.state;
 
     return (
-      <DragDropContext
-        onDragStart={this.onDragStart}
-        onDragEnd={this.onDragEnd}
-        onDragUpdate={this.onDragUpdate}
-      >
-        <Droppable
-          droppableId="tree"
-          isCombineEnabled={isNestingEnabled}
-          ignoreContainerClipping
-        >
-          {(provided: DroppableProvided) => {
-            const finalProvided: DroppableProvided = this.patchDroppableProvided(
-              provided,
-            );
-            return (
-              <div
-                ref={finalProvided.innerRef}
-                style={{ pointerEvents: 'auto' }}
-                onTouchMove={this.onPointerMove}
-                onMouseMove={this.onPointerMove}
-                {...finalProvided.droppableProps}
+      <AutoSizer>
+        {
+          ({ width, height }) => (
+            <DragDropContext
+              onDragStart={this.onDragStart}
+              onDragEnd={this.onDragEnd}
+              onDragUpdate={this.onDragUpdate}
+            >
+              <Droppable
+                droppableId="tree"
+                isCombineEnabled={isNestingEnabled}
+                ignoreContainerClipping
+                mode="virtual"
+                renderClone={(
+                  provided: DraggableProvided,
+                  snapshot: DraggableStateSnapshot,
+                  rubric: DraggableRubric,
+                ) => {
+                  const flatItem = getItemById(this.state.flattenedTree, rubric.draggableId);
+
+                  if (!flatItem) {
+                    throw new Error(`Could not find item with ID ${rubric.draggableId} in flattenedTree.`);
+                  }
+
+                  const {
+                    onExpand,
+                    onCollapse,
+                    renderItem,
+                    offsetPerLevel,
+                  } = this.props;
+
+                  return (
+                    <TreeItem
+                      key={flatItem.item.id}
+                      item={flatItem.item}
+                      path={flatItem.path}
+                      onExpand={onExpand}
+                      onCollapse={onCollapse}
+                      renderItem={renderItem}
+                      provided={provided}
+                      snapshot={snapshot}
+                      itemRef={noop}
+                      offsetPerLevel={offsetPerLevel}
+                    />
+                  )
+                }}
               >
-                {renderedItems}
-                {provided.placeholder}
-              </div>
-            );
-          }}
-        </Droppable>
-      </DragDropContext>
+                {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => {
+                  const itemCount = snapshot.isUsingPlaceholder
+                    ? flattenedTree.length + 1
+                    : flattenedTree.length;
+                  
+                  const finalProvided: DroppableProvided = this.patchDroppableProvided(
+                    provided,
+                  );
+
+                  return (
+                    <div
+                      onTouchMove={this.onPointerMove}
+                      onMouseMove={this.onPointerMove}
+                    >
+                      <List
+                        width={width}
+                        height={height}
+                        itemCount={itemCount}
+                        itemSize={20}
+                        itemData={flattenedTree}
+                        style={{ pointerEvents: 'auto' }}
+                        outerRef={finalProvided.innerRef}
+                        {...finalProvided.droppableProps}
+                      >
+                        {this.renderItem}
+                      </List>
+                    </div>
+                  );
+                }}
+              </Droppable>
+            </DragDropContext>
+          )
+        }
+      </AutoSizer>
     );
   }
 }

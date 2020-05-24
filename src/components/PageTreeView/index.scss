@@ -5,7 +5,6 @@
 
 .Tree > * {
   height: 100%;
-  overflow: auto;
   flex: 1 1;
   flex-basis: 0;
 }
@@ -17,6 +16,7 @@
 
 .Tree-rowContents {
   @extend %rowItem;
+  height: 20px;
   position: relative;
   flex: 1 0 auto;
   display: flex;
