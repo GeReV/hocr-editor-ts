@@ -23,7 +23,7 @@ function TreeNodeTextEditor({ defaultValue, onCancel, onSave }: Props) {
 
   useKey('Enter', () => {
     handleSave();
-  }, undefined, []);
+  }, undefined, [handleSave]);
 
   return (
     <Form className="Tree-rowEditor">
