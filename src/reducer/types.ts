@@ -1,7 +1,7 @@
 ﻿import { RecognizeResult } from "tesseract.js";
 import { ChangeCallbackParams } from "../components/PageCanvas/Block";
 import { DocumentTreeItem, ItemId } from "../types";
-import { TreeDestinationPosition, TreeItem, TreeSourcePosition } from "../components/SortableTree";
+import { TreeDestinationPosition, TreeSourcePosition } from "../components/SortableTree";
 
 export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
@@ -30,9 +30,14 @@ export interface MoveNodeParams {
   destination: TreeDestinationPosition;
 }
 
+export interface ModifyNodeChanges {
+  isExpanded?: boolean;
+  text?: string;
+}
+
 export interface ModifyNodePayload {
   itemId: ItemId;
-  changes: Partial<TreeItem>
+  changes: ModifyNodeChanges;
 }
 
 export type Action<T extends string, P = void> = { type: T, payload: P };

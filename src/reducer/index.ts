@@ -154,8 +154,8 @@ function modifyTreeNode(state: State, payload: ModifyNodePayload) {
       node.isExpanded = changes.isExpanded;
     }
     
-    if (typeof changes.data !== "undefined") {
-      node.data = changes.data;
+    if (typeof changes.text !== "undefined") {
+      node.data.text = changes.text;
     }
   });
 }

@@ -1,16 +1,15 @@
 ﻿import { createAction } from "@reduxjs/toolkit";
 import { RecognizeResult } from "tesseract.js";
 import { ChangeCallbackParams } from "../components/PageCanvas/Block";
-import { ActionType, ModifyNodePayload, MoveNodeParams } from "./types";
+import { ActionType, ModifyNodeChanges, ModifyNodePayload, MoveNodeParams } from "./types";
 import { ItemId } from "../types";
-import { TreeItem } from "../components/SortableTree";
 
 export const createInit = createAction<RecognizeResult, ActionType.Init>(ActionType.Init);
 // export const createUpdateTree = createAction<BlockTreeItem[], ActionType.UpdateTree>(ActionType.UpdateTree);
 export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, ActionType.UpdateTreeNodeRect>(ActionType.UpdateTreeNodeRect);
 export const createChangeSelected = createAction<ItemId | null, ActionType.ChangeSelected>(ActionType.ChangeSelected);
 export const createChangeHovered = createAction<ItemId | null, ActionType.ChangeHovered>(ActionType.ChangeHovered);
-export const createModifyNode = createAction<(itemId: ItemId, changes: Partial<TreeItem>) => { payload: ModifyNodePayload }, ActionType.ModifyNode>(
+export const createModifyNode = createAction<(itemId: ItemId, changes: ModifyNodeChanges) => { payload: ModifyNodePayload }, ActionType.ModifyNode>(
   ActionType.ModifyNode,
   (itemId, changes) => ({
     payload: {

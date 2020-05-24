@@ -10,6 +10,15 @@ export const canBlockHostChildren = (block: Block) => INCLUDES_PARAGRAPHS.includ
 const THUMBNAIL_MAX_WIDTH = 120;
 const THUMBNAIL_MAX_HEIGHT = 160;
 
+export function truncate(s: string, len: number = 20): string {
+  if (s.length <= len) {
+    return s;
+  }
+
+  // Slice and add ellipsis.
+  return `${s.slice(0, len).trim()}\u2026`;
+}
+
 export function resizeImage(
   image: ImageBitmap,
   width: number,

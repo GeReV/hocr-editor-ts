@@ -23,7 +23,7 @@
   align-items: center;
   font-size: 0.8rem;
   transition: background-color .1s ease-in-out;
-  
+
   &--selected {
     background-color: rgba(255, 255, 0, 0.2);
   }
@@ -31,6 +31,7 @@
   &.Tree-drag--legal {
     background-color: #8fd19e;
   }
+
   &.Tree-drag--illegal {
     background-color: #ed969e;
   }
@@ -40,6 +41,17 @@
   @extend %rowItem;
   flex: 0 1 auto;
   padding-left: 24px;
+}
+
+.Tree-rowEditor {
+  background: #fff;
+  border-radius: .5rem;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2) inset;
+  padding: .5rem;
+  position: absolute;
+  top: 50%;
+  transform: translate3d(0, -50%, 0);
+  z-index: 5;
 }
 
 .Tree-collapseButton,
@@ -53,7 +65,7 @@
   top: 50%;
   width: 24px;
   height: 24px;
-  transform: translate3d(0%, -50%, 0);
+  transform: translate3d(0, -50%, 0);
   cursor: pointer;
 
   &::after {
