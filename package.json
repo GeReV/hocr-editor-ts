@@ -14,7 +14,6 @@
     "konva": "^6.0.0",
     "react": "^16.13.1",
     "react-beautiful-dnd": "^13.0.0",
-    "react-beautiful-dnd-next": "^11.0.5",
     "react-bootstrap": "^1.0.1",
     "react-dom": "^16.13.1",
     "react-konva": "^16.13.0-2",
