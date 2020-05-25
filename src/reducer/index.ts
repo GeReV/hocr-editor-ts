@@ -14,22 +14,9 @@ const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   y1: bbox.y1 + offset.y,
 });
 
-// function walkTreeMap<T extends BaseTreeItem<ElementType, any>>(tree: T[], transform: (item: T) => T): T[] {
-//   function walk(item: T): T {
-//     const transformedItem = transform(item);
-//
-//     if (transformedItem.children && typeof transformedItem.children !== 'function') {
-//       transformedItem.children = walkTreeMap(item.children ?? [], transform);
-//     }
-//
-//     return transformedItem;
-//   }
-//
-//   return tree.map(block => walk(block));
-// }
-
 export const initialState: State = {
-  tree: null,
+  documents: [],
+  currentDocument: 0,
   selectedId: null,
   hoveredId: null,
 };
@@ -46,11 +33,13 @@ export function getNodeOrThrow(treeItems: TreeItems, nodeId: ItemId): BaseTreeIt
 
 function updateTreeNodePosition(state: State, nodeId: ItemId, x: number, y: number, width: number | undefined, height: number | undefined): State {
   return produce(state, (draft) => {
-    if (!draft.tree) {
+    const tree = draft.documents[draft.currentDocument].tree;
+    
+    if (!tree) {
       return;
     }
     
-    const treeItems = draft.tree.items;
+    const treeItems = tree.items;
 
     const node = getNodeOrThrow(treeItems, nodeId);
 
@@ -87,12 +76,14 @@ function updateTreeNodePosition(state: State, nodeId: ItemId, x: number, y: numb
 
 function moveTreeNode(state: State, source: TreeSourcePosition, destination: TreeDestinationPosition): State {
   return produce(state, (draft) => {
-    if (!draft.tree) {
+    const tree = draft.documents[draft.currentDocument].tree;
+    
+    if (!tree) {
       throw new Error('Cannot move node when no tree exists. This should never happen.');
     }
 
-    const sourceParent = draft.tree.items[source.parentId];
-    const destinationParent = draft.tree.items[destination.parentId];
+    const sourceParent = tree.items[source.parentId];
+    const destinationParent = tree.items[destination.parentId];
     
     const item = sourceParent.children.splice(source.index, 1)[0];
     
@@ -110,11 +101,13 @@ function moveTreeNode(state: State, source: TreeSourcePosition, destination: Tre
 
 function deleteTreeNode(state: State, nodeId: ItemId): State {
   return produce(state, (draft) => {
-    if (!draft.tree) {
+    const tree = draft.documents[draft.currentDocument].tree;
+    
+    if (!tree) {
       return;
     }
     
-    const treeItems = draft.tree.items;
+    const treeItems = tree.items;
     
     const node = getNodeOrThrow(treeItems, nodeId);
     
@@ -140,11 +133,13 @@ function deleteTreeNode(state: State, nodeId: ItemId): State {
 
 function modifyTreeNode(state: State, payload: ModifyNodePayload) {
   return produce(state, (draft) => {
-    if (!draft.tree) {
+    const tree = draft.documents[draft.currentDocument].tree;
+
+    if (!tree) {
       return;
     }
     
-    const treeItems = draft.tree.items;
+    const treeItems = tree.items;
     
     const node = getNodeOrThrow(treeItems, payload.itemId);
 
@@ -162,14 +157,27 @@ function modifyTreeNode(state: State, payload: ModifyNodePayload) {
 
 export function reducer(state: State, action: ReducerAction): State {
   switch (action.type) {
-    case ActionType.Init: {
+    case ActionType.AddDocument: {
+      return produce(state, (draft) => {
+        draft.documents.push({
+          pageImage: action.payload,
+          tree: null,
+        });
+      });
+    }
+    case ActionType.RecognizeDocument: {
       return produce(state, (draft) => {
         const [rootId, items] = buildTree(action.payload);
-        
-        draft.tree = {
+
+        draft.documents[draft.currentDocument].tree = {
           rootId,
           items,
         };
+      });
+    }
+    case ActionType.SelectDocument: {
+      return produce(state, (draft) => {
+        draft.currentDocument = action.payload;
       });
     }
     case ActionType.ChangeSelected: {

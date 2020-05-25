@@ -1,23 +1,31 @@
 ﻿import { RecognizeResult } from "tesseract.js";
 import { ChangeCallbackParams } from "../components/PageCanvas/Block";
-import { DocumentTreeItem, ItemId } from "../types";
+import { DocumentTreeItem, ItemId, PageImage } from "../types";
 import { TreeDestinationPosition, TreeSourcePosition } from "../components/SortableTree";
 
 export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
-export interface State {
+export interface OcrDocument {
+  pageImage: PageImage;
   tree: {
     rootId: ItemId;
     items: TreeItems;
-  } | null
+  } | null;
+}
+
+export interface State {
+  documents: OcrDocument[];
+  currentDocument: number;
   selectedId: ItemId | null;
   hoveredId: ItemId | null;
 }
 
 export enum ActionType {
-  Init = 'Init',
   UpdateTree = 'UpdateTree',
   UpdateTreeNodeRect = 'UpdateTreeNodeRect',
+  AddDocument = 'AddDocument',
+  RecognizeDocument = 'RecognizeDocument',
+  SelectDocument = 'SelectDocument',
   ChangeSelected = 'ChangeSelected',
   ChangeHovered = 'ChangeHovered',
   ModifyNode = 'ModifyNode',
@@ -43,9 +51,11 @@ export interface ModifyNodePayload {
 export type Action<T extends string, P = void> = { type: T, payload: P };
 
 export type ReducerAction =
-  Action<ActionType.Init, RecognizeResult> |
+  Action<ActionType.AddDocument, PageImage> |
+  Action<ActionType.RecognizeDocument, RecognizeResult> |
   // Action<ActionType.UpdateTree, BlockTreeItem[]> |
   Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams> |
+  Action<ActionType.SelectDocument, number> |
   Action<ActionType.ChangeSelected, ItemId | null> |
   Action<ActionType.ChangeHovered, ItemId | null> |
   Action<ActionType.ModifyNode, ModifyNodePayload> |

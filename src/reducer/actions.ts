@@ -2,10 +2,11 @@
 import { RecognizeResult } from "tesseract.js";
 import { ChangeCallbackParams } from "../components/PageCanvas/Block";
 import { ActionType, ModifyNodeChanges, ModifyNodePayload, MoveNodeParams } from "./types";
-import { ItemId } from "../types";
+import { ItemId, PageImage } from "../types";
 
-export const createInit = createAction<RecognizeResult, ActionType.Init>(ActionType.Init);
-// export const createUpdateTree = createAction<BlockTreeItem[], ActionType.UpdateTree>(ActionType.UpdateTree);
+export const createRecognizeDocument = createAction<RecognizeResult, ActionType.RecognizeDocument>(ActionType.RecognizeDocument);
+export const createAddDocument = createAction<PageImage, ActionType.AddDocument>(ActionType.AddDocument);
+export const createSelectDocument = createAction<number, ActionType.SelectDocument>(ActionType.SelectDocument);
 export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, ActionType.UpdateTreeNodeRect>(ActionType.UpdateTreeNodeRect);
 export const createChangeSelected = createAction<ItemId | null, ActionType.ChangeSelected>(ActionType.ChangeSelected);
 export const createChangeHovered = createAction<ItemId | null, ActionType.ChangeHovered>(ActionType.ChangeHovered);

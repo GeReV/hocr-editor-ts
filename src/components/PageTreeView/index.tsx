@@ -57,7 +57,9 @@ export default function PageTreeView(props: Props) {
     dispatch(createModifyNode(itemId, { isExpanded: true }));
   }
 
-  if (!state.tree) {
+  const tree = state.documents[state.currentDocument]?.tree;
+  
+  if (!tree) {
     return null;
   }
 
@@ -67,7 +69,7 @@ export default function PageTreeView(props: Props) {
       onMouseLeave={onMouseLeave}
     >
       <Tree
-        tree={state.tree}
+        tree={tree}
         onExpand={handleExpand}
         onCollapse={handleCollapse}
         onDragEnd={handleDragEnd}

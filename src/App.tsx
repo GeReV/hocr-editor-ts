@@ -1,35 +1,30 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
   Container,
   Navbar,
   Row,
   Col,
   FormFile,
-  Image as BsImage,
 } from "react-bootstrap";
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 
-import { PageImage } from "./types";
 import PageCanvas from "./components/PageCanvas";
 import PageTreeView from "./components/PageTreeView";
+import PageList from "./components/PageList";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import { loadImage } from "./utils";
 import { useKey } from "react-use";
 import { useAppReducer } from "./reducerContext";
-import { createDeleteNode } from "./reducer/actions";
+import { createAddDocument, createDeleteNode, createSelectDocument } from "./reducer/actions";
 
 library.add(fas);
 
 function App() {
-  const [pageImage, setPageImage] = React.useState<PageImage | undefined>(
-    undefined
-  );
-  
   const [state, dispatch] = useAppReducer();
-  
+
   useKey('Delete', () => {
     if (state.selectedId === null) {
       return;
@@ -37,35 +32,44 @@ function App() {
 
     dispatch(createDeleteNode(state.selectedId));
   }, undefined, [state.selectedId]);
+
+  const onFileSelect = useCallback(async (evt: React.ChangeEvent<HTMLInputElement>) => {
+    if (!evt.currentTarget.files) {
+      return;
+    }
+    
+    const files = Array.from(evt.currentTarget.files)
+      .filter(f => f.type.startsWith("image/"));
+
+    if (!files.length) {
+      return;
+    }
+
+    files.forEach(f => {
+      const reader = new FileReader();
+
+      reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
+        const pageImage = await loadImage(
+          loadEvt.target?.result as ArrayBuffer,
+          f.type
+        );
+
+        if (!pageImage) {
+          return;
+        }
+
+        dispatch(createAddDocument(pageImage));
+      };
+
+      reader.readAsArrayBuffer(f);
+    })
+  }, [dispatch]);
   
-  async function onFileSelect(evt: React.ChangeEvent<HTMLInputElement>) {
-    if (!evt.currentTarget.files?.length) {
-      return;
-    }
+  const handleSelect = useCallback((index: number) => {
+    dispatch(createSelectDocument(index));
+  }, [dispatch])
 
-    const file = evt.currentTarget.files[0];
-
-    if (!file.type.startsWith("image/")) {
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
-      const pageImage = await loadImage(
-        loadEvt.target?.result as ArrayBuffer,
-        file.type
-      );
-
-      if (!pageImage) {
-        return;
-      }
-
-      setPageImage(pageImage);
-    };
-
-    reader.readAsArrayBuffer(file);
-  }
+  const currentDocument = state.documents[state.currentDocument];
 
   return (
     <>
@@ -75,7 +79,7 @@ function App() {
         variant="dark"
       >
         <Navbar.Brand>hOCR Editor</Navbar.Brand>
-        <FormFile onChange={onFileSelect} />
+        <FormFile onChange={onFileSelect} multiple />
       </Navbar>
       <Container
         fluid
@@ -83,18 +87,21 @@ function App() {
       >
         <Row className="App-main">
           <Col xl={1}>
-            Pages
-            {pageImage ? <BsImage src={pageImage.thumbnailUrlObject} /> : null}
+            <PageList
+              documents={state.documents}
+              currentDocument={state.currentDocument}
+              onSelect={handleSelect}
+            />
           </Col>
           <Col
             xl={9}
             className="App-canvas"
           >
             <PageCanvas
-              pageImage={pageImage}
+              pageImage={currentDocument?.pageImage}
             />
           </Col>
-          <Col 
+          <Col
             xl={2}
             className="App-tree"
           >

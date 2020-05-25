@@ -1,0 +1,32 @@
+﻿.Pages {
+
+}
+
+.Pages-list {
+  display: flex;
+  flex-direction: column;
+  list-style-type: none;
+  padding: 0;
+}
+
+.Pages-item {
+  padding: .5rem;
+  cursor: pointer;
+  
+  &:hover {
+    background: lighten(#17a2b8, 50%);
+  }
+  
+  &--selected,
+  &--selected:hover {
+    background: lighten(#17a2b8, 40%);
+  }
+  
+  img {
+    width: 100%;
+  }
+}
+
+.Pages-item + .Pages-item {
+  margin-top: .5rem;
+}

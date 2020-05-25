@@ -3,7 +3,7 @@ import { useMeasure, useTitle } from "react-use";
 import { Button, Spinner } from 'react-bootstrap';
 
 import { ItemId, PageImage, Position, RecognizeUpdate } from '../../types';
-import { createInit, createChangeSelected } from '../../reducer/actions';
+import { createRecognizeDocument, createChangeSelected } from '../../reducer/actions';
 import PageGraphics from "./PageGraphics";
 import { recognize } from "../../ocr";
 import { useAppReducer } from "../../reducerContext";
@@ -76,7 +76,7 @@ export default function PageCanvas(props: Props) {
       },
     });
 
-    dispatch(createInit(result));
+    dispatch(createRecognizeDocument(result));
     setProcessing(false);
   }
 
