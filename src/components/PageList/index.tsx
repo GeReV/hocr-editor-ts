@@ -2,6 +2,7 @@
 import cx from 'classnames';
 import { Image as BsImage } from "react-bootstrap";
 
+import Header from "../Header";
 import { OcrDocument } from "../../reducer/types";
 
 import './index.scss';
@@ -21,7 +22,7 @@ function PageList({ documents, currentDocument, onSelect }: Props) {
   
   return (
     <div className="Pages">
-      <header>Pages</header>
+      <Header>Pages</Header>
       <ul className="Pages-list">
         {
           documents.map((doc, index) => (

@@ -1,15 +1,16 @@
 import React from 'react';
 import { useMeasure, useTitle } from "react-use";
 import { Button, Spinner } from 'react-bootstrap';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { ItemId, PageImage, Position, RecognizeUpdate } from '../../types';
 import { createRecognizeDocument, createChangeSelected } from '../../reducer/actions';
+import Header from "../Header";
 import PageGraphics from "./PageGraphics";
 import { recognize } from "../../ocr";
 import { useAppReducer } from "../../reducerContext";
 
 import './index.css';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface Props {
   pageImage?: PageImage;
@@ -85,7 +86,7 @@ export default function PageCanvas(props: Props) {
       className="Canvas"
       onWheel={handleMouseWheel}
     >
-      <div className="Canvas-toolbar">
+      <Header className="Canvas-toolbar">
         <Button
           size="sm"
           variant="primary"
@@ -104,7 +105,6 @@ export default function PageCanvas(props: Props) {
           OCR
           {processing && ` (${(progress * 100).toFixed(1)}%)`}
         </Button>
-        {' '}
         <Button
           size="sm"
           onClick={setFitScale}
@@ -114,7 +114,7 @@ export default function PageCanvas(props: Props) {
         >
           <FontAwesomeIcon icon="expand" />
         </Button>
-      </div>
+      </Header>
       <div
         className="Canvas-main"
         ref={ref}

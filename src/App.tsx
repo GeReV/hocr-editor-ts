@@ -19,6 +19,7 @@ import { loadImage } from "./utils";
 import { useKey } from "react-use";
 import { useAppReducer } from "./reducerContext";
 import { createAddDocument, createDeleteNode, createSelectDocument } from "./reducer/actions";
+import Header from "./components/Header";
 
 library.add(fas);
 
@@ -105,6 +106,7 @@ function App() {
             xl={2}
             className="App-tree"
           >
+            <Header>Hierarchy</Header>
             <PageTreeView />
           </Col>
         </Row>
