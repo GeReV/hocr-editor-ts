@@ -50,7 +50,7 @@ export interface ModifyNodePayload {
 
 export type Action<T extends string, P = void> = { type: T, payload: P };
 
-export type ReducerAction =
+export type AppReducerAction =
   Action<ActionType.AddDocument, PageImage> |
   Action<ActionType.RecognizeDocument, RecognizeResult> |
   // Action<ActionType.UpdateTree, BlockTreeItem[]> |

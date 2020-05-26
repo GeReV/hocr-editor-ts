@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Group, Rect, Transformer } from 'react-konva';
 import Konva from 'konva';
 
@@ -18,6 +18,8 @@ export interface ChangeCallbackParams extends Position {
   height?: number;
 }
 
+export type SetInnerRefFn = (itemId: ItemId, el: Konva.Rect | null) => void;
+
 export interface BlockProps {
   fill?: string;
   opacity?: number;
@@ -25,23 +27,23 @@ export interface BlockProps {
   onChange?: (args: ChangeCallbackParams) => void;
   item: DocumentTreeItem;
   isSelected?: boolean;
-  isHovered?: boolean;
   onSelected?: (itemId: ItemId) => void;
   children?: React.ReactNode
   pageWidth: number;
   pageHeight: number;
   treeItems: TreeItems;
+  setInnerRef: SetInnerRefFn;
 }
 
 const MINIMUM_NODE_WIDTH = 5;
 const MINIMUM_NODE_HEIGHT = 5;
 
 export function Block(props: BlockProps): React.ReactElement | null {
-  const groupRef = React.useRef<Konva.Group | null>(null);
-  const shapeRef = React.useRef<Konva.Rect | null>(null);
-  const trRef = React.useRef<Konva.Transformer | null>(null);
+  const groupRef = useRef<Konva.Group | null>(null);
+  const shapeRef = useRef<Konva.Rect | null>(null);
+  const trRef = useRef<Konva.Transformer | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (props.isSelected) {
       groupRef.current?.moveToTop();
       
@@ -51,15 +53,15 @@ export function Block(props: BlockProps): React.ReactElement | null {
     }
   }, [props.isSelected]);
 
-  const fill = props.isSelected ? 'yellow' : props.fill;
+  const fill = props.isSelected ? 'rgba(255, 255, 0, 0.2)' : props.fill;
 
-  const handleClick = React.useCallback((evt: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleClick = useCallback((evt: Konva.KonvaEventObject<MouseEvent>) => {
     evt.cancelBubble = true;
 
     props.onSelected?.(props.item.id);
   }, [props]);
 
-  const dragBoundFunc = React.useCallback<(pos: Position) => Position>((pos) => {
+  const dragBoundFunc = useCallback<(pos: Position) => Position>((pos) => {
     const bounds = calculateDragBounds(groupRef.current, props.item, props.treeItems, props.pageWidth, props.pageHeight);
 
     return {
@@ -68,7 +70,7 @@ export function Block(props: BlockProps): React.ReactElement | null {
     };
   }, [props.item, props.pageHeight, props.pageWidth, props.treeItems]);
 
-  const handleDragEnd = React.useCallback<(evt: Konva.KonvaEventObject<DragEvent>) => void>((evt) => {
+  const handleDragEnd = useCallback<(evt: Konva.KonvaEventObject<DragEvent>) => void>((evt) => {
     evt.cancelBubble = true;
 
     props.onChange?.({
@@ -78,7 +80,7 @@ export function Block(props: BlockProps): React.ReactElement | null {
     });
   }, [props.item.id, props.onChange]);
   
-  const handleTransformEnd = React.useCallback<(evt: Konva.KonvaEventObject<Event>) => void>((evt) => {
+  const handleTransformEnd = useCallback<(evt: Konva.KonvaEventObject<Event>) => void>((evt) => {
     // transformer is changing scale of the node
     // and NOT its width or height
     // but in the store we have only width and height
@@ -109,7 +111,7 @@ export function Block(props: BlockProps): React.ReactElement | null {
     });
   }, [props.item.id, props.onChange]);
 
-  const boundBoxFunc = React.useCallback<(oldBox: Box, newBox: Box) => Box>((oldBox, newBox) => {
+  const boundBoxFunc = useCallback<(oldBox: Box, newBox: Box) => Box>((oldBox, newBox) => {
     if (!groupRef.current) {
       return newBox;
     }
@@ -163,12 +165,16 @@ export function Block(props: BlockProps): React.ReactElement | null {
       onDragEnd={handleDragEnd}
     >
       <Rect
-        ref={shapeRef}
+        ref={(el) => {
+          props.setInnerRef(props.item.id, el);
+          
+          shapeRef.current = el;
+        }}
         fill={fill}
         strokeWidth={MINIMUM_NODE_WIDTH}
         stroke="red"
         strokeScaleEnabled={false}
-        strokeEnabled={props.isHovered}
+        strokeEnabled={false}
         opacity={props.opacity}
         width={props.item.data.bbox.x1 - props.item.data.bbox.x0}
         height={props.item.data.bbox.y1 - props.item.data.bbox.y0}
@@ -186,3 +192,5 @@ export function Block(props: BlockProps): React.ReactElement | null {
     </Group>
   );
 }
+
+export default React.memo(Block);

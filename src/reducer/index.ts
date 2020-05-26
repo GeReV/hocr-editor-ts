@@ -3,7 +3,7 @@ import produce from 'immer';
 
 import { BaseTreeItem, ElementType, ItemId, Position } from "../types";
 import { buildTree, walkChildren } from "../treeBuilder";
-import { ActionType, ModifyNodePayload, ReducerAction, State, TreeItems } from "./types";
+import { ActionType, ModifyNodePayload, AppReducerAction, State, TreeItems } from "./types";
 import { TreeDestinationPosition, TreeSourcePosition } from "../components/SortableTree";
 import { isLeafItem } from "../components/SortableTree/utils/tree";
 
@@ -155,7 +155,7 @@ function modifyTreeNode(state: State, payload: ModifyNodePayload) {
   });
 }
 
-export function reducer(state: State, action: ReducerAction): State {
+export function reducer(state: State, action: AppReducerAction): State {
   switch (action.type) {
     case ActionType.AddDocument: {
       return produce(state, (draft) => {
