@@ -53,7 +53,7 @@ export function calculateDragBounds(node: Konva.Node | null, item: DocumentTreeI
 
   const parent = getParent(treeItems, item);
 
-  const parentBounds: BoundsTuple = parent ? bboxToBoundsTuple(parent.data.bbox) : pageBounds;
+  const parentBounds: BoundsTuple = !parent || parent.type === ElementType.Page ? pageBounds : bboxToBoundsTuple(parent.data.bbox);
 
   const offsetParentBounds = offsetBounds(parentBounds, stageOffset);
 

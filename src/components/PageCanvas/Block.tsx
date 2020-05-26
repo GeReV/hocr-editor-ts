@@ -115,6 +115,8 @@ export function Block(props: BlockProps): React.ReactElement | null {
     if (!groupRef.current) {
       return newBox;
     }
+    
+    const stage = groupRef.current.getStage();
 
     const scale = groupRef.current.getAbsoluteScale();
     
@@ -127,11 +129,14 @@ export function Block(props: BlockProps): React.ReactElement | null {
       y1: props.pageHeight,
     } : parent.data.bbox;
     
+    const stageX = stage?.x() ?? 0;
+    const stageY = stage?.y() ?? 0;
+    
     const scaledBbox = {
-      left: bbox.x0 * scale.x,
-      top: bbox.y0 * scale.y,
-      right: bbox.x1 * scale.x,
-      bottom: bbox.y1 * scale.y,
+      left: bbox.x0 * scale.x + stageX,
+      top: bbox.y0 * scale.y + stageY,
+      right: bbox.x1 * scale.x + stageX,
+      bottom: bbox.y1 * scale.y + stageY,
     };
 
     // The 1 offset is to make things a bit more forgiving, since precision errors could lead to unwanted behaviors, for
