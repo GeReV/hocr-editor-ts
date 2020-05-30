@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { useMeasure, useTitle } from "react-use";
 import { Button, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -23,17 +23,17 @@ const SCALE_MIN = 0.05;
 
 export default function PageCanvas(props: Props) {
   const [ref, { width, height }] = useMeasure();
-  const [scale, setScale] = React.useState(1);
-  const [position, setPosition] = React.useState<Position>({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
 
-  const [processing, setProcessing] = React.useState<boolean>(false);
-  const [progress, setProgress] = React.useState(0);
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [progress, setProgress] = useState(0);
 
   const [state, dispatch] = useAppReducer();
 
   useTitle(processing ? `(${(progress * 100).toFixed(1)}%) ${TITLE}` : TITLE);
 
-  const setFitScale = React.useCallback(() => {
+  const setFitScale = useCallback(() => {
     if (!props.pageImage) {
       return;
     }
