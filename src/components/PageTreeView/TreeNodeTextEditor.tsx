@@ -1,6 +1,7 @@
 ﻿import React, { useCallback, useRef } from "react";
 import { Button, Col, Form } from "react-bootstrap";
 import { useKey } from "react-use";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface Props {
   defaultValue?: string;
@@ -44,7 +45,7 @@ function TreeNodeTextEditor({ defaultValue, onCancel, onSave }: Props) {
             size="sm"
             onClick={() => handleSave()}
           >
-            Save
+            <FontAwesomeIcon icon="check" />
           </Button>
           {' '}
           <Button
@@ -52,7 +53,7 @@ function TreeNodeTextEditor({ defaultValue, onCancel, onSave }: Props) {
             size="sm"
             onClick={() => onCancel()}
           >
-            Cancel
+            <FontAwesomeIcon icon="times" />
           </Button>
         </Col>
       </Form.Row>
