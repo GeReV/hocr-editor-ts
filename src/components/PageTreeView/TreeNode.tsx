@@ -23,7 +23,7 @@ function buildTitle(items: TreeItems, nodeId: ItemId): string {
   
   switch (node.type) {
     case ElementType.Block: {
-      if (!node.data.text) {
+      if (!node.data.text.trim()) {
         return node.data.blocktype;
       }
 
