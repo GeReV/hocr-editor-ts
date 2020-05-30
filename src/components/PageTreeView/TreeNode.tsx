@@ -1,15 +1,16 @@
-﻿import React, { useCallback, useEffect, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useState } from "react";
 import cx from "classnames";
+import { useKey } from "react-use";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconName } from "@fortawesome/free-solid-svg-icons";
 
 import { ItemId, RenderItemParams } from "../SortableTree";
 import { DocumentTreeItem, ElementType } from "../../types";
-import { canBlockHostChildren, truncate } from "../../utils";
-import { useKey } from "react-use";
+import { truncate } from "../../utils";
 import { useAppReducer } from "../../reducerContext";
 import { createModifyNode } from "../../reducer/actions";
 import TreeNodeTextEditor from "./TreeNodeTextEditor";
+import { TreeItems } from "../../reducer/types";
 
 interface TreeNodeProps {
   isSelected?: boolean;
@@ -17,59 +18,81 @@ interface TreeNodeProps {
   onClick?: (evt: React.MouseEvent, nodeId: ItemId) => void;
 }
 
-function getTypeSpec(node: DocumentTreeItem): { icon: IconName | null; iconTitle?: string; title: string; } {
+function buildTitle(items: TreeItems, nodeId: ItemId): string {
+  const node = items[nodeId];
+  
+  switch (node.type) {
+    case ElementType.Block: {
+      if (!node.data.text) {
+        return node.data.blocktype;
+      }
+
+      return node.children.map(childId => buildTitle(items, childId)).join('\n\n');
+    }
+    case ElementType.Paragraph:
+      return node.children.map(childId => buildTitle(items, childId)).join('\n');
+    case ElementType.Line:
+      return node.children.map(childId => buildTitle(items, childId)).join(' ');
+    case ElementType.Word:
+      return node.data.text.trim();
+    default:
+      return '';
+  }
+}
+
+function getTypeIcon(node: DocumentTreeItem): { icon: IconName | null; iconTitle?: string; } {
   switch (node.type) {
     case ElementType.Block:
       return {
         icon: 'square',
         iconTitle: 'Block',
-        title: node.data.text.trim() || node.data.blocktype,
       };
     case ElementType.Paragraph:
       return {
         icon: 'paragraph',
         iconTitle: 'Paragraph',
-        title: node.data.text.trim()
       };
     case ElementType.Line:
       return {
         icon: 'i-cursor',
         iconTitle: 'Line',
-        title: node.data.text.trim()
       };
     case ElementType.Word:
       return {
         icon: null,
-        title: node.data.text.trim()
       };
     case ElementType.Symbol:
       return {
         icon: 'font',
         iconTitle: 'Symbol',
-        title: node.data.text.trim()
       };
     default: {
       return {
         icon: null,
-        title: node.data.text.trim(),
       };
     }
   }
 }
 
 function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter, onClick, isSelected }: RenderItemParams & TreeNodeProps) {
-  const [, dispatch] = useAppReducer();
+  const [state, dispatch] = useAppReducer();
 
   const [isEditing, setIsEditing] = useState(false);
-
-  const enableEditingIfPossible = useCallback(() => {
-    if (!isSelected) {
-      return;
+  
+  const title = useMemo(() => {
+    const tree = state.documents[state.currentDocument].tree;
+    
+    if (!tree) {
+      return '';
     }
 
-    const documentTreeItem = item as DocumentTreeItem;
+    return buildTitle(tree.items, item.id)
+  }, [item, state]);
 
-    if (documentTreeItem.type === ElementType.Block && !canBlockHostChildren(documentTreeItem.data)) {
+  const enableEditingIfPossible = useCallback(() => {
+    const documentTreeItem = item as DocumentTreeItem;
+    
+    if (!isSelected || documentTreeItem.type !== ElementType.Word) {
       return;
     }
 
@@ -115,10 +138,9 @@ function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter, onClick,
   }
 
   const {
-    title,
     icon,
     iconTitle,
-  } = getTypeSpec(item as DocumentTreeItem);
+  } = getTypeIcon(item as DocumentTreeItem);
 
   return (
     <div
