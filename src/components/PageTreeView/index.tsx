@@ -66,7 +66,7 @@ export default function PageTreeView(props: Props) {
   return (
     <Row
       className="Tree"
-      // onMouseLeave={onMouseLeave}
+      onMouseLeave={onMouseLeave}
     >
       <Tree
         tree={tree}
@@ -75,7 +75,7 @@ export default function PageTreeView(props: Props) {
         onDragEnd={handleDragEnd}
         renderItem={(params) => (
           <TreeNode
-            // onMouseEnter={onMouseEnter}
+            onMouseEnter={onMouseEnter}
             onClick={onSelect}
             isSelected={state.selectedId === params.item.id} 
             {...params} 
