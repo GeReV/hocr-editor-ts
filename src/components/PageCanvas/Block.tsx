@@ -39,9 +39,9 @@ const MINIMUM_NODE_WIDTH = 5;
 const MINIMUM_NODE_HEIGHT = 5;
 
 export function Block(props: BlockProps): React.ReactElement | null {
-  const groupRef = useRef<Konva.Group | null>(null);
+  const groupRef = useRef<Konva.Group>(null);
   const shapeRef = useRef<Konva.Rect | null>(null);
-  const trRef = useRef<Konva.Transformer | null>(null);
+  const trRef = useRef<Konva.Transformer>(null);
 
   useEffect(() => {
     if (props.isSelected) {
@@ -94,8 +94,7 @@ export function Block(props: BlockProps): React.ReactElement | null {
       return;
     }
     
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
+    const scale = node.scale();
 
     // we will reset it back
     node.scaleX(1);
@@ -106,8 +105,8 @@ export function Block(props: BlockProps): React.ReactElement | null {
       x: group.x(),
       y: group.y(),
       // set minimal value
-      width: Math.max(MINIMUM_NODE_WIDTH, node.width() * scaleX),
-      height: Math.max(MINIMUM_NODE_HEIGHT, node.height() * scaleY),
+      width: Math.max(MINIMUM_NODE_WIDTH, node.width() * scale.x),
+      height: Math.max(MINIMUM_NODE_HEIGHT, node.height() * scale.y),
     });
   }, [props.item.id, props.onChange]);
 

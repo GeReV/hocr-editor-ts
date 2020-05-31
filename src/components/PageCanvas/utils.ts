@@ -3,7 +3,7 @@ import { BaseTreeItem, DocumentTreeItem, ElementType, Position } from "../../typ
 import { TreeItems } from "../../reducer/types";
 import { Bbox } from "tesseract.js";
 
-type BoundsTuple = [number, number, number, number];
+export type BoundsTuple = [number, number, number, number];
 
 const INFINITE_BOUNDS = {
   left: Number.NEGATIVE_INFINITY,
@@ -12,7 +12,7 @@ const INFINITE_BOUNDS = {
   bottom: Number.POSITIVE_INFINITY,
 };
 
-const offsetBounds = ([left, top, right, bottom]: BoundsTuple, { x, y }: Position): BoundsTuple => [
+export const offsetBounds = ([left, top, right, bottom]: BoundsTuple, { x, y }: Position): BoundsTuple => [
   left + x,
   top + y,
   right + x,
