@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { useMeasure, useTitle } from "react-use";
+import { useKey, useMeasure, useTitle } from "react-use";
+import cx from 'classnames';
 import { Button, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -21,15 +22,24 @@ const TITLE = document.title;
 const SCALE_MAX = 3.0;
 const SCALE_MIN = 0.05;
 
+const Separator = React.memo(() => (
+  <div className="Separator" />
+))
+
 export default function PageCanvas(props: Props) {
   const [ref, { width, height }] = useMeasure();
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
 
+  const [isDrawing, setDrawing] = useState<boolean>(false);
   const [processing, setProcessing] = useState<boolean>(false);
   const [progress, setProgress] = useState(0);
 
   const [state, dispatch] = useAppReducer();
+  
+  useKey('Escape', () => {
+    setDrawing(false);
+  }, undefined, [isDrawing])
 
   useTitle(processing ? `(${(progress * 100).toFixed(1)}%) ${TITLE}` : TITLE);
 
@@ -41,7 +51,7 @@ export default function PageCanvas(props: Props) {
     const fitScale = props.pageImage.image.width > props.pageImage.image.height ?
       (width / props.pageImage.image.width) :
       (height / props.pageImage.image.height);
-
+    
     setScale(fitScale);
     setPosition({
       x: (width - props.pageImage.image.width * fitScale) * .5,
@@ -114,9 +124,20 @@ export default function PageCanvas(props: Props) {
         >
           <FontAwesomeIcon icon="expand" />
         </Button>
+        <Separator />
+        <Button
+          size="sm"
+          onClick={() => setDrawing(!isDrawing)}
+          disabled={!props.pageImage}
+          active={isDrawing}
+          variant="outline-dark"
+          title="Select region"
+        >
+          <FontAwesomeIcon icon="vector-square" />
+        </Button>
       </Header>
       <div
-        className="Canvas-main"
+        className={cx('Canvas-main', isDrawing && 'Canvas-main--drawing')}
         ref={ref}
       >
         <PageGraphics
@@ -130,6 +151,7 @@ export default function PageCanvas(props: Props) {
           scale={scale}
           position={position}
           setPosition={setPosition}
+          isDrawing={isDrawing}
         />
       </div>
     </div>

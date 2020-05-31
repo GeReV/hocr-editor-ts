@@ -1,5 +1,5 @@
 ﻿﻿.Canvas {
-    
+
     display: flex;
     flex: 1 1 0;
     flex-direction: column;
@@ -19,4 +19,16 @@
 .Canvas-main {
     background: #f0f0f0;
     flex: 1 1 0;
+}
+
+.Canvas-main--drawing {
+    cursor: crosshair;
+}
+
+.Separator {
+    padding: .25rem .5rem;
+    background: rgba(0, 0, 0, 0.2);
+    background-clip: content-box;
+    height: 100%;
+    width: calc(1rem + 1px);
 }

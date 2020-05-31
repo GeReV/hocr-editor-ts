@@ -44,13 +44,14 @@ export function Block(props: BlockProps): React.ReactElement | null {
   const trRef = useRef<Konva.Transformer>(null);
 
   useEffect(() => {
-    if (props.isSelected) {
-      groupRef.current?.moveToTop();
-      
-      // we need to attach transformer manually
-      trRef.current?.setNode(shapeRef.current);
-      trRef.current?.getLayer()?.batchDraw();
+    if (!props.isSelected || !shapeRef.current) {
+      return;
     }
+    
+    groupRef.current?.moveToTop();
+    
+    trRef.current?.nodes([shapeRef.current]);
+    trRef.current?.getLayer()?.batchDraw();
   }, [props.isSelected]);
 
   const fill = props.isSelected ? 'rgba(255, 255, 0, 0.2)' : props.fill;

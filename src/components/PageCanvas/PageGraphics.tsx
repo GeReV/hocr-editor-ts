@@ -19,19 +19,12 @@ export interface Props {
   hoveredId?: ItemId | null;
   selectedId?: ItemId | null;
   pageImage?: PageImage;
+  isDrawing?: boolean;
 }
 
-interface State {
-  isDrawing: boolean;
-}
-
-export default class PageGraphics extends React.Component<Props, State> {
+export default class PageGraphics extends React.Component<Props> {
   layer: React.RefObject<Konva.Layer> = React.createRef<Konva.Layer>();
   rectRefs: Record<ItemId, Konva.Rect | null> = {};
-
-  state: State = {
-    isDrawing: false,
-  };
 
   setInnerRef = (itemId: ItemId, el: Konva.Rect | null) => {
     this.rectRefs[itemId] = el;
@@ -56,8 +49,19 @@ export default class PageGraphics extends React.Component<Props, State> {
   }
 
   render() {
-    const { width, height, onSelect, onDeselect, scale, position, setPosition, pageImage, selectedId } = this.props;
-
+    const {
+      width,
+      height, 
+      onSelect,
+      onDeselect,
+      scale,
+      position,
+      setPosition,
+      pageImage,
+      selectedId,
+      isDrawing,
+    } = this.props;
+    
     if (!pageImage) {
       return null;
     }
@@ -88,7 +92,6 @@ export default class PageGraphics extends React.Component<Props, State> {
                 scaleY={scale}
                 x={position.x}
                 y={position.y}
-                onDblClick={() => this.setState({ isDrawing: true })}
                 onDragEnd={(evt) => {
                   const stage = evt.target.getStage();
 
@@ -97,7 +100,7 @@ export default class PageGraphics extends React.Component<Props, State> {
                     y: stage?.y() ?? 0,
                   });
                 }}
-                draggable={!this.state.isDrawing}
+                draggable={!isDrawing}
               >
                 <BlocksLayer ref={this.layer}>
                   <Image image={pageImage.image} />
@@ -111,7 +114,7 @@ export default class PageGraphics extends React.Component<Props, State> {
                   />
                 </BlocksLayer>
                 {
-                  this.state.isDrawing && (
+                  isDrawing && (
                     <DrawLayer
                       width={pageImage?.image.width ?? 0}
                       height={pageImage?.image.height ?? 0}
