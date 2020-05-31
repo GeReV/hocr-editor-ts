@@ -3,8 +3,10 @@ import Konva from "konva";
 import { Image, Layer, Stage } from "react-konva";
 import { ItemId, PageImage, Position } from "../../types";
 import { AppReducerContext } from "../../reducerContext";
-import BlocksLayer from "./BlocksLayer";
+import Blocks from "./Blocks";
 import { createUpdateTreeNodeRect } from "../../reducer/actions";
+import BlocksLayer from "./BlocksLayer";
+import DrawLayer from "./DrawLayer";
 
 export interface Props {
   width: number;
@@ -17,9 +19,10 @@ export interface Props {
   hoveredId?: ItemId | null;
   selectedId?: ItemId | null;
   pageImage?: PageImage;
+  isDrawing?: boolean;
 }
 
-export default class PageGraphics extends React.Component<Props, any> {
+export default class PageGraphics extends React.Component<Props> {
   layer: React.RefObject<Konva.Layer> = React.createRef<Konva.Layer>();
   rectRefs: Record<ItemId, Konva.Rect | null> = {};
 
@@ -46,8 +49,19 @@ export default class PageGraphics extends React.Component<Props, any> {
   }
 
   render() {
-    const { width, height, onSelect, onDeselect, scale, position, setPosition, pageImage, selectedId } = this.props;
-
+    const {
+      width,
+      height, 
+      onSelect,
+      onDeselect,
+      scale,
+      position,
+      setPosition,
+      pageImage,
+      selectedId,
+      isDrawing,
+    } = this.props;
+    
     if (!pageImage) {
       return null;
     }
@@ -86,20 +100,27 @@ export default class PageGraphics extends React.Component<Props, any> {
                     y: stage?.y() ?? 0,
                   });
                 }}
-                draggable
+                draggable={!isDrawing}
               >
-                <Layer>
+                <BlocksLayer ref={this.layer}>
                   <Image image={pageImage.image} />
-                </Layer>
-                <BlocksLayer
-                  ref={this.layer}
-                  tree={tree}
-                  onChange={(args) => dispatch(createUpdateTreeNodeRect(args))}
-                  onSelect={onSelect}
-                  selectedId={selectedId}
-                  pageProps={pageProps}
-                  setInnerRef={this.setInnerRef}
-                />
+                  <Blocks
+                    tree={tree}
+                    onChange={(args) => dispatch(createUpdateTreeNodeRect(args))}
+                    onSelect={onSelect}
+                    selectedId={selectedId}
+                    pageProps={pageProps}
+                    setInnerRef={this.setInnerRef}
+                  />
+                </BlocksLayer>
+                {
+                  isDrawing && (
+                    <DrawLayer
+                      width={pageImage?.image.width ?? 0}
+                      height={pageImage?.image.height ?? 0}
+                    />
+                  )
+                }
               </Stage>
             )
           }
