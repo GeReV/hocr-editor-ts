@@ -1,23 +1,27 @@
 import React, { useCallback, useState } from 'react';
-import { useKey, useMeasure, useTitle } from "react-use";
+import { useKey, useMeasure } from "react-use";
 import cx from 'classnames';
-import { Button, Spinner } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { ItemId, PageImage, Position, RecognizeUpdate } from '../../types';
-import { createRecognizeDocument, createChangeSelected } from '../../reducer/actions';
+import { ItemId, Position } from '../../types';
+import {
+  createRecognizeDocument,
+  createChangeSelected,
+  createChangeIsProcessing,
+  createRecognizeDocumentProgress
+} from '../../reducer/actions';
 import Header from "../Header";
 import PageGraphics from "./PageGraphics";
 import { recognize } from "../../ocr";
 import { useAppReducer } from "../../reducerContext";
+import { OcrDocument } from "../../reducer/types";
 
 import './index.css';
 
 interface Props {
-  pageImage?: PageImage;
+  document?: OcrDocument;
 }
-
-const TITLE = document.title;
 
 const SCALE_MAX = 3.0;
 const SCALE_MIN = 0.05;
@@ -26,38 +30,34 @@ const Separator = React.memo(() => (
   <div className="Separator" />
 ))
 
-export default function PageCanvas(props: Props) {
+export default function PageCanvas({ document }: Props) {
   const [ref, { width, height }] = useMeasure();
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
 
   const [isDrawing, setDrawing] = useState<boolean>(false);
-  const [processing, setProcessing] = useState<boolean>(false);
-  const [progress, setProgress] = useState(0);
 
   const [state, dispatch] = useAppReducer();
-  
+
   useKey('Escape', () => {
     setDrawing(false);
-  }, undefined, [isDrawing])
-
-  useTitle(processing ? `(${(progress * 100).toFixed(1)}%) ${TITLE}` : TITLE);
+  }, undefined, [isDrawing]);
 
   const setFitScale = useCallback(() => {
-    if (!props.pageImage) {
+    if (!document?.pageImage) {
       return;
     }
 
-    const fitScale = props.pageImage.image.width > props.pageImage.image.height ?
-      (width / props.pageImage.image.width) :
-      (height / props.pageImage.image.height);
-    
+    const fitScale = document.pageImage.image.width > document.pageImage.image.height ?
+      (width / document.pageImage.image.width) :
+      (height / document.pageImage.image.height);
+
     setScale(fitScale);
     setPosition({
-      x: (width - props.pageImage.image.width * fitScale) * .5,
-      y: (height - props.pageImage.image.height * fitScale) * .5,
+      x: (width - document.pageImage.image.width * fitScale) * .5,
+      y: (height - document.pageImage.image.height * fitScale) * .5,
     });
-  }, [props.pageImage, height, width]);
+  }, [document, height, width]);
 
   React.useLayoutEffect(setFitScale, [setFitScale]);
 
@@ -72,23 +72,25 @@ export default function PageCanvas(props: Props) {
   }
 
   async function performOCR() {
-    if (!props.pageImage) {
+    if (!document?.pageImage) {
       return;
     }
 
-    setProcessing(true);
+    dispatch(createChangeIsProcessing(true));
+    
+    const documents = [document];
 
-    const result = await recognize(props.pageImage.urlObject, "heb+eng", {
-      logger: (update: RecognizeUpdate) => {
-        if (update.status.startsWith("recognizing")) {
-
-          setProgress(update.progress);
-        }
+    const results = await recognize(documents, "heb+eng", {
+      logger: (id, progress) => {
+        dispatch(createRecognizeDocumentProgress(id, progress));
       },
     });
 
-    dispatch(createRecognizeDocument(result));
-    setProcessing(false);
+    results.forEach((result, index) => {
+      dispatch(createRecognizeDocument(documents[index].id, result));
+    });
+      
+    dispatch(createChangeIsProcessing(false));
   }
 
   return (
@@ -100,25 +102,15 @@ export default function PageCanvas(props: Props) {
         <Button
           size="sm"
           variant="primary"
-          disabled={!props.pageImage || processing}
+          disabled={!document?.pageImage || state.isProcessing}
           onClick={performOCR}
         >
-          {processing && (
-            <Spinner
-              as="span"
-              animation="border"
-              size="sm"
-              role="status"
-              aria-hidden="true"
-            />
-          )}{" "}
           OCR
-          {processing && ` (${(progress * 100).toFixed(1)}%)`}
         </Button>
         <Button
           size="sm"
           onClick={setFitScale}
-          disabled={!props.pageImage}
+          disabled={!document?.pageImage}
           variant="outline-dark"
           title="Fit image"
         >
@@ -128,7 +120,7 @@ export default function PageCanvas(props: Props) {
         <Button
           size="sm"
           onClick={() => setDrawing(!isDrawing)}
-          disabled={!props.pageImage}
+          disabled={!document?.pageImage}
           active={isDrawing}
           variant="outline-dark"
           title="Select region"
@@ -147,7 +139,7 @@ export default function PageCanvas(props: Props) {
           onDeselect={() => handleSelected(null)}
           hoveredId={state.hoveredId}
           selectedId={state.selectedId}
-          pageImage={props.pageImage}
+          pageImage={document?.pageImage}
           scale={scale}
           position={position}
           setPosition={setPosition}

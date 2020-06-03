@@ -3,9 +3,10 @@ import produce from 'immer';
 
 import { BaseTreeItem, ElementType, ItemId, Position } from "../types";
 import { buildTree, walkChildren } from "../treeBuilder";
-import { ActionType, ModifyNodePayload, AppReducerAction, State, TreeItems } from "./types";
+import { ActionType, AppReducerAction, ModifyNodePayload, State, TreeItems } from "./types";
 import { TreeDestinationPosition, TreeSourcePosition } from "../components/SortableTree";
 import { isLeafItem } from "../components/SortableTree/utils/tree";
+import { createUniqueIdentifier } from "../utils";
 
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
@@ -17,6 +18,7 @@ const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
 export const initialState: State = {
   documents: [],
   currentDocument: 0,
+  isProcessing: false,
   selectedId: null,
   hoveredId: null,
 };
@@ -155,11 +157,15 @@ function modifyTreeNode(state: State, payload: ModifyNodePayload) {
   });
 }
 
+const documentId = createUniqueIdentifier();
+
 export function reducer(state: State, action: AppReducerAction): State {
   switch (action.type) {
     case ActionType.AddDocument: {
       return produce(state, (draft) => {
         draft.documents.push({
+          id: documentId(),
+          progress: 0,
           pageImage: action.payload,
           tree: null,
         });
@@ -167,12 +173,29 @@ export function reducer(state: State, action: AppReducerAction): State {
     }
     case ActionType.RecognizeDocument: {
       return produce(state, (draft) => {
-        const [rootId, items] = buildTree(action.payload);
-
-        draft.documents[draft.currentDocument].tree = {
+        const [rootId, items] = buildTree(action.payload.result);
+        
+        const document = draft.documents.find(doc => doc.id === action.payload.id);
+        
+        if (!document) {
+          throw new Error(`Document with ID ${action.payload.id} not found.`);
+        }
+        
+        document.tree = {
           rootId,
           items,
         };
+      });
+    }
+    case ActionType.RecognizeDocumentProgress: {
+      return produce(state, (draft) => {
+        const document = draft.documents.find(doc => doc.id === action.payload.id);
+
+        if (!document) {
+          throw new Error(`Document with ID ${action.payload.id} not found.`);
+        }
+        
+        document.progress = action.payload.progress;
       });
     }
     case ActionType.SelectDocument: {
@@ -190,12 +213,11 @@ export function reducer(state: State, action: AppReducerAction): State {
         draft.hoveredId = action.payload;
       });
     }
-    // case ActionType.UpdateTree: {
-    //   return {
-    //     ...state,
-    //     treeMap: action.payload,
-    //   };
-    // }
+    case ActionType.ChangeIsProcessing: {
+      return produce(state, (draft) => {
+        draft.isProcessing = action.payload;
+      });
+    }
     case ActionType.UpdateTreeNodeRect: {
       return updateTreeNodePosition(state, action.payload.nodeId, action.payload.x, action.payload.y, action.payload.width, action.payload.height);
     }

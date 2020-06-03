@@ -1,15 +1,24 @@
 ﻿import { createAction } from "@reduxjs/toolkit";
-import { RecognizeResult } from "tesseract.js";
 import { ChangeCallbackParams } from "../components/PageCanvas/Block";
-import { ActionType, ModifyNodeChanges, ModifyNodePayload, MoveNodeParams } from "./types";
+import {
+  ActionType,
+  CreateRecognizeDocumentPayload,
+  CreateRecognizeProgressPayload,
+  ModifyNodeChanges,
+  ModifyNodePayload,
+  MoveNodeParams
+} from "./types";
 import { ItemId, PageImage } from "../types";
+import { RecognizeResult } from "tesseract.js";
 
-export const createRecognizeDocument = createAction<RecognizeResult, ActionType.RecognizeDocument>(ActionType.RecognizeDocument);
 export const createAddDocument = createAction<PageImage, ActionType.AddDocument>(ActionType.AddDocument);
 export const createSelectDocument = createAction<number, ActionType.SelectDocument>(ActionType.SelectDocument);
 export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, ActionType.UpdateTreeNodeRect>(ActionType.UpdateTreeNodeRect);
 export const createChangeSelected = createAction<ItemId | null, ActionType.ChangeSelected>(ActionType.ChangeSelected);
 export const createChangeHovered = createAction<ItemId | null, ActionType.ChangeHovered>(ActionType.ChangeHovered);
+export const createChangeIsProcessing = createAction<boolean, ActionType.ChangeIsProcessing>(ActionType.ChangeIsProcessing);
+export const createDeleteNode = createAction<ItemId, ActionType.DeleteNode>(ActionType.DeleteNode);
+export const createMoveNode = createAction<MoveNodeParams, ActionType.MoveNode>(ActionType.MoveNode);
 export const createModifyNode = createAction<(itemId: ItemId, changes: ModifyNodeChanges) => { payload: ModifyNodePayload }, ActionType.ModifyNode>(
   ActionType.ModifyNode,
   (itemId, changes) => ({
@@ -18,5 +27,15 @@ export const createModifyNode = createAction<(itemId: ItemId, changes: ModifyNod
       changes
     }
   }));
-export const createDeleteNode = createAction<ItemId, ActionType.DeleteNode>(ActionType.DeleteNode);
-export const createMoveNode = createAction<MoveNodeParams, ActionType.MoveNode>(ActionType.MoveNode);
+export const createRecognizeDocument = createAction<(id: number, result: RecognizeResult) => { payload: CreateRecognizeDocumentPayload }, ActionType.RecognizeDocument>(ActionType.RecognizeDocument, (id, result) => ({
+  payload: {
+    id,
+    result
+  }
+}));
+export const createRecognizeDocumentProgress = createAction<(id: number, progress: number) => { payload: CreateRecognizeProgressPayload }, ActionType.RecognizeDocumentProgress>(ActionType.RecognizeDocumentProgress, (id, progress) => ({
+  payload: {
+    id,
+    progress
+  }
+}));

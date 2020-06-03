@@ -1,4 +1,6 @@
-import tesseract, { ImageLike, RecognizeResult } from 'tesseract.js';
+import tesseract, { RecognizeResult } from 'tesseract.js';
+import { OcrDocument } from "./reducer/types";
+import { RecognizeUpdate } from "./types";
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends Array<infer U>
@@ -10,7 +12,7 @@ export type DeepPartial<T> = {
 
 interface RecognizeOptions {
   PSM?: string;
-  logger?: (arg: any) => void,
+  logger?: (id: number, progress: number) => void,
 }
 
 function decircularize(recog: RecognizeResult): DeepPartial<RecognizeResult> {
@@ -63,33 +65,53 @@ function decircularize(recog: RecognizeResult): DeepPartial<RecognizeResult> {
   return partial;
 }
 
-export async function recognize(image: ImageLike, langs?: string, options?: RecognizeOptions): Promise<RecognizeResult> {
-  const stored = localStorage.getItem('OCR');
+export async function recognize(docs: OcrDocument[], langs?: string, options?: RecognizeOptions): Promise<RecognizeResult[]> {
+  // const stored = localStorage.getItem('OCR');
+  //
+  // if (stored) {
+  //   return JSON.parse(stored) as RecognizeResult;
+  // }
 
-  if (stored) {
-    return JSON.parse(stored) as RecognizeResult;
+  const scheduler = tesseract.createScheduler();
+  
+  const workers = Array(2).fill(0).map(() => tesseract.createWorker({
+    logger: (update: RecognizeUpdate) => {
+      console.debug(update);
+      // if (!options?.logger) {
+      //   return;
+      // }
+      //
+      // if (update.status.startsWith("recognizing")) {
+      //   if (!update.jobId) {
+      //     return;
+      //   }
+      //
+      //   const id = +update.jobId.slice(update.jobId.indexOf('-') + 1)
+      //
+      //   options.logger(id, update.progress);
+      // }
+    },
+  }));
+  
+  for (const worker of workers) {
+    await worker.load();
+    await worker.loadLanguage(langs ?? 'eng');
+    await worker.initialize(langs ?? 'eng');
+    // @ts-ignore
+    await worker.setParameters({ tessedit_pageseg_mode: options?.PSM ?? '3' })
+
+    scheduler.addWorker(worker);
   }
 
-  const worker = tesseract.createWorker({
-    logger: options?.logger,
-  });
+  const results = await Promise.all(
+    docs.map(doc => scheduler.addJob('recognize', doc.pageImage.urlObject, {}, `recog-${doc.id}`) as Promise<RecognizeResult>)
+  );
+  
+  await scheduler.terminate();
 
-  await worker.load();
-  await worker.loadLanguage(langs ?? 'eng');
-  await worker.initialize(langs ?? 'eng');
-  // @ts-ignore
-  await worker.setParameters({ tessedit_pageseg_mode: options?.PSM ?? '3' })
+  // const decirc = decircularize(recog);
 
-  const recog = await worker.recognize(image);
+  // localStorage.setItem('OCR', JSON.stringify(decirc));
 
-
-  await worker.terminate();
-
-  console.debug(recog);
-
-  const decirc = decircularize(recog);
-
-  localStorage.setItem('OCR', JSON.stringify(decirc));
-
-  return recog;
+  return results;
 }

@@ -13,16 +13,17 @@
   background: #eee;
   padding: .5rem;
   cursor: pointer;
-  
+  position: relative;
+
   &:hover {
     background: lighten(#17a2b8, 50%);
   }
-  
+
   &--selected,
   &--selected:hover {
     background: lighten(#17a2b8, 40%);
   }
-  
+
   img {
     width: 100%;
   }
@@ -30,4 +31,14 @@
 
 .Pages-item + .Pages-item {
   margin-top: .5rem;
+}
+
+.Pages-item-progress {
+  margin: .75rem 0;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2) inset;
+  width: 80%;
 }

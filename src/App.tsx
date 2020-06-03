@@ -20,6 +20,7 @@ import { useKey } from "react-use";
 import { useAppReducer } from "./reducerContext";
 import { createAddDocument, createDeleteNode, createSelectDocument } from "./reducer/actions";
 import Header from "./components/Header";
+import { OcrDocument } from "./reducer/types";
 
 library.add(fas);
 
@@ -70,7 +71,7 @@ function App() {
     dispatch(createSelectDocument(index));
   }, [dispatch])
 
-  const currentDocument = state.documents[state.currentDocument];
+  const currentDocument: OcrDocument = state.documents[state.currentDocument];
 
   return (
     <>
@@ -90,7 +91,7 @@ function App() {
           <Col xl={1}>
             <PageList
               documents={state.documents}
-              currentDocument={state.currentDocument}
+              currentDocument={currentDocument}
               onSelect={handleSelect}
             />
           </Col>
@@ -99,7 +100,7 @@ function App() {
             className="App-canvas"
           >
             <PageCanvas
-              pageImage={currentDocument?.pageImage}
+              document={currentDocument}
             />
           </Col>
           <Col

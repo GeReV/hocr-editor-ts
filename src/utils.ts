@@ -77,3 +77,9 @@ export async function loadImage(
     thumbnailUrlObject,
   };
 }
+
+export const createUniqueIdentifier = (): () => number => {
+  let counter = 0;
+  
+  return () => ++counter;
+};
