@@ -11,7 +11,7 @@ import DrawLayer from "./DrawLayer";
 export interface Props {
   width: number;
   height: number;
-  scale: number;
+  scale?: number;
   position: Position;
   setPosition: (pos: Position) => void;
   onSelect: (id: ItemId) => void;
@@ -20,10 +20,12 @@ export interface Props {
   selectedId?: ItemId | null;
   pageImage?: PageImage;
   isDrawing?: boolean;
+  innerRef?: React.Ref<Stage>;
 }
 
-export default class PageGraphics extends React.Component<Props> {
+class PageGraphics extends React.Component<Props> {
   layer: React.RefObject<Konva.Layer> = React.createRef<Konva.Layer>();
+  
   rectRefs: Record<ItemId, Konva.Rect | null> = {};
 
   setInnerRef = (itemId: ItemId, el: Konva.Rect | null) => {
@@ -51,7 +53,7 @@ export default class PageGraphics extends React.Component<Props> {
   render() {
     const {
       width,
-      height, 
+      height,
       onSelect,
       onDeselect,
       scale,
@@ -60,8 +62,9 @@ export default class PageGraphics extends React.Component<Props> {
       pageImage,
       selectedId,
       isDrawing,
+      innerRef,
     } = this.props;
-    
+
     if (!pageImage) {
       return null;
     }
@@ -85,6 +88,7 @@ export default class PageGraphics extends React.Component<Props> {
 
             return (
               <Stage
+                ref={innerRef}
                 onClick={onDeselect}
                 width={width}
                 height={height}
@@ -129,3 +133,7 @@ export default class PageGraphics extends React.Component<Props> {
     );
   }
 }
+
+export default React.forwardRef<Stage, Props>((props, ref) => (
+  <PageGraphics innerRef={ref} {...props} />
+));
