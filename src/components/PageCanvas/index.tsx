@@ -1,4 +1,5 @@
-import React, { useCallback, useLayoutEffect, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { Stage } from "react-konva";
 import { useKey, useMeasure } from "react-use";
 import cx from 'classnames';
 import { Button } from 'react-bootstrap';
@@ -23,11 +24,13 @@ const SCALE_MAX = 3.0;
 const SCALE_MIN = 0.05;
 
 export default function PageCanvas({ document }: Props) {
-  const [ref, { width, height }] = useMeasure();
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
-
   const [isDrawing, setDrawing] = useState<boolean>(false);
+
+  const stageRef = useRef<Stage>(null);
+
+  const [ref, { width, height }] = useMeasure();
 
   const [state, dispatch] = useAppReducer();
 
@@ -58,8 +61,27 @@ export default function PageCanvas({ document }: Props) {
   }, [dispatch]);
 
   const handleMouseWheel = useCallback((evt: React.WheelEvent) => {
+    if (!stageRef.current) {
+      return;
+    }
+
+    const stage = stageRef.current.getStage();
+
+    const pointer = stage.getPointerPosition() ?? { x: 0, y: 0 };
+
     const newScale = Math.max(SCALE_MIN, Math.min(SCALE_MAX, scale * Math.pow(2, -evt.deltaY * 0.05)));
 
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / scale,
+      y: (pointer.y - stage.y()) / scale,
+    };
+
+    const newPos: Position = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+
+    setPosition(newPos);
     setScale(newScale);
   }, [scale]);
 
@@ -94,6 +116,7 @@ export default function PageCanvas({ document }: Props) {
         ref={ref}
       >
         <PageGraphics
+          ref={stageRef}
           width={width}
           height={height}
           onSelect={handleSelected}
