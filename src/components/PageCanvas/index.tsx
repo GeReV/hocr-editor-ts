@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { useKey, useMeasure } from "react-use";
 import cx from 'classnames';
 import { Button } from 'react-bootstrap';
@@ -51,17 +51,17 @@ export default function PageCanvas({ document }: Props) {
     });
   }, [document, height, width]);
 
-  React.useLayoutEffect(setFitScale, [setFitScale]);
+  useLayoutEffect(setFitScale, [setFitScale]);
 
-  function handleSelected(itemId: ItemId | null) {
+  const handleSelected = useCallback((itemId: ItemId | null) => {
     dispatch(createChangeSelected(itemId));
-  }
+  }, [dispatch]);
 
-  function handleMouseWheel(evt: React.WheelEvent) {
+  const handleMouseWheel = useCallback((evt: React.WheelEvent) => {
     const newScale = Math.max(SCALE_MIN, Math.min(SCALE_MAX, scale * Math.pow(2, -evt.deltaY * 0.05)));
 
     setScale(newScale);
-  }
+  }, [scale]);
 
   return (
     <div

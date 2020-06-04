@@ -1,4 +1,4 @@
-﻿import React from "react";
+﻿import React, { useCallback, useRef, useState } from "react";
 import Konva from "konva";
 import { Image, Layer, Stage } from "react-konva";
 import { ItemId, PageImage, Position } from "../../types";
@@ -11,7 +11,7 @@ import DrawLayer from "./DrawLayer";
 export interface Props {
   width: number;
   height: number;
-  scale: number;
+  scale?: number;
   position: Position;
   setPosition: (pos: Position) => void;
   onSelect: (id: ItemId) => void;
@@ -24,6 +24,7 @@ export interface Props {
 
 export default class PageGraphics extends React.Component<Props> {
   layer: React.RefObject<Konva.Layer> = React.createRef<Konva.Layer>();
+  stageRef: React.RefObject<Stage> = React.createRef<Stage>();
   rectRefs: Record<ItemId, Konva.Rect | null> = {};
 
   setInnerRef = (itemId: ItemId, el: Konva.Rect | null) => {
@@ -48,15 +49,49 @@ export default class PageGraphics extends React.Component<Props> {
     this.rectRefs = {};
   }
 
+  handleMouseWheel =(evt: Konva.KonvaEventObject<WheelEvent>) => {
+    if (!this.stageRef.current) {
+      return;
+    }
+
+    const stage = this.stageRef.current.getStage();
+
+    const scale = stage.scaleX();
+    const pos = stage.position();
+
+    const newScale = Math.max(0.05, Math.min(3.0, scale * Math.pow(2, -evt.evt.deltaY * 0.05)));
+    
+    const clientRect = (evt.evt.currentTarget as HTMLCanvasElement).getBoundingClientRect();
+    
+    const centerX = (evt.evt.x - clientRect.x - pos.x);
+    const centerY = (evt.evt.y - clientRect.y - pos.y);
+    
+    const newPos = {
+      x: (pos.x - centerX) * newScale + centerX,
+      y: (pos.y - centerY) * newScale + centerY,
+    };
+    
+    console.debug(pos);
+    console.debug(centerX, centerY);
+    console.debug(newPos);
+
+    stage.scale({
+      x: newScale,
+      y: newScale
+    });
+    
+    stage.position(newPos);
+  };
+
   render() {
     const {
       width,
       height, 
       onSelect,
       onDeselect,
-      scale,
-      position,
-      setPosition,
+      // scale,
+      // position,
+      // setPosition,
       pageImage,
       selectedId,
       isDrawing,
@@ -85,20 +120,22 @@ export default class PageGraphics extends React.Component<Props> {
 
             return (
               <Stage
+                ref={this.stageRef}
+                onWheel={this.handleMouseWheel}
                 onClick={onDeselect}
                 width={width}
                 height={height}
-                scaleX={scale}
-                scaleY={scale}
-                x={position.x}
-                y={position.y}
+                // scaleX={scale}
+                // scaleY={scale}
+                // x={position.x}
+                // y={position.y}
                 onDragEnd={(evt) => {
                   const stage = evt.target.getStage();
 
-                  setPosition({
-                    x: stage?.x() ?? 0,
-                    y: stage?.y() ?? 0,
-                  });
+                  // setPosition({
+                  //   x: stage?.x() ?? 0,
+                  //   y: stage?.y() ?? 0,
+                  // });
                 }}
                 draggable={!isDrawing}
               >
