@@ -3,7 +3,7 @@ import { ChangeCallbackParams } from "../components/PageCanvas/Block";
 import {
   ActionType,
   CreateRecognizeDocumentPayload,
-  CreateRecognizeProgressPayload,
+  ChangeDocumentIsProcessingPayload,
   ModifyNodeChanges,
   ModifyNodePayload,
   MoveNodeParams
@@ -16,7 +16,12 @@ export const createSelectDocument = createAction<number, ActionType.SelectDocume
 export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, ActionType.UpdateTreeNodeRect>(ActionType.UpdateTreeNodeRect);
 export const createChangeSelected = createAction<ItemId | null, ActionType.ChangeSelected>(ActionType.ChangeSelected);
 export const createChangeHovered = createAction<ItemId | null, ActionType.ChangeHovered>(ActionType.ChangeHovered);
-export const createChangeIsProcessing = createAction<boolean, ActionType.ChangeIsProcessing>(ActionType.ChangeIsProcessing);
+export const createChangeIsProcessing = createAction<(id: number, isProcessing: boolean) => { payload: ChangeDocumentIsProcessingPayload; }, ActionType.ChangeDocumentIsProcessing>(ActionType.ChangeDocumentIsProcessing, (id, isProcessing) => ({
+  payload: {
+    id,
+    isProcessing
+  }
+}));
 export const createDeleteNode = createAction<ItemId, ActionType.DeleteNode>(ActionType.DeleteNode);
 export const createMoveNode = createAction<MoveNodeParams, ActionType.MoveNode>(ActionType.MoveNode);
 export const createModifyNode = createAction<(itemId: ItemId, changes: ModifyNodeChanges) => { payload: ModifyNodePayload }, ActionType.ModifyNode>(
@@ -31,11 +36,5 @@ export const createRecognizeDocument = createAction<(id: number, result: Recogni
   payload: {
     id,
     result
-  }
-}));
-export const createRecognizeDocumentProgress = createAction<(id: number, progress: number) => { payload: CreateRecognizeProgressPayload }, ActionType.RecognizeDocumentProgress>(ActionType.RecognizeDocumentProgress, (id, progress) => ({
-  payload: {
-    id,
-    progress
   }
 }));

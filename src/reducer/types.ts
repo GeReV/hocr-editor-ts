@@ -7,7 +7,7 @@ export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
 export interface OcrDocument {
   id: number;
-  progress: number;
+  isProcessing: boolean;
   pageImage: PageImage;
   tree: {
     rootId: ItemId;
@@ -18,7 +18,6 @@ export interface OcrDocument {
 export interface State {
   documents: OcrDocument[];
   currentDocument: number;
-  isProcessing: boolean;
   selectedId: ItemId | null;
   hoveredId: ItemId | null;
 }
@@ -28,14 +27,13 @@ export enum ActionType {
   UpdateTreeNodeRect = 'UpdateTreeNodeRect',
   AddDocument = 'AddDocument',
   RecognizeDocument = 'RecognizeDocument',
-  RecognizeDocumentProgress = 'RecognizeDocumentProgress',
   SelectDocument = 'SelectDocument',
+  ChangeDocumentIsProcessing = 'ChangeDocumentIsProcessing',
   ChangeSelected = 'ChangeSelected',
   ChangeHovered = 'ChangeHovered',
   ModifyNode = 'ModifyNode',
   DeleteNode = 'DeleteNode',
   MoveNode = 'MoveNode',
-  ChangeIsProcessing = 'ChangeIsProcessing',
 }
 
 export interface MoveNodeParams {
@@ -58,13 +56,12 @@ export type Action<T extends string, P = void> = { type: T, payload: P };
 export type AppReducerAction =
   Action<ActionType.AddDocument, PageImage> |
   Action<ActionType.RecognizeDocument, CreateRecognizeDocumentPayload> |
-  Action<ActionType.RecognizeDocumentProgress, CreateRecognizeProgressPayload> |
   // Action<ActionType.UpdateTree, BlockTreeItem[]> |
   Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams> |
   Action<ActionType.SelectDocument, number> |
   Action<ActionType.ChangeSelected, ItemId | null> |
   Action<ActionType.ChangeHovered, ItemId | null> |
-  Action<ActionType.ChangeIsProcessing, boolean> |
+  Action<ActionType.ChangeDocumentIsProcessing, ChangeDocumentIsProcessingPayload> |
   Action<ActionType.ModifyNode, ModifyNodePayload> |
   Action<ActionType.DeleteNode, ItemId> |
   Action<ActionType.MoveNode, MoveNodeParams>;
@@ -74,7 +71,7 @@ export interface CreateRecognizeDocumentPayload {
   result: RecognizeResult;
 }
 
-export interface CreateRecognizeProgressPayload {
+export interface ChangeDocumentIsProcessingPayload {
   id: number;
-  progress: number;
+  isProcessing: boolean;
 }

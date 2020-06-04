@@ -3,7 +3,6 @@ import cx from 'classnames';
 import { Image as BsImage, ProgressBar } from "react-bootstrap";
 
 import Header from "../Header";
-import { useAppReducer } from "../../reducerContext";
 import { OcrDocument } from "../../reducer/types";
 
 import './index.scss';
@@ -15,14 +14,12 @@ interface Props {
 }
 
 function PageList({ documents, currentDocument, onSelect }: Props) {
-  const [state,] = useAppReducer();
-
   const handleClick = useCallback((evt: React.MouseEvent, index: number) => {
     evt.preventDefault();
 
     onSelect(index);
   }, [onSelect]);
-
+  
   return (
     <div className="Pages">
       <Header>Pages</Header>
@@ -37,7 +34,7 @@ function PageList({ documents, currentDocument, onSelect }: Props) {
               <div>
                 <BsImage src={doc.pageImage.thumbnailUrlObject} />
                 {
-                  state.isProcessing && !doc.tree && (
+                  doc.isProcessing && (
                     <ProgressBar
                       className="Pages-item-progress"
                       now={100}

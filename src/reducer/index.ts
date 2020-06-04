@@ -18,7 +18,6 @@ const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
 export const initialState: State = {
   documents: [],
   currentDocument: 0,
-  isProcessing: false,
   selectedId: null,
   hoveredId: null,
 };
@@ -165,7 +164,7 @@ export function reducer(state: State, action: AppReducerAction): State {
       return produce(state, (draft) => {
         draft.documents.push({
           id: documentId(),
-          progress: 0,
+          isProcessing: false,
           pageImage: action.payload,
           tree: null,
         });
@@ -187,17 +186,6 @@ export function reducer(state: State, action: AppReducerAction): State {
         };
       });
     }
-    case ActionType.RecognizeDocumentProgress: {
-      return produce(state, (draft) => {
-        const document = draft.documents.find(doc => doc.id === action.payload.id);
-
-        if (!document) {
-          throw new Error(`Document with ID ${action.payload.id} not found.`);
-        }
-        
-        document.progress = action.payload.progress;
-      });
-    }
     case ActionType.SelectDocument: {
       return produce(state, (draft) => {
         draft.currentDocument = action.payload;
@@ -213,9 +201,15 @@ export function reducer(state: State, action: AppReducerAction): State {
         draft.hoveredId = action.payload;
       });
     }
-    case ActionType.ChangeIsProcessing: {
+    case ActionType.ChangeDocumentIsProcessing: {
       return produce(state, (draft) => {
-        draft.isProcessing = action.payload;
+        const document = draft.documents.find(doc => doc.id === action.payload.id);
+        
+        if (!document) {
+          throw new Error(`Document with ID ${action.payload.id} not found.`);
+        }
+        
+        document.isProcessing = action.payload.isProcessing;
       });
     }
     case ActionType.UpdateTreeNodeRect: {

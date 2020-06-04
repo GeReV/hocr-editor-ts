@@ -12,7 +12,6 @@ export type DeepPartial<T> = {
 
 interface RecognizeOptions {
   PSM?: string;
-  logger?: (id: number, progress: number) => void,
 }
 
 function decircularize(recog: RecognizeResult): DeepPartial<RecognizeResult> {
@@ -77,19 +76,6 @@ export async function recognize(docs: OcrDocument[], langs?: string, options?: R
   const workers = Array(2).fill(0).map(() => tesseract.createWorker({
     logger: (update: RecognizeUpdate) => {
       console.debug(update);
-      // if (!options?.logger) {
-      //   return;
-      // }
-      //
-      // if (update.status.startsWith("recognizing")) {
-      //   if (!update.jobId) {
-      //     return;
-      //   }
-      //
-      //   const id = +update.jobId.slice(update.jobId.indexOf('-') + 1)
-      //
-      //   options.logger(id, update.progress);
-      // }
     },
   }));
   

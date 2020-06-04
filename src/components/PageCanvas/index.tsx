@@ -6,14 +6,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { ItemId, Position } from '../../types';
 import {
-  createRecognizeDocument,
   createChangeSelected,
-  createChangeIsProcessing,
-  createRecognizeDocumentProgress
 } from '../../reducer/actions';
-import Header from "../Header";
+import CanvasToolbar from "./CanvasToolbar";
 import PageGraphics from "./PageGraphics";
-import { recognize } from "../../ocr";
 import { useAppReducer } from "../../reducerContext";
 import { OcrDocument } from "../../reducer/types";
 
@@ -25,10 +21,6 @@ interface Props {
 
 const SCALE_MAX = 3.0;
 const SCALE_MIN = 0.05;
-
-const Separator = React.memo(() => (
-  <div className="Separator" />
-))
 
 export default function PageCanvas({ document }: Props) {
   const [ref, { width, height }] = useMeasure();
@@ -71,42 +63,12 @@ export default function PageCanvas({ document }: Props) {
     setScale(newScale);
   }
 
-  async function performOCR() {
-    if (!document?.pageImage) {
-      return;
-    }
-
-    dispatch(createChangeIsProcessing(true));
-    
-    const documents = [document];
-
-    const results = await recognize(documents, "heb+eng", {
-      logger: (id, progress) => {
-        dispatch(createRecognizeDocumentProgress(id, progress));
-      },
-    });
-
-    results.forEach((result, index) => {
-      dispatch(createRecognizeDocument(documents[index].id, result));
-    });
-      
-    dispatch(createChangeIsProcessing(false));
-  }
-
   return (
     <div
       className="Canvas"
       onWheel={handleMouseWheel}
     >
-      <Header className="Canvas-toolbar">
-        <Button
-          size="sm"
-          variant="primary"
-          disabled={!document?.pageImage || state.isProcessing}
-          onClick={performOCR}
-        >
-          OCR
-        </Button>
+      <CanvasToolbar>
         <Button
           size="sm"
           onClick={setFitScale}
@@ -116,7 +78,6 @@ export default function PageCanvas({ document }: Props) {
         >
           <FontAwesomeIcon icon="expand" />
         </Button>
-        <Separator />
         <Button
           size="sm"
           onClick={() => setDrawing(!isDrawing)}
@@ -127,7 +88,7 @@ export default function PageCanvas({ document }: Props) {
         >
           <FontAwesomeIcon icon="vector-square" />
         </Button>
-      </Header>
+      </CanvasToolbar>
       <div
         className={cx('Canvas-main', isDrawing && 'Canvas-main--drawing')}
         ref={ref}
