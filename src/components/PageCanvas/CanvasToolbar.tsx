@@ -2,7 +2,6 @@
 import Header from "../Header";
 import { Dropdown, ButtonGroup, Button } from "react-bootstrap";
 import { useAppReducer } from "../../reducerContext";
-import Separator from "./Separator";
 import { createChangeIsProcessing, createRecognizeDocument } from "../../reducer/actions";
 import { recognize } from "../../ocr";
 import { OcrDocument } from "../../reducer/types";
@@ -66,8 +65,7 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
           </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
-
-      <Separator />
+      
       {children}
     </Header>
   );

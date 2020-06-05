@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Stage } from "react-konva";
 import { useKey, useMeasure } from "react-use";
 import cx from 'classnames';
@@ -15,6 +15,9 @@ import { useAppReducer } from "../../reducerContext";
 import { OcrDocument } from "../../reducer/types";
 
 import './index.css';
+import Separator from "./Separator";
+import { isAnyDocumentProcessing } from "../../reducer/selectors";
+import ExportModal from "../ExportModal";
 
 interface Props {
   document?: OcrDocument;
@@ -27,6 +30,7 @@ export default function PageCanvas({ document }: Props) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [isDrawing, setDrawing] = useState<boolean>(false);
+  const [showExport, setShowExport] = useState<boolean>(false);
 
   const stageRef = useRef<Stage>(null);
 
@@ -85,12 +89,26 @@ export default function PageCanvas({ document }: Props) {
     setScale(newScale);
   }, [scale]);
 
+  const isProcessing = useMemo(() => isAnyDocumentProcessing(state), [state]);
+
   return (
     <div
       className="Canvas"
       onWheel={handleMouseWheel}
     >
       <CanvasToolbar>
+        <Button
+          size="sm"
+          disabled={!state.documents.length || isProcessing}
+          onClick={() => setShowExport(true)}
+        >
+          <FontAwesomeIcon icon="file-export" />
+          {' '}
+          Export
+        </Button>
+
+        <Separator />
+
         <Button
           size="sm"
           onClick={setFitScale}
@@ -130,6 +148,11 @@ export default function PageCanvas({ document }: Props) {
           isDrawing={isDrawing}
         />
       </div>
+      <ExportModal
+        show={showExport}
+        onClose={() => setShowExport(false)}
+        document={document}
+      />
     </div>
   );
 }
