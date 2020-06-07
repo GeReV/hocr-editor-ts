@@ -8,6 +8,7 @@ export type TreeItems = Record<ItemId, DocumentTreeItem>;
 export interface OcrDocument {
   id: number;
   isProcessing: boolean;
+  filename: string;
   pageImage: PageImage;
   tree: {
     rootId: ItemId;
@@ -36,6 +37,11 @@ export enum ActionType {
   MoveNode = 'MoveNode',
 }
 
+export interface AddDocumentPayload {
+  filename: string;
+  pageImage: PageImage
+}
+
 export interface MoveNodeParams {
   source: TreeSourcePosition;
   destination: TreeDestinationPosition;
@@ -54,9 +60,8 @@ export interface ModifyNodePayload {
 export type Action<T extends string, P = void> = { type: T, payload: P };
 
 export type AppReducerAction =
-  Action<ActionType.AddDocument, PageImage> |
+  Action<ActionType.AddDocument, AddDocumentPayload> |
   Action<ActionType.RecognizeDocument, CreateRecognizeDocumentPayload> |
-  // Action<ActionType.UpdateTree, BlockTreeItem[]> |
   Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams> |
   Action<ActionType.SelectDocument, number> |
   Action<ActionType.ChangeSelected, ItemId | null> |

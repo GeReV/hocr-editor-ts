@@ -60,7 +60,7 @@ function App() {
           return;
         }
 
-        dispatch(createAddDocument(pageImage));
+        dispatch(createAddDocument(f.name, pageImage));
       };
 
       reader.readAsArrayBuffer(f);

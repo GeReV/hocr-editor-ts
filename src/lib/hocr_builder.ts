@@ -59,9 +59,9 @@ function createElement<K extends keyof HTMLElementTagNameMap>(doc: Document, tag
   return el;
 }
 
-function createPageElement(doc: Document, page: Page, size: Size) {
+function createPageElement(doc: Document, page: Page, size: Size, filename: string) {
   const title = [
-    `image ""`,
+    `image "${filename}"`,
     `bbox 0 0 ${size.width} ${size.height}`,
     `ppageno 0`,
   ].join('; ');
@@ -132,8 +132,8 @@ function buildHocrHead(doc: Document, page: Page) {
   }));
 }
 
-function buildHocrBody(doc: Document, page: Page, size: Size) {
-  const el = createPageElement(doc, page, size);
+function buildHocrBody(doc: Document, page: Page, size: Size, filename: string) {
+  const el = createPageElement(doc, page, size, filename);
   
   for (const block of page.blocks) {
     const b = createBlockElement(doc, block);
@@ -162,12 +162,12 @@ function buildHocrBody(doc: Document, page: Page, size: Size) {
   doc.body.appendChild(el);
 }
 
-export default function buildHocrDocument(page: Page, size: Size): Document {
+export default function buildHocrDocument(page: Page, size: Size, filename: string): Document {
   const doc = document.implementation.createHTMLDocument();
 
   buildHocrHead(doc, page);
   
-  buildHocrBody(doc, page, size);
+  buildHocrBody(doc, page, size, filename);
   
   return doc;
 }

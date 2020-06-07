@@ -6,12 +6,17 @@ import {
   ChangeDocumentIsProcessingPayload,
   ModifyNodeChanges,
   ModifyNodePayload,
-  MoveNodeParams
+  MoveNodeParams, AddDocumentPayload
 } from "./types";
 import { ItemId, PageImage } from "../types";
 import { RecognizeResult } from "tesseract.js";
 
-export const createAddDocument = createAction<PageImage, ActionType.AddDocument>(ActionType.AddDocument);
+export const createAddDocument = createAction<(filename: string, pageImage: PageImage) => { payload: AddDocumentPayload; }, ActionType.AddDocument>(ActionType.AddDocument, (filename, pageImage) => ({
+  payload: {
+    filename,
+    pageImage,
+  },
+}));
 export const createSelectDocument = createAction<number, ActionType.SelectDocument>(ActionType.SelectDocument);
 export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, ActionType.UpdateTreeNodeRect>(ActionType.UpdateTreeNodeRect);
 export const createChangeSelected = createAction<ItemId | null, ActionType.ChangeSelected>(ActionType.ChangeSelected);

@@ -41,10 +41,12 @@ export default function ExportModal({ document, onClose, show }: Props) {
 
     const page = rootTreeItem.data;
 
-    const doc = buildHocrDocument(page, {
+    const size = {
       width: document.pageImage.image.width,
       height: document.pageImage.image.height,
-    });
+    };
+    
+    const doc = buildHocrDocument(page, size, document.filename);
 
     const serializer = new XMLSerializer();
 

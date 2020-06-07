@@ -165,7 +165,8 @@ export function reducer(state: State, action: AppReducerAction): State {
         draft.documents.push({
           id: documentId(),
           isProcessing: false,
-          pageImage: action.payload,
+          filename: action.payload.filename,
+          pageImage: action.payload.pageImage,
           tree: null,
         });
       });
