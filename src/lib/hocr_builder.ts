@@ -35,11 +35,11 @@ function baseline(bl: Baseline, bbox: Bbox): string {
 }
 
 function fontSize(fs: number) {
-  return `x_fsize ${fs}`;
+  return `x_size ${fs}`;
 }
 
 function confidence(conf: number) {
-  return `x_wconf ${conf}`;
+  return `x_wconf ${Math.round(conf)}`;
 }
 
 function direction(isLtr: boolean) {
@@ -106,11 +106,15 @@ function createWordElement(doc: Document, word: Word) {
     confidence(word.confidence)
   ].join('; ');
 
-  return createElement(doc, 'span', {
+  const el = createElement(doc, 'span', {
     title,
     'class': 'ocrx_word',
     lang: word.language,
   });
+  
+  el.textContent = word.text ?? ' ';
+  
+  return el;
 }
 
 function buildHocrHead(doc: Document, page: Page) {

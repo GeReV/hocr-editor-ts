@@ -1,10 +1,15 @@
 ﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Button, Overlay, Tooltip } from "react-bootstrap";
+import { PrismAsync as SyntaxHighlighter } from 'react-syntax-highlighter';
+import prettier from 'prettier/standalone';
+import parserHtml from 'prettier/parser-html';
+import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism'
+import { useCopyToClipboard } from "react-use";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 import { OcrDocument } from "../../reducer/types";
 import buildHocrDocument from "../../lib/hocr_builder";
 import { PageTreeItem } from "../../types";
-import { useCopyToClipboard } from "react-use";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface Props {
   document?: OcrDocument;
@@ -14,10 +19,22 @@ interface Props {
 
 export default function ExportModal({ document, onClose, show }: Props) {
   const clipboardButtonRef = useRef(null);
+  
+  const [hocr, setHocr] = useState<string | null>(null);
 
-  const hocr = useMemo(() => {
-    if (!document?.tree) {
-      return null;
+  const hocrDownload = useMemo(() => hocr ? `data:text/html;charset=utf-8,${encodeURIComponent(hocr)}` : '#', [hocr]);
+
+  const [showClipboardTooltip, setShowClipboardTooltip] = useState(false);
+  const [, copyToClipboard] = useCopyToClipboard();
+
+  const handleCopyToClipboard = useCallback(() => {
+    copyToClipboard(hocr ?? '');
+    setShowClipboardTooltip(true);
+  }, [hocr, copyToClipboard]);
+
+  useEffect(() => {
+    if (!document?.tree || !show || !!hocr) {
+      return;
     }
 
     const rootTreeItem = document.tree.items[document.tree.rootId] as PageTreeItem;
@@ -31,18 +48,16 @@ export default function ExportModal({ document, onClose, show }: Props) {
 
     const serializer = new XMLSerializer();
 
-    return serializer.serializeToString(doc);
-  }, [document]);
-
-  const hocrDownload = useMemo(() => hocr ? `data:text/html;charset=utf-8,${encodeURIComponent(hocr)}` : '#', [hocr]);
-
-  const [showClipboardTooltip, setShowClipboardTooltip] = useState(false);
-  const [, copyToClipboard] = useCopyToClipboard();
-
-  const handleCopyToClipboard = useCallback(() => {
-    copyToClipboard(hocr ?? '');
-    setShowClipboardTooltip(true);
-  }, [hocr, copyToClipboard]);
+    const html = serializer.serializeToString(doc);
+    
+    const pretty = prettier.format(html, {
+      parser: "html",
+      plugins: [parserHtml],
+      htmlWhitespaceSensitivity: 'ignore',
+    });
+    
+    setHocr(pretty);
+  }, [document, show, hocr]);
 
   useEffect(() => {
     let timeoutId: number;
@@ -65,6 +80,7 @@ export default function ExportModal({ document, onClose, show }: Props) {
       show={show}
       size="xl"
       centered
+      scrollable
     >
       <Modal.Header
         closeButton
@@ -74,9 +90,9 @@ export default function ExportModal({ document, onClose, show }: Props) {
       <Modal.Body>
         {
           hocr && (
-            <code>
-              <pre>{hocr}</pre>
-            </code>
+            <SyntaxHighlighter language="markup" style={prism}>
+              {hocr}
+            </SyntaxHighlighter>
           )
         }
       </Modal.Body>

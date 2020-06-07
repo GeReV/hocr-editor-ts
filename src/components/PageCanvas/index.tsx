@@ -65,7 +65,9 @@ export default function PageCanvas({ document }: Props) {
   }, [dispatch]);
 
   const handleMouseWheel = useCallback((evt: React.WheelEvent) => {
-    if (!stageRef.current) {
+    // For some reason, the modal doesn't stop mouse wheel events (even with pointer-events: none), 
+    // so ignore them explicitly when modal is up.
+    if (!stageRef.current || showExport) {
       return;
     }
 
@@ -87,9 +89,11 @@ export default function PageCanvas({ document }: Props) {
 
     setPosition(newPos);
     setScale(newScale);
-  }, [scale]);
+  }, [scale, showExport]);
 
-  const isProcessing = useMemo(() => isAnyDocumentProcessing(state), [state]);
+  const isAnyProcessing = useMemo(() => isAnyDocumentProcessing(state), [state]);
+  
+  const currentDocument: OcrDocument | null = state.documents[state.currentDocument];
 
   return (
     <div
@@ -99,7 +103,7 @@ export default function PageCanvas({ document }: Props) {
       <CanvasToolbar>
         <Button
           size="sm"
-          disabled={!state.documents.length || isProcessing}
+          disabled={!state.documents.length || isAnyProcessing || !currentDocument?.tree}
           onClick={() => setShowExport(true)}
         >
           <FontAwesomeIcon icon="file-export" />
