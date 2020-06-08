@@ -1,5 +1,5 @@
-import { State } from './types';
+import { OcrDocument } from './types';
 
-export function isAnyDocumentProcessing(state: State): boolean {
-  return state.documents.some((doc) => doc.isProcessing);
+export function isAnyDocumentProcessing(documents: OcrDocument[]): boolean {
+  return documents.some((doc) => doc.isProcessing);
 }

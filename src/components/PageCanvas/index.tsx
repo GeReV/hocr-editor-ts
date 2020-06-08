@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { Dispatch, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Stage } from 'react-konva';
 import { useKey, useMeasure } from 'react-use';
 import cx from 'classnames';
@@ -7,8 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { ItemId, Position } from '../../types';
 import { createChangeSelected } from '../../reducer/actions';
-import { useAppReducer } from '../../reducerContext';
-import { OcrDocument } from '../../reducer/types';
+import { AppReducerAction, OcrDocument } from '../../reducer/types';
 
 import './index.css';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
@@ -18,13 +17,17 @@ import PageGraphics from './PageGraphics';
 import CanvasToolbar from './CanvasToolbar';
 
 interface Props {
-  document?: OcrDocument;
+  document: OcrDocument | undefined;
+  documents: OcrDocument[];
+  hoveredId: ItemId | null;
+  selectedId: ItemId | null;
+  dispatch: Dispatch<AppReducerAction>;
 }
 
 const SCALE_MAX = 3.0;
 const SCALE_MIN = 0.05;
 
-export default function PageCanvas({ document }: Props) {
+function PageCanvas({ document, documents, hoveredId, selectedId, dispatch }: Props) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [isDrawing, setDrawing] = useState<boolean>(false);
@@ -33,8 +36,6 @@ export default function PageCanvas({ document }: Props) {
   const stageRef = useRef<Stage>(null);
 
   const [ref, { width, height }] = useMeasure();
-
-  const [state, dispatch] = useAppReducer();
 
   useKey(
     'Escape',
@@ -101,16 +102,14 @@ export default function PageCanvas({ document }: Props) {
     [scale, showExport],
   );
 
-  const isAnyProcessing = useMemo(() => isAnyDocumentProcessing(state), [state]);
-
-  const currentDocument: OcrDocument | null = state.documents[state.currentDocument];
+  const isAnyProcessing = useMemo(() => isAnyDocumentProcessing(documents), [documents]);
 
   return (
     <div className="Canvas" onWheel={handleMouseWheel}>
       <CanvasToolbar>
         <Button
           size="sm"
-          disabled={!state.documents.length || isAnyProcessing || !currentDocument?.tree}
+          disabled={!documents.length || isAnyProcessing || !document?.tree}
           onClick={() => setShowExport(true)}
         >
           <FontAwesomeIcon icon="file-export" /> Export
@@ -140,21 +139,24 @@ export default function PageCanvas({ document }: Props) {
       </CanvasToolbar>
       <div className={cx('Canvas-main', isDrawing && 'Canvas-main--drawing')} ref={ref}>
         <PageGraphics
+          document={document}
           ref={stageRef}
           width={width}
           height={height}
           onSelect={handleSelected}
           onDeselect={() => handleSelected(null)}
-          hoveredId={state.hoveredId}
-          selectedId={state.selectedId}
-          pageImage={document?.pageImage}
+          hoveredId={hoveredId}
+          selectedId={selectedId}
           scale={scale}
           position={position}
           setPosition={setPosition}
           isDrawing={isDrawing}
+          dispatch={dispatch}
         />
       </div>
       <ExportModal show={showExport} onClose={() => setShowExport(false)} document={document} />
     </div>
   );
 }
+
+export default React.memo(PageCanvas);

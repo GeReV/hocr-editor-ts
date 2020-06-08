@@ -1,59 +1,79 @@
-import React from 'react';
+import React, { useCallback, Dispatch } from 'react';
 import { Row } from 'react-bootstrap';
 
 import { createChangeHovered, createChangeSelected, createModifyNode, createMoveNode } from '../../reducer/actions';
-import { useAppReducer } from '../../reducerContext';
 import Tree from '../SortableTree/components/Tree';
 import { ItemId, Path, TreeDestinationPosition, TreeSourcePosition } from '../SortableTree';
 
 import './index.scss';
+import { AppReducerAction, OcrDocument } from '../../reducer/types';
 import TreeNode from './TreeNode';
 
-interface Props {}
+interface Props {
+  currentDocument: OcrDocument | undefined;
+  selectedId: ItemId | null;
+  dispatch: Dispatch<AppReducerAction>;
+}
 
-export default function PageTreeView(props: Props) {
-  const [state, dispatch] = useAppReducer();
+function PageTreeView({ currentDocument, selectedId, dispatch }: Props) {
+  const handleDragEnd = useCallback(
+    (source: TreeSourcePosition, destination?: TreeDestinationPosition) => {
+      if (!destination) {
+        return;
+      }
 
-  function handleDragEnd(source: TreeSourcePosition, destination?: TreeDestinationPosition) {
-    if (!destination) {
-      return;
-    }
+      dispatch(
+        createMoveNode({
+          source,
+          destination,
+        }),
+      );
+    },
+    [dispatch],
+  );
 
-    dispatch(
-      createMoveNode({
-        source,
-        destination,
-      }),
-    );
-  }
+  const onMouseEnter = useCallback(
+    (evt: React.MouseEvent, nodeId: ItemId) => {
+      evt.stopPropagation();
 
-  function onMouseEnter(evt: React.MouseEvent, nodeId: ItemId) {
-    evt.stopPropagation();
+      dispatch(createChangeHovered(nodeId));
+    },
+    [dispatch],
+  );
 
-    dispatch(createChangeHovered(nodeId));
-  }
+  const onMouseLeave = useCallback(
+    (evt: React.MouseEvent) => {
+      evt.stopPropagation();
 
-  function onMouseLeave(evt: React.MouseEvent) {
-    evt.stopPropagation();
+      dispatch(createChangeHovered(null));
+    },
+    [dispatch],
+  );
 
-    dispatch(createChangeHovered(null));
-  }
+  const onSelect = useCallback(
+    (evt: React.MouseEvent, nodeId: ItemId) => {
+      evt.stopPropagation();
 
-  function onSelect(evt: React.MouseEvent, nodeId: ItemId) {
-    evt.stopPropagation();
+      dispatch(createChangeSelected(nodeId));
+    },
+    [dispatch],
+  );
 
-    dispatch(createChangeSelected(nodeId));
-  }
+  const handleCollapse = useCallback(
+    (itemId: ItemId, path: Path) => {
+      dispatch(createModifyNode(itemId, { isExpanded: false }));
+    },
+    [dispatch],
+  );
 
-  function handleCollapse(itemId: ItemId, path: Path) {
-    dispatch(createModifyNode(itemId, { isExpanded: false }));
-  }
+  const handleExpand = useCallback(
+    (itemId: ItemId, path: Path) => {
+      dispatch(createModifyNode(itemId, { isExpanded: true }));
+    },
+    [dispatch],
+  );
 
-  function handleExpand(itemId: ItemId, path: Path) {
-    dispatch(createModifyNode(itemId, { isExpanded: true }));
-  }
-
-  const tree = state.documents[state.currentDocument]?.tree;
+  const tree = currentDocument?.tree;
 
   if (!tree) {
     return null;
@@ -70,7 +90,7 @@ export default function PageTreeView(props: Props) {
           <TreeNode
             onMouseEnter={onMouseEnter}
             onClick={onSelect}
-            isSelected={state.selectedId === params.item.id}
+            isSelected={selectedId === params.item.id}
             {...params}
           />
         )}
@@ -81,3 +101,5 @@ export default function PageTreeView(props: Props) {
     </Row>
   );
 }
+
+export default React.memo(PageTreeView);

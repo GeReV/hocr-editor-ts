@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { Dispatch } from 'react';
 import Konva from 'konva';
-import { Image, Layer, Stage } from 'react-konva';
-import { ItemId, PageImage, Position } from '../../types';
-import { AppReducerContext } from '../../reducerContext';
+import { Image, Stage } from 'react-konva';
+import { ItemId, Position } from '../../types';
 import { createUpdateTreeNodeRect } from '../../reducer/actions';
+import { AppReducerAction, OcrDocument } from '../../reducer/types';
 import Blocks from './Blocks';
 import BlocksLayer from './BlocksLayer';
 import DrawLayer from './DrawLayer';
 
 export interface Props {
+  document: OcrDocument | undefined;
   width: number;
   height: number;
   scale?: number;
@@ -18,9 +19,9 @@ export interface Props {
   onDeselect: () => void;
   hoveredId?: ItemId | null;
   selectedId?: ItemId | null;
-  pageImage?: PageImage;
   isDrawing?: boolean;
   innerRef?: React.Ref<Stage>;
+  dispatch: Dispatch<AppReducerAction>;
 }
 
 class PageGraphics extends React.Component<Props> {
@@ -52,6 +53,7 @@ class PageGraphics extends React.Component<Props> {
 
   render() {
     const {
+      document,
       width,
       height,
       onSelect,
@@ -59,68 +61,56 @@ class PageGraphics extends React.Component<Props> {
       scale,
       position,
       setPosition,
-      pageImage,
       selectedId,
       isDrawing,
       innerRef,
+      dispatch,
     } = this.props;
 
-    if (!pageImage) {
+    if (!document?.pageImage || !document?.tree) {
       return null;
     }
 
     const pageProps = {
-      pageWidth: pageImage.image.width,
-      pageHeight: pageImage.image.height,
+      pageWidth: document.pageImage.image.width,
+      pageHeight: document.pageImage.image.height,
     };
 
     return (
-      <AppReducerContext.Consumer>
-        {(consumer) => {
-          if (!consumer) {
-            return null;
-          }
+      <Stage
+        ref={innerRef}
+        onClick={onDeselect}
+        width={width}
+        height={height}
+        scaleX={scale}
+        scaleY={scale}
+        x={position.x}
+        y={position.y}
+        onDragEnd={(evt) => {
+          const stage = evt.target.getStage();
 
-          const [state, dispatch] = consumer;
-
-          const tree = state.documents[state.currentDocument]?.tree;
-
-          return (
-            <Stage
-              ref={innerRef}
-              onClick={onDeselect}
-              width={width}
-              height={height}
-              scaleX={scale}
-              scaleY={scale}
-              x={position.x}
-              y={position.y}
-              onDragEnd={(evt) => {
-                const stage = evt.target.getStage();
-
-                setPosition({
-                  x: stage?.x() ?? 0,
-                  y: stage?.y() ?? 0,
-                });
-              }}
-              draggable={!isDrawing}
-            >
-              <BlocksLayer ref={this.layer}>
-                <Image image={pageImage.image} />
-                <Blocks
-                  tree={tree}
-                  onChange={(args) => dispatch(createUpdateTreeNodeRect(args))}
-                  onSelect={onSelect}
-                  selectedId={selectedId}
-                  pageProps={pageProps}
-                  setInnerRef={this.setInnerRef}
-                />
-              </BlocksLayer>
-              {isDrawing && <DrawLayer width={pageImage?.image.width ?? 0} height={pageImage?.image.height ?? 0} />}
-            </Stage>
-          );
+          setPosition({
+            x: stage?.x() ?? 0,
+            y: stage?.y() ?? 0,
+          });
         }}
-      </AppReducerContext.Consumer>
+        draggable={!isDrawing}
+      >
+        <BlocksLayer ref={this.layer}>
+          <Image image={document.pageImage.image} />
+          <Blocks
+            tree={document.tree}
+            onChange={(args) => dispatch(createUpdateTreeNodeRect(args))}
+            onSelect={onSelect}
+            selectedId={selectedId}
+            pageProps={pageProps}
+            setInnerRef={this.setInnerRef}
+          />
+        </BlocksLayer>
+        {isDrawing && (
+          <DrawLayer width={document.pageImage.image.width ?? 0} height={document.pageImage.image.height ?? 0} />
+        )}
+      </Stage>
     );
   }
 }

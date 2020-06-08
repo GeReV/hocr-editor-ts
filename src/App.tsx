@@ -14,6 +14,7 @@ import PageList from './components/PageList';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
+import { LogView } from './components/LogView';
 
 library.add(fas);
 
@@ -53,11 +54,17 @@ function App() {
             <PageList documents={state.documents} currentDocument={currentDocument} onSelect={handleSelect} />
           </Col>
           <Col xl={9} className="App-canvas">
-            <PageCanvas document={currentDocument} />
+            <PageCanvas
+              documents={state.documents}
+              document={currentDocument}
+              selectedId={state.selectedId}
+              hoveredId={state.hoveredId}
+              dispatch={dispatch}
+            />
           </Col>
           <Col xl={2} className="App-tree">
             <Header>Hierarchy</Header>
-            <PageTreeView />
+            <PageTreeView currentDocument={currentDocument} selectedId={state.selectedId} dispatch={dispatch} />
           </Col>
         </Row>
       </Container>
