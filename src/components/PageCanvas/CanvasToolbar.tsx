@@ -1,15 +1,16 @@
 ﻿import React, { PropsWithChildren, useCallback, useMemo } from "react";
-import Header from "../Header";
 import { Dropdown, ButtonGroup, Button } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import Header from "../Header";
 import { useAppReducer } from "../../reducerContext";
 import { createAddDocument, createChangeIsProcessing, createRecognizeDocument } from "../../reducer/actions";
 import { recognize } from "../../ocr";
 import { OcrDocument } from "../../reducer/types";
 import { isAnyDocumentProcessing } from "../../reducer/selectors";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { loadImage } from "../../utils";
 
 import './CanvasToolbar.scss';
-import { loadImage } from "../../utils";
 
 interface Props {
 }
@@ -71,7 +72,10 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
   return (
     <Header className="Canvas-toolbar">
-      <Button className="Toolbar-open" size="sm">
+      <Button
+        className="Toolbar-open"
+        size="sm"
+      >
         <input
           type="file"
           className="Toolbar-open-file"
