@@ -31,14 +31,14 @@ function printElement(el: Element, level: number): string {
 
     html += padding;
     html += printClosingTag(el);
-    html += '\n';
   } else if (el.textContent) {
     html += el.textContent;
     html += printClosingTag(el);
-    html += '\n';
   } else {
     html = html.replace(/>$/, ' />');
   }
+  
+  html += '\n';
 
   return html;
 }
