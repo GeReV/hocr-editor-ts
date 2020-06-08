@@ -2,6 +2,7 @@ import { RecognizeResult } from 'tesseract.js';
 import { ChangeCallbackParams } from '../components/PageCanvas/Block';
 import { DocumentTreeItem, ItemId, PageImage } from '../types';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
+import * as actions from './actions';
 
 export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
@@ -57,20 +58,6 @@ export interface ModifyNodePayload {
   changes: ModifyNodeChanges;
 }
 
-export type Action<T extends string, P = void> = { type: T; payload: P };
-
-export type AppReducerAction =
-  | Action<ActionType.AddDocument, AddDocumentPayload>
-  | Action<ActionType.RecognizeDocument, CreateRecognizeDocumentPayload>
-  | Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams>
-  | Action<ActionType.SelectDocument, number>
-  | Action<ActionType.ChangeSelected, ItemId | null>
-  | Action<ActionType.ChangeHovered, ItemId | null>
-  | Action<ActionType.ChangeDocumentIsProcessing, ChangeDocumentIsProcessingPayload>
-  | Action<ActionType.ModifyNode, ModifyNodePayload>
-  | Action<ActionType.DeleteNode, ItemId>
-  | Action<ActionType.MoveNode, MoveNodeParams>;
-
 export interface CreateRecognizeDocumentPayload {
   id: number;
   result: RecognizeResult;
@@ -80,3 +67,7 @@ export interface ChangeDocumentIsProcessingPayload {
   id: number;
   isProcessing: boolean;
 }
+
+type Actions = typeof actions;
+
+export type AppReducerAction = ReturnType<Actions[keyof Actions]>;
