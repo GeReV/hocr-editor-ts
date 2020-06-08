@@ -5,20 +5,21 @@ import {
   Row,
   Col,
 } from "react-bootstrap";
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { fas } from '@fortawesome/free-solid-svg-icons'
+import { useKey } from "react-use";
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+import { OcrDocument } from "./reducer/types";
+import { useAppReducer } from "./reducerContext";
+import { createDeleteNode, createSelectDocument } from "./reducer/actions";
+import Header from "./components/Header";
 import PageCanvas from "./components/PageCanvas";
 import PageTreeView from "./components/PageTreeView";
 import PageList from "./components/PageList";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
-import { useKey } from "react-use";
-import { useAppReducer } from "./reducerContext";
-import { createDeleteNode, createSelectDocument } from "./reducer/actions";
-import Header from "./components/Header";
-import { OcrDocument } from "./reducer/types";
 
 library.add(fas);
 
