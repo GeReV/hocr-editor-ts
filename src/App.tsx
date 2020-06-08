@@ -4,7 +4,6 @@ import {
   Navbar,
   Row,
   Col,
-  FormFile,
 } from "react-bootstrap";
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
@@ -15,10 +14,9 @@ import PageList from "./components/PageList";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
-import { loadImage } from "./utils";
 import { useKey } from "react-use";
 import { useAppReducer } from "./reducerContext";
-import { createAddDocument, createDeleteNode, createSelectDocument } from "./reducer/actions";
+import { createDeleteNode, createSelectDocument } from "./reducer/actions";
 import Header from "./components/Header";
 import { OcrDocument } from "./reducer/types";
 
@@ -34,38 +32,6 @@ function App() {
 
     dispatch(createDeleteNode(state.selectedId));
   }, undefined, [state.selectedId]);
-
-  const onFileSelect = useCallback(async (evt: React.ChangeEvent<HTMLInputElement>) => {
-    if (!evt.currentTarget.files) {
-      return;
-    }
-    
-    const files = Array.from(evt.currentTarget.files)
-      .filter(f => f.type.startsWith("image/"));
-
-    if (!files.length) {
-      return;
-    }
-
-    files.forEach(f => {
-      const reader = new FileReader();
-
-      reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
-        const pageImage = await loadImage(
-          loadEvt.target?.result as ArrayBuffer,
-          f.type
-        );
-
-        if (!pageImage) {
-          return;
-        }
-
-        dispatch(createAddDocument(f.name, pageImage));
-      };
-
-      reader.readAsArrayBuffer(f);
-    })
-  }, [dispatch]);
   
   const handleSelect = useCallback((index: number) => {
     dispatch(createSelectDocument(index));
@@ -81,7 +47,6 @@ function App() {
         variant="dark"
       >
         <Navbar.Brand>hOCR Editor</Navbar.Brand>
-        <FormFile onChange={onFileSelect} multiple />
       </Navbar>
       <Container
         fluid

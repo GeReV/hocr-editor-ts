@@ -2,11 +2,14 @@
 import Header from "../Header";
 import { Dropdown, ButtonGroup, Button } from "react-bootstrap";
 import { useAppReducer } from "../../reducerContext";
-import { createChangeIsProcessing, createRecognizeDocument } from "../../reducer/actions";
+import { createAddDocument, createChangeIsProcessing, createRecognizeDocument } from "../../reducer/actions";
 import { recognize } from "../../ocr";
 import { OcrDocument } from "../../reducer/types";
 import { isAnyDocumentProcessing } from "../../reducer/selectors";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import './CanvasToolbar.scss';
+import { loadImage } from "../../utils";
 
 interface Props {
 }
@@ -30,12 +33,56 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
   }, [dispatch]);
 
+  const handleFileSelect = useCallback(async (evt: React.ChangeEvent<HTMLInputElement>) => {
+    if (!evt.currentTarget.files) {
+      return;
+    }
+
+    const files = Array.from(evt.currentTarget.files)
+      .filter(f => f.type.startsWith("image/"));
+
+    if (!files.length) {
+      return;
+    }
+
+    files.forEach(f => {
+      const reader = new FileReader();
+
+      reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
+        const pageImage = await loadImage(
+          loadEvt.target?.result as ArrayBuffer,
+          f.type
+        );
+
+        if (!pageImage) {
+          return;
+        }
+
+        dispatch(createAddDocument(f.name, pageImage));
+      };
+
+      reader.readAsArrayBuffer(f);
+    })
+  }, [dispatch]);
+
   const isProcessing = useMemo(() => isAnyDocumentProcessing(state), [state]);
-  
+
   const currentDocument: OcrDocument = state.documents[state.currentDocument];
 
   return (
     <Header className="Canvas-toolbar">
+      <Button className="Toolbar-open" size="sm">
+        <input
+          type="file"
+          className="Toolbar-open-file"
+          onChange={handleFileSelect}
+          accept="image/*"
+          multiple
+        />
+        <FontAwesomeIcon icon="folder-open" />
+        {' '}
+        Load images
+      </Button>
       <Dropdown as={ButtonGroup}>
         <Button
           size="sm"
@@ -65,7 +112,7 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
           </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
-      
+
       {children}
     </Header>
   );
