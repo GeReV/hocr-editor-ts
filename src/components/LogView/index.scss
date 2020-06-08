@@ -1,0 +1,48 @@
+﻿@import '~bootstrap/scss/bootstrap';
+
+.LogView {
+  align-items: center;
+  display: flex;
+  font-size: .875rem;
+  line-height: 1.2;
+  padding: .25rem 0;
+  
+  > * + * {
+    margin-left: .25rem;
+  }
+  
+  .LogView-worker,
+  .LogView-job,
+  .LogView-status,
+  .LogView-progress {
+    &:empty {
+      display: none;
+    }
+  }
+
+  .LogView-worker,
+  .LogView-job {
+    border-radius: 4px;
+    padding: 0 .25rem;
+  }
+
+  .LogView-worker {
+    background-color: $primary;
+    color: #fff;
+  }
+
+  .LogView-job {
+    background-color: $info;
+    color: #fff;
+  }
+
+  .LogView-status {
+    &::after {
+      content: ':';
+    }
+  }
+
+  .LogView-progress {
+
+  }
+}

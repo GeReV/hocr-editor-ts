@@ -1,7 +1,7 @@
 import { createAction } from '@reduxjs/toolkit';
 import { RecognizeResult } from 'tesseract.js';
 import { ChangeCallbackParams } from '../components/PageCanvas/Block';
-import { ItemId, PageImage } from '../types';
+import { ItemId, PageImage, RecognizeUpdate } from '../types';
 import {
   ActionType,
   CreateRecognizeDocumentPayload,
@@ -56,3 +56,4 @@ export const createRecognizeDocument = createAction<
     result,
   },
 }));
+export const createLogUpdate = createAction<RecognizeUpdate | null, ActionType.LogUpdate>(ActionType.LogUpdate);

@@ -4,7 +4,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import Header from '../Header';
 import { useAppReducer } from '../../reducerContext';
-import { createAddDocument, createChangeIsProcessing, createRecognizeDocument } from '../../reducer/actions';
+import {
+  createAddDocument,
+  createChangeIsProcessing,
+  createLogUpdate,
+  createRecognizeDocument,
+} from '../../reducer/actions';
 import { recognize } from '../../ocr';
 import { OcrDocument } from '../../reducer/types';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
@@ -25,7 +30,13 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
       documents.forEach((doc) => dispatch(createChangeIsProcessing(doc.id, true)));
 
-      const results = await recognize(documents, 'heb+eng');
+      const results = await recognize(documents, 'heb+eng', {
+        logger: (update) => {
+          dispatch(createLogUpdate(update));
+        },
+      });
+
+      dispatch(createLogUpdate(null));
 
       results.forEach((result, index) => {
         dispatch(createRecognizeDocument(documents[index].id, result));
@@ -66,7 +77,7 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
     [dispatch],
   );
 
-  const isProcessing = useMemo(() => isAnyDocumentProcessing(state), [state]);
+  const isProcessing = useMemo(() => isAnyDocumentProcessing(state.documents), [state]);
 
   const currentDocument: OcrDocument = state.documents[state.currentDocument];
 

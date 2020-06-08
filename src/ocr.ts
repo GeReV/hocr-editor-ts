@@ -83,7 +83,7 @@ export async function recognize(
     .map(() =>
       tesseract.createWorker({
         logger: (update: RecognizeUpdate) => {
-          console.debug(update);
+          options?.logger?.(update);
         },
       }),
     );

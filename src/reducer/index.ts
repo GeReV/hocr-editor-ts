@@ -20,6 +20,7 @@ export const initialState: State = {
   currentDocument: 0,
   selectedId: null,
   hoveredId: null,
+  lastRecognizeUpdate: null,
 };
 
 export function getNodeOrThrow(treeItems: TreeItems, nodeId: ItemId): BaseTreeItem<ElementType, any> {
@@ -238,6 +239,11 @@ export function reducer(state: State, action: AppReducerAction): State {
     }
     case ActionType.MoveNode: {
       return moveTreeNode(state, action.payload.source, action.payload.destination);
+    }
+    case ActionType.LogUpdate: {
+      return produce(state, (draft) => {
+        draft.lastRecognizeUpdate = action.payload;
+      });
     }
     default:
       throw new Error(`Unknown action ${JSON.stringify(action)}`);

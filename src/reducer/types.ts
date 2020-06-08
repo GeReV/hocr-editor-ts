@@ -1,6 +1,5 @@
 import { RecognizeResult } from 'tesseract.js';
-import { ChangeCallbackParams } from '../components/PageCanvas/Block';
-import { DocumentTreeItem, ItemId, PageImage } from '../types';
+import { DocumentTreeItem, ItemId, PageImage, RecognizeUpdate } from '../types';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
 import * as actions from './actions';
 
@@ -22,6 +21,7 @@ export interface State {
   currentDocument: number;
   selectedId: ItemId | null;
   hoveredId: ItemId | null;
+  lastRecognizeUpdate: RecognizeUpdate | null;
 }
 
 export enum ActionType {
@@ -36,6 +36,7 @@ export enum ActionType {
   ModifyNode = 'ModifyNode',
   DeleteNode = 'DeleteNode',
   MoveNode = 'MoveNode',
+  LogUpdate = 'LogUpdate',
 }
 
 export interface AddDocumentPayload {

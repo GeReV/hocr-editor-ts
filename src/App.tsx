@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Container, Navbar, Row, Col } from 'react-bootstrap';
+import { Col, Container, Navbar, Row } from 'react-bootstrap';
 import { useKey } from 'react-use';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
@@ -48,7 +48,7 @@ function App() {
       <Navbar bg="dark" expand="lg" variant="dark">
         <Navbar.Brand>hOCR Editor</Navbar.Brand>
       </Navbar>
-      <Container fluid className="App">
+      <Container className="App" fluid>
         <Row className="App-main">
           <Col xl={1}>
             <PageList documents={state.documents} currentDocument={currentDocument} onSelect={handleSelect} />
@@ -65,6 +65,11 @@ function App() {
           <Col xl={2} className="App-tree">
             <Header>Hierarchy</Header>
             <PageTreeView currentDocument={currentDocument} selectedId={state.selectedId} dispatch={dispatch} />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <LogView lastUpdate={state.lastRecognizeUpdate} />
           </Col>
         </Row>
       </Container>
