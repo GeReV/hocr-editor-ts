@@ -14,8 +14,10 @@ function printClosingTag(el: Element): string {
   return `</${el.tagName.toLowerCase()}>`;
 }
 
-function printElement(el: Element, level: number): string {
-  const padding = ' '.repeat(level * 2);
+type Whitespace = ' ' | '  ' | '    ' | '\t';
+
+function printElement(el: Element, level: number, whitespace: Whitespace = ' '): string {
+  const padding = whitespace.repeat(level * 2);
 
   let html = '';
 
