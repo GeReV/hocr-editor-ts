@@ -11,58 +11,59 @@ export type DeepPartial<T> = {
 };
 
 interface RecognizeOptions {
+  logger: (update: RecognizeUpdate) => void;
   PSM?: string;
 }
 
-function decircularize(recog: RecognizeResult): DeepPartial<RecognizeResult> {
-  const partial: DeepPartial<RecognizeResult> = recog;
-
-  partial.data = {
-    ...partial.data,
-    lines: [],
-    paragraphs: [],
-    words: [],
-    symbols: [],
-    blocks: partial.data?.blocks?.map((block) => {
-      return {
-        ...block,
-        page: undefined,
-        lines: [],
-        words: [],
-        symbols: [],
-        paragraphs: block.paragraphs?.map((para) => {
-          return {
-            ...para,
-            page: undefined,
-            block: undefined,
-            words: [],
-            symbols: [],
-            lines: para.lines?.map((line) => {
-              return {
-                ...line,
-                page: undefined,
-                block: undefined,
-                paragraph: undefined,
-                words: line.words?.map((word) => {
-                  return {
-                    ...word,
-                    page: undefined,
-                    block: undefined,
-                    paragraph: undefined,
-                    line: undefined,
-                    symbols: [],
-                  };
-                }),
-              };
-            }),
-          };
-        }),
-      };
-    }),
-  };
-
-  return partial;
-}
+// function decircularize(recog: RecognizeResult): DeepPartial<RecognizeResult> {
+//   const partial: DeepPartial<RecognizeResult> = recog;
+//
+//   partial.data = {
+//     ...partial.data,
+//     lines: [],
+//     paragraphs: [],
+//     words: [],
+//     symbols: [],
+//     blocks: partial.data?.blocks?.map((block) => {
+//       return {
+//         ...block,
+//         page: undefined,
+//         lines: [],
+//         words: [],
+//         symbols: [],
+//         paragraphs: block.paragraphs?.map((para) => {
+//           return {
+//             ...para,
+//             page: undefined,
+//             block: undefined,
+//             words: [],
+//             symbols: [],
+//             lines: para.lines?.map((line) => {
+//               return {
+//                 ...line,
+//                 page: undefined,
+//                 block: undefined,
+//                 paragraph: undefined,
+//                 words: line.words?.map((word) => {
+//                   return {
+//                     ...word,
+//                     page: undefined,
+//                     block: undefined,
+//                     paragraph: undefined,
+//                     line: undefined,
+//                     symbols: [],
+//                   };
+//                 }),
+//               };
+//             }),
+//           };
+//         }),
+//       };
+//     }),
+//   };
+//
+//   return partial;
+// }
 
 export async function recognize(
   docs: OcrDocument[],
