@@ -1,13 +1,13 @@
 import tesseract, { RecognizeResult } from 'tesseract.js';
-import { OcrDocument } from "./reducer/types";
-import { RecognizeUpdate } from "./types";
+import { OcrDocument } from './reducer/types';
+import { RecognizeUpdate } from './types';
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends Array<infer U>
     ? Array<DeepPartial<U>>
     : T[P] extends ReadonlyArray<infer U>
-      ? ReadonlyArray<DeepPartial<U>>
-      : DeepPartial<T[P]>
+    ? ReadonlyArray<DeepPartial<U>>
+    : DeepPartial<T[P]>;
 };
 
 interface RecognizeOptions {
@@ -23,34 +23,34 @@ function decircularize(recog: RecognizeResult): DeepPartial<RecognizeResult> {
     paragraphs: [],
     words: [],
     symbols: [],
-    blocks: partial.data?.blocks?.map(block => {
+    blocks: partial.data?.blocks?.map((block) => {
       return {
         ...block,
         page: undefined,
         lines: [],
         words: [],
         symbols: [],
-        paragraphs: block.paragraphs?.map(para => {
+        paragraphs: block.paragraphs?.map((para) => {
           return {
             ...para,
             page: undefined,
             block: undefined,
             words: [],
             symbols: [],
-            lines: para.lines?.map(line => {
+            lines: para.lines?.map((line) => {
               return {
                 ...line,
                 page: undefined,
                 block: undefined,
                 paragraph: undefined,
-                words: line.words?.map(word => {
+                words: line.words?.map((word) => {
                   return {
                     ...word,
                     page: undefined,
                     block: undefined,
                     paragraph: undefined,
                     line: undefined,
-                    symbols: []
+                    symbols: [],
                   };
                 }),
               };
@@ -59,12 +59,16 @@ function decircularize(recog: RecognizeResult): DeepPartial<RecognizeResult> {
         }),
       };
     }),
-  }
+  };
 
   return partial;
 }
 
-export async function recognize(docs: OcrDocument[], langs?: string, options?: RecognizeOptions): Promise<RecognizeResult[]> {
+export async function recognize(
+  docs: OcrDocument[],
+  langs?: string,
+  options?: RecognizeOptions,
+): Promise<RecognizeResult[]> {
   // const stored = localStorage.getItem('OCR');
   //
   // if (stored) {
@@ -72,27 +76,34 @@ export async function recognize(docs: OcrDocument[], langs?: string, options?: R
   // }
 
   const scheduler = tesseract.createScheduler();
-  
-  const workers = Array(2).fill(0).map(() => tesseract.createWorker({
-    logger: (update: RecognizeUpdate) => {
-      console.debug(update);
-    },
-  }));
-  
+
+  const workers = Array(2)
+    .fill(0)
+    .map(() =>
+      tesseract.createWorker({
+        logger: (update: RecognizeUpdate) => {
+          console.debug(update);
+        },
+      }),
+    );
+
   for (const worker of workers) {
     await worker.load();
     await worker.loadLanguage(langs ?? 'eng');
     await worker.initialize(langs ?? 'eng');
     // @ts-ignore
-    await worker.setParameters({ tessedit_pageseg_mode: options?.PSM ?? '3' })
+    await worker.setParameters({ tessedit_pageseg_mode: options?.PSM ?? '3' });
 
     scheduler.addWorker(worker);
   }
 
   const results = await Promise.all(
-    docs.map(doc => scheduler.addJob('recognize', doc.pageImage.urlObject, {}, `recog-${doc.id}`) as Promise<RecognizeResult>)
+    docs.map(
+      (doc) =>
+        scheduler.addJob('recognize', doc.pageImage.urlObject, {}, `recog-${doc.id}`) as Promise<RecognizeResult>,
+    ),
   );
-  
+
   await scheduler.terminate();
 
   // const decirc = decircularize(recog);

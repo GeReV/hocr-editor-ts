@@ -1,7 +1,7 @@
-﻿import { RecognizeResult } from "tesseract.js";
-import { ChangeCallbackParams } from "../components/PageCanvas/Block";
-import { DocumentTreeItem, ItemId, PageImage } from "../types";
-import { TreeDestinationPosition, TreeSourcePosition } from "../components/SortableTree";
+import { RecognizeResult } from 'tesseract.js';
+import { ChangeCallbackParams } from '../components/PageCanvas/Block';
+import { DocumentTreeItem, ItemId, PageImage } from '../types';
+import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
 
 export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
@@ -39,7 +39,7 @@ export enum ActionType {
 
 export interface AddDocumentPayload {
   filename: string;
-  pageImage: PageImage
+  pageImage: PageImage;
 }
 
 export interface MoveNodeParams {
@@ -57,19 +57,19 @@ export interface ModifyNodePayload {
   changes: ModifyNodeChanges;
 }
 
-export type Action<T extends string, P = void> = { type: T, payload: P };
+export type Action<T extends string, P = void> = { type: T; payload: P };
 
 export type AppReducerAction =
-  Action<ActionType.AddDocument, AddDocumentPayload> |
-  Action<ActionType.RecognizeDocument, CreateRecognizeDocumentPayload> |
-  Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams> |
-  Action<ActionType.SelectDocument, number> |
-  Action<ActionType.ChangeSelected, ItemId | null> |
-  Action<ActionType.ChangeHovered, ItemId | null> |
-  Action<ActionType.ChangeDocumentIsProcessing, ChangeDocumentIsProcessingPayload> |
-  Action<ActionType.ModifyNode, ModifyNodePayload> |
-  Action<ActionType.DeleteNode, ItemId> |
-  Action<ActionType.MoveNode, MoveNodeParams>;
+  | Action<ActionType.AddDocument, AddDocumentPayload>
+  | Action<ActionType.RecognizeDocument, CreateRecognizeDocumentPayload>
+  | Action<ActionType.UpdateTreeNodeRect, ChangeCallbackParams>
+  | Action<ActionType.SelectDocument, number>
+  | Action<ActionType.ChangeSelected, ItemId | null>
+  | Action<ActionType.ChangeHovered, ItemId | null>
+  | Action<ActionType.ChangeDocumentIsProcessing, ChangeDocumentIsProcessingPayload>
+  | Action<ActionType.ModifyNode, ModifyNodePayload>
+  | Action<ActionType.DeleteNode, ItemId>
+  | Action<ActionType.MoveNode, MoveNodeParams>;
 
 export interface CreateRecognizeDocumentPayload {
   id: number;

@@ -1,9 +1,9 @@
-﻿function printOpeningTag(el: Element): string {
+function printOpeningTag(el: Element): string {
   let attributes = '';
 
   for (let i = 0; i < el.attributes.length; i++) {
     const attr = el.attributes[i];
-    
+
     attributes += ` ${attr.name}="${attr.value}"`;
   }
 
@@ -39,7 +39,7 @@ function printElement(el: Element, level: number, whitespace: Whitespace = ' '):
   } else {
     html = html.replace(/>$/, ' />');
   }
-  
+
   html += '\n';
 
   return html;

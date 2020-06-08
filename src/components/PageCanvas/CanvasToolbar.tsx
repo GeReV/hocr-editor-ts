@@ -1,70 +1,70 @@
-﻿import React, { PropsWithChildren, useCallback, useMemo } from "react";
-import { Dropdown, ButtonGroup, Button } from "react-bootstrap";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import React, { PropsWithChildren, useCallback, useMemo } from 'react';
+import { Dropdown, ButtonGroup, Button } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import Header from "../Header";
-import { useAppReducer } from "../../reducerContext";
-import { createAddDocument, createChangeIsProcessing, createRecognizeDocument } from "../../reducer/actions";
-import { recognize } from "../../ocr";
-import { OcrDocument } from "../../reducer/types";
-import { isAnyDocumentProcessing } from "../../reducer/selectors";
-import { loadImage } from "../../utils";
+import Header from '../Header';
+import { useAppReducer } from '../../reducerContext';
+import { createAddDocument, createChangeIsProcessing, createRecognizeDocument } from '../../reducer/actions';
+import { recognize } from '../../ocr';
+import { OcrDocument } from '../../reducer/types';
+import { isAnyDocumentProcessing } from '../../reducer/selectors';
+import { loadImage } from '../../utils';
 
 import './CanvasToolbar.scss';
 
-interface Props {
-}
+interface Props {}
 
 export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
   const [state, dispatch] = useAppReducer();
 
-  const performOCR = useCallback(async (documents: OcrDocument[]) => {
-    if (!documents.length) {
-      return;
-    }
+  const performOCR = useCallback(
+    async (documents: OcrDocument[]) => {
+      if (!documents.length) {
+        return;
+      }
 
-    documents.forEach(doc => dispatch(createChangeIsProcessing(doc.id, true)));
+      documents.forEach((doc) => dispatch(createChangeIsProcessing(doc.id, true)));
 
-    const results = await recognize(documents, "heb+eng");
+      const results = await recognize(documents, 'heb+eng');
 
-    results.forEach((result, index) => {
-      dispatch(createRecognizeDocument(documents[index].id, result));
-      dispatch(createChangeIsProcessing(documents[index].id, false));
-    });
+      results.forEach((result, index) => {
+        dispatch(createRecognizeDocument(documents[index].id, result));
+        dispatch(createChangeIsProcessing(documents[index].id, false));
+      });
+    },
+    [dispatch],
+  );
 
-  }, [dispatch]);
+  const handleFileSelect = useCallback(
+    async (evt: React.ChangeEvent<HTMLInputElement>) => {
+      if (!evt.currentTarget.files) {
+        return;
+      }
 
-  const handleFileSelect = useCallback(async (evt: React.ChangeEvent<HTMLInputElement>) => {
-    if (!evt.currentTarget.files) {
-      return;
-    }
+      const files = Array.from(evt.currentTarget.files).filter((f) => f.type.startsWith('image/'));
 
-    const files = Array.from(evt.currentTarget.files)
-      .filter(f => f.type.startsWith("image/"));
+      if (!files.length) {
+        return;
+      }
 
-    if (!files.length) {
-      return;
-    }
+      files.forEach((f) => {
+        const reader = new FileReader();
 
-    files.forEach(f => {
-      const reader = new FileReader();
+        reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
+          const pageImage = await loadImage(loadEvt.target?.result as ArrayBuffer, f.type);
 
-      reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
-        const pageImage = await loadImage(
-          loadEvt.target?.result as ArrayBuffer,
-          f.type
-        );
+          if (!pageImage) {
+            return;
+          }
 
-        if (!pageImage) {
-          return;
-        }
+          dispatch(createAddDocument(f.name, pageImage));
+        };
 
-        dispatch(createAddDocument(f.name, pageImage));
-      };
-
-      reader.readAsArrayBuffer(f);
-    })
-  }, [dispatch]);
+        reader.readAsArrayBuffer(f);
+      });
+    },
+    [dispatch],
+  );
 
   const isProcessing = useMemo(() => isAnyDocumentProcessing(state), [state]);
 
@@ -72,20 +72,9 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
   return (
     <Header className="Canvas-toolbar">
-      <Button
-        className="Toolbar-open"
-        size="sm"
-      >
-        <input
-          type="file"
-          className="Toolbar-open-file"
-          onChange={handleFileSelect}
-          accept="image/*"
-          multiple
-        />
-        <FontAwesomeIcon icon="folder-open" />
-        {' '}
-        Load images
+      <Button className="Toolbar-open" size="sm">
+        <input type="file" className="Toolbar-open-file" onChange={handleFileSelect} accept="image/*" multiple />
+        <FontAwesomeIcon icon="folder-open" /> Load images
       </Button>
       <Dropdown as={ButtonGroup}>
         <Button
@@ -94,9 +83,7 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
           disabled={!currentDocument || isProcessing}
           onClick={() => performOCR([currentDocument])}
         >
-          <FontAwesomeIcon icon="glasses" />
-          {' '}
-          OCR
+          <FontAwesomeIcon icon="glasses" /> OCR
         </Button>
 
         <Dropdown.Toggle
@@ -108,12 +95,8 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
         />
 
         <Dropdown.Menu>
-          <Dropdown.Item onClick={() => performOCR([currentDocument])}>
-            OCR current document
-          </Dropdown.Item>
-          <Dropdown.Item onClick={() => performOCR(state.documents)}>
-            OCR all documents
-          </Dropdown.Item>
+          <Dropdown.Item onClick={() => performOCR([currentDocument])}>OCR current document</Dropdown.Item>
+          <Dropdown.Item onClick={() => performOCR(state.documents)}>OCR all documents</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
 

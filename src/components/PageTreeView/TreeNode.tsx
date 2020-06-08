@@ -1,16 +1,16 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from "react";
-import cx from "classnames";
-import { useKey } from "react-use";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconName } from "@fortawesome/free-solid-svg-icons";
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import cx from 'classnames';
+import { useKey } from 'react-use';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { IconName } from '@fortawesome/free-solid-svg-icons';
 
-import { ItemId, RenderItemParams } from "../SortableTree";
-import { DocumentTreeItem, ElementType } from "../../types";
-import { truncate } from "../../utils";
-import { useAppReducer } from "../../reducerContext";
-import { createModifyNode } from "../../reducer/actions";
-import TreeNodeTextEditor from "./TreeNodeTextEditor";
-import { TreeItems } from "../../reducer/types";
+import { ItemId, RenderItemParams } from '../SortableTree';
+import { DocumentTreeItem, ElementType } from '../../types';
+import { truncate } from '../../utils';
+import { useAppReducer } from '../../reducerContext';
+import { createModifyNode } from '../../reducer/actions';
+import { TreeItems } from '../../reducer/types';
+import TreeNodeTextEditor from './TreeNodeTextEditor';
 
 interface TreeNodeProps {
   isSelected?: boolean;
@@ -20,19 +20,19 @@ interface TreeNodeProps {
 
 function buildTitle(items: TreeItems, nodeId: ItemId): string {
   const node = items[nodeId];
-  
+
   switch (node.type) {
     case ElementType.Block: {
       if (!node.data.text.trim()) {
         return node.data.blocktype;
       }
 
-      return node.children.map(childId => buildTitle(items, childId)).join('\n\n');
+      return node.children.map((childId) => buildTitle(items, childId)).join('\n\n');
     }
     case ElementType.Paragraph:
-      return node.children.map(childId => buildTitle(items, childId)).join('\n');
+      return node.children.map((childId) => buildTitle(items, childId)).join('\n');
     case ElementType.Line:
-      return node.children.map(childId => buildTitle(items, childId)).join(' ');
+      return node.children.map((childId) => buildTitle(items, childId)).join(' ');
     case ElementType.Word:
       return node.data.text.trim();
     default:
@@ -40,7 +40,7 @@ function buildTitle(items: TreeItems, nodeId: ItemId): string {
   }
 }
 
-function getTypeIcon(node: DocumentTreeItem): { icon: IconName | null; iconTitle?: string; } {
+function getTypeIcon(node: DocumentTreeItem): { icon: IconName | null; iconTitle?: string } {
   switch (node.type) {
     case ElementType.Block:
       return {
@@ -74,24 +74,32 @@ function getTypeIcon(node: DocumentTreeItem): { icon: IconName | null; iconTitle
   }
 }
 
-function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter, onClick, isSelected }: RenderItemParams & TreeNodeProps) {
+function TreeNode({
+  item,
+  provided,
+  onCollapse,
+  onExpand,
+  onMouseEnter,
+  onClick,
+  isSelected,
+}: RenderItemParams & TreeNodeProps) {
   const [state, dispatch] = useAppReducer();
 
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const title = useMemo(() => {
     const tree = state.documents[state.currentDocument].tree;
-    
+
     if (!tree) {
       return '';
     }
 
-    return buildTitle(tree.items, item.id)
+    return buildTitle(tree.items, item.id);
   }, [item, state]);
 
   const enableEditingIfPossible = useCallback(() => {
     const documentTreeItem = item as DocumentTreeItem;
-    
+
     if (!isSelected || documentTreeItem.type !== ElementType.Word) {
       return;
     }
@@ -99,11 +107,14 @@ function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter, onClick,
     setIsEditing(true);
   }, [isSelected, item]);
 
-  const handleSave = useCallback((text: string) => {
-    dispatch(createModifyNode(item.id, { text }));
+  const handleSave = useCallback(
+    (text: string) => {
+      dispatch(createModifyNode(item.id, { text }));
 
-    setIsEditing(false);
-  }, [dispatch, item.id]);
+      setIsEditing(false);
+    },
+    [dispatch, item.id],
+  );
 
   const handleDoubleClick = useCallback(() => {
     enableEditingIfPossible();
@@ -115,32 +126,26 @@ function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter, onClick,
     }
   }, [isSelected]);
 
-  useKey('F2', () => {
-    enableEditingIfPossible();
-  }, undefined, [isSelected]);
+  useKey(
+    'F2',
+    () => {
+      enableEditingIfPossible();
+    },
+    undefined,
+    [isSelected],
+  );
 
   let button: React.ReactElement | null = null;
 
   if (item.children && item.children.length > 0) {
     button = item.isExpanded ? (
-      <button
-        type="button"
-        onClick={() => onCollapse(item.id)}
-        className="Tree-collapseButton"
-      />
+      <button type="button" onClick={() => onCollapse(item.id)} className="Tree-collapseButton" />
     ) : (
-      <button
-        type="button"
-        onClick={() => onExpand(item.id)}
-        className="Tree-expandButton"
-      />
+      <button type="button" onClick={() => onExpand(item.id)} className="Tree-expandButton" />
     );
   }
 
-  const {
-    icon,
-    iconTitle,
-  } = getTypeIcon(item as DocumentTreeItem);
+  const { icon, iconTitle } = getTypeIcon(item as DocumentTreeItem);
 
   return (
     <div
@@ -152,32 +157,20 @@ function TreeNode({ item, provided, onCollapse, onExpand, onMouseEnter, onClick,
       {...provided.draggableProps}
       {...provided.dragHandleProps}
     >
-      {
-        isEditing && (
-          <TreeNodeTextEditor
-            defaultValue={title}
-            onCancel={() => setIsEditing(false)}
-            onSave={handleSave}
-          />
-        )
-      }
+      {isEditing && (
+        <TreeNodeTextEditor defaultValue={title} onCancel={() => setIsEditing(false)} onSave={handleSave} />
+      )}
       {button}
-      <div
-        className="Tree-rowLabel"
-        title={title}
-      >
-        {
-          icon && (
-            <><FontAwesomeIcon
-              icon={icon}
-              title={iconTitle}
-            />{' '}</>
-          )
-        }
+      <div className="Tree-rowLabel" title={title}>
+        {icon && (
+          <>
+            <FontAwesomeIcon icon={icon} title={iconTitle} />{' '}
+          </>
+        )}
         {truncate(title)}
       </div>
     </div>
-  )
+  );
 }
 
 export default React.memo(TreeNode);

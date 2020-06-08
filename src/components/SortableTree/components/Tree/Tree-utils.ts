@@ -1,13 +1,7 @@
-import { DragState } from './Tree-types';
 import { getTreePosition } from '../../utils/tree';
 import { getDestinationPath, getSourcePath } from '../../utils/flat-tree';
-import {
-  Path,
-  TreeSourcePosition,
-  TreeDestinationPosition,
-  TreeData,
-  FlattenedTree,
-} from '../../types';
+import { Path, TreeSourcePosition, TreeDestinationPosition, TreeData, FlattenedTree } from '../../types';
+import { DragState } from './Tree-types';
 
 /*
     Translates a drag&drop movement from an index based position to a relative (parent, index) position
@@ -37,12 +31,7 @@ export const calculateFinalDropPositions = (
     return { sourcePosition, destinationPosition: undefined };
   }
 
-  const destinationPath: Path = getDestinationPath(
-    flattenedTree,
-    source.index,
-    destination.index,
-    horizontalLevel,
-  );
+  const destinationPath: Path = getDestinationPath(flattenedTree, source.index, destination.index, horizontalLevel);
   const destinationPosition: TreeDestinationPosition = {
     ...getTreePosition(tree, destinationPath),
   };

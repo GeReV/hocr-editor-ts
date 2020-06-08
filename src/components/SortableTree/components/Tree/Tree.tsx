@@ -1,6 +1,6 @@
 import React, { Component, ReactElement } from 'react';
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer'
+import AutoSizer from 'react-virtualized-auto-sizer';
 import {
   Draggable,
   Droppable,
@@ -10,23 +10,21 @@ import {
   DragUpdate,
   DraggableProvided,
   DraggableStateSnapshot,
-  DroppableProvided, DraggableRubric, DroppableStateSnapshot,
+  DroppableProvided,
+  DraggableRubric,
+  DroppableStateSnapshot,
 } from 'react-beautiful-dnd';
 import { getBox } from 'css-box-model';
-import { calculateFinalDropPositions } from './Tree-utils';
-import { Props, State, DragState } from './Tree-types';
 import { noop } from '../../utils/handy';
 import { flattenTree, mutateTree } from '../../utils/tree';
 import { FlattenedItem, ItemId, Path, TreeData, TreeDestinationPosition, TreeSourcePosition } from '../../types';
 import TreeItem from '../TreeItem';
-import {
-  getDestinationPath,
-  getItemById,
-  getIndexById,
-} from '../../utils/flat-tree';
+import { getDestinationPath, getItemById, getIndexById } from '../../utils/flat-tree';
 import DelayedFunction from '../../utils/delayed-function';
-import { DocumentTreeItem, ElementType } from "../../../../types";
-import { canBlockHostChildren } from "../../../../utils";
+import { DocumentTreeItem, ElementType } from '../../../../types';
+import { canBlockHostChildren } from '../../../../utils';
+import { Props, State, DragState } from './Tree-types';
+import { calculateFinalDropPositions } from './Tree-utils';
 
 const TREE_DRAG_STATE_LEGAL = 'Tree-drag--legal';
 const TREE_DRAG_STATE_ILLEGAL = 'Tree-drag--illegal';
@@ -39,7 +37,11 @@ const canNodeHaveChildren = (node: DocumentTreeItem): boolean => {
   return node.type !== ElementType.Word && node.type !== ElementType.Symbol;
 };
 
-function canMoveNode(tree: TreeData, sourcePosition: TreeSourcePosition, destinationPosition: TreeDestinationPosition | undefined): boolean {
+function canMoveNode(
+  tree: TreeData,
+  sourcePosition: TreeSourcePosition,
+  destinationPosition: TreeDestinationPosition | undefined,
+): boolean {
   if (!destinationPosition) {
     return false;
   }
@@ -128,10 +130,7 @@ export default class Tree extends Component<Props, State> {
     this.expandTimer.stop();
     if (update.combine) {
       const { draggableId } = update.combine;
-      const item: FlattenedItem | undefined = getItemById(
-        flattenedTree,
-        draggableId,
-      );
+      const item: FlattenedItem | undefined = getItemById(flattenedTree, draggableId);
       if (item && this.isExpandable(item)) {
         this.expandTimer.start(() => onExpand(draggableId, item.path));
       }
@@ -142,10 +141,7 @@ export default class Tree extends Component<Props, State> {
       combine: update.combine,
     };
 
-    const {
-      sourcePosition,
-      destinationPosition,
-    } = calculateFinalDropPositions(tree, flattenedTree, this.dragState);
+    const { sourcePosition, destinationPosition } = calculateFinalDropPositions(tree, flattenedTree, this.dragState);
 
     const moveLegal = canMoveNode(tree, sourcePosition, destinationPosition);
 
@@ -175,11 +171,7 @@ export default class Tree extends Component<Props, State> {
       draggedItemId: undefined,
     });
 
-    const { sourcePosition, destinationPosition } = calculateFinalDropPositions(
-      tree,
-      flattenedTree,
-      finalDragState,
-    );
+    const { sourcePosition, destinationPosition } = calculateFinalDropPositions(tree, flattenedTree, finalDragState);
 
     if (canMoveNode(tree, sourcePosition, destinationPosition)) {
       onDragEnd(sourcePosition, destinationPosition);
@@ -201,7 +193,7 @@ export default class Tree extends Component<Props, State> {
     }
 
     return this.itemsElement[draggedItemId];
-  }
+  };
 
   onPointerMove = () => {
     if (this.dragState) {
@@ -212,10 +204,7 @@ export default class Tree extends Component<Props, State> {
     }
   };
 
-  calculateEffectivePath = (
-    flatItem: FlattenedItem,
-    snapshot: DraggableStateSnapshot,
-  ): Path => {
+  calculateEffectivePath = (flatItem: FlattenedItem, snapshot: DraggableStateSnapshot): Path => {
     const { flattenedTree, draggedItemId } = this.state;
 
     if (
@@ -223,23 +212,12 @@ export default class Tree extends Component<Props, State> {
       draggedItemId === flatItem.item.id &&
       (this.dragState.destination || this.dragState.combine)
     ) {
-      const {
-        source,
-        destination,
-        combine,
-        horizontalLevel,
-        mode,
-      } = this.dragState;
+      const { source, destination, combine, horizontalLevel, mode } = this.dragState;
       // We only update the path when it's dragged by keyboard or drop is animated
       if (mode === 'SNAP' || snapshot.isDropAnimating) {
         if (destination) {
           // Between two items
-          return getDestinationPath(
-            flattenedTree,
-            source.index,
-            destination.index,
-            horizontalLevel,
-          );
+          return getDestinationPath(flattenedTree, source.index, destination.index, horizontalLevel);
         }
         if (combine) {
           // Hover on other item while dragging
@@ -255,8 +233,7 @@ export default class Tree extends Component<Props, State> {
     return flatItem.path;
   };
 
-  isExpandable = (item: FlattenedItem): boolean =>
-    !!item.item.hasChildren && !item.item.isExpanded;
+  isExpandable = (item: FlattenedItem): boolean => !!item.item.hasChildren && !item.item.isExpanded;
 
   getDroppedLevel = (): number | undefined => {
     const { offsetPerLevel } = this.props;
@@ -272,9 +249,7 @@ export default class Tree extends Component<Props, State> {
     if (itemElement) {
       const currentLeft: number = getBox(itemElement).contentBox.left;
       const relativeLeft: number = Math.max(currentLeft - containerLeft, 0);
-      return (
-        Math.floor((relativeLeft + offsetPerLevel / 2) / offsetPerLevel) + 1
-      );
+      return Math.floor((relativeLeft + offsetPerLevel / 2) / offsetPerLevel) + 1;
     }
 
     return undefined;
@@ -296,11 +271,11 @@ export default class Tree extends Component<Props, State> {
     }
   };
 
-  renderItem = ({ data, index, style }: ListChildComponentProps & { data: FlattenedItem; }): ReactElement | null => {
+  renderItem = ({ data, index, style }: ListChildComponentProps & { data: FlattenedItem }): ReactElement | null => {
     const { isDragEnabled, renderItem, onExpand, onCollapse, offsetPerLevel } = this.props;
 
     const flatItem = data[index];
-    
+
     if (!flatItem) {
       return null;
     }
@@ -312,31 +287,29 @@ export default class Tree extends Component<Props, State> {
         index={index}
         isDragDisabled={!isDragEnabled}
       >
-        {
-          (provided: DraggableProvided, snapshot: DraggableStateSnapshot) => {
-            const currentPath: Path = this.calculateEffectivePath(flatItem, snapshot);
+        {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => {
+          const currentPath: Path = this.calculateEffectivePath(flatItem, snapshot);
 
-            if (snapshot.isDropAnimating) {
-              this.onDropAnimating();
-            }
-
-            return (
-              <TreeItem
-                key={flatItem.item.id}
-                item={flatItem.item}
-                path={currentPath}
-                onExpand={onExpand}
-                onCollapse={onCollapse}
-                renderItem={renderItem}
-                provided={provided}
-                snapshot={snapshot}
-                itemRef={this.setItemRef}
-                offsetPerLevel={offsetPerLevel}
-                style={style}
-              />
-            );
+          if (snapshot.isDropAnimating) {
+            this.onDropAnimating();
           }
-        }
+
+          return (
+            <TreeItem
+              key={flatItem.item.id}
+              item={flatItem.item}
+              path={currentPath}
+              onExpand={onExpand}
+              onCollapse={onCollapse}
+              renderItem={renderItem}
+              provided={provided}
+              snapshot={snapshot}
+              itemRef={this.setItemRef}
+              offsetPerLevel={offsetPerLevel}
+              style={style}
+            />
+          );
+        }}
       </Draggable>
     );
   };
@@ -347,85 +320,63 @@ export default class Tree extends Component<Props, State> {
 
     return (
       <AutoSizer>
-        {
-          ({ width, height }) => (
-            <DragDropContext
-              onDragStart={this.onDragStart}
-              onDragEnd={this.onDragEnd}
-              onDragUpdate={this.onDragUpdate}
+        {({ width, height }) => (
+          <DragDropContext onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} onDragUpdate={this.onDragUpdate}>
+            <Droppable
+              droppableId="tree"
+              isCombineEnabled={isNestingEnabled}
+              ignoreContainerClipping
+              mode="virtual"
+              renderClone={(provided: DraggableProvided, snapshot: DraggableStateSnapshot, rubric: DraggableRubric) => {
+                const flatItem = getItemById(this.state.flattenedTree, rubric.draggableId);
+
+                if (!flatItem) {
+                  throw new Error(`Could not find item with ID ${rubric.draggableId} in flattenedTree.`);
+                }
+
+                const { onExpand, onCollapse, renderItem, offsetPerLevel } = this.props;
+
+                return (
+                  <TreeItem
+                    key={flatItem.item.id}
+                    item={flatItem.item}
+                    path={flatItem.path}
+                    onExpand={onExpand}
+                    onCollapse={onCollapse}
+                    renderItem={renderItem}
+                    provided={provided}
+                    snapshot={snapshot}
+                    itemRef={noop}
+                    offsetPerLevel={offsetPerLevel}
+                  />
+                );
+              }}
             >
-              <Droppable
-                droppableId="tree"
-                isCombineEnabled={isNestingEnabled}
-                ignoreContainerClipping
-                mode="virtual"
-                renderClone={(
-                  provided: DraggableProvided,
-                  snapshot: DraggableStateSnapshot,
-                  rubric: DraggableRubric,
-                ) => {
-                  const flatItem = getItemById(this.state.flattenedTree, rubric.draggableId);
+              {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => {
+                const itemCount = snapshot.isUsingPlaceholder ? flattenedTree.length + 1 : flattenedTree.length;
 
-                  if (!flatItem) {
-                    throw new Error(`Could not find item with ID ${rubric.draggableId} in flattenedTree.`);
-                  }
+                const finalProvided: DroppableProvided = this.patchDroppableProvided(provided);
 
-                  const {
-                    onExpand,
-                    onCollapse,
-                    renderItem,
-                    offsetPerLevel,
-                  } = this.props;
-
-                  return (
-                    <TreeItem
-                      key={flatItem.item.id}
-                      item={flatItem.item}
-                      path={flatItem.path}
-                      onExpand={onExpand}
-                      onCollapse={onCollapse}
-                      renderItem={renderItem}
-                      provided={provided}
-                      snapshot={snapshot}
-                      itemRef={noop}
-                      offsetPerLevel={offsetPerLevel}
-                    />
-                  )
-                }}
-              >
-                {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => {
-                  const itemCount = snapshot.isUsingPlaceholder
-                    ? flattenedTree.length + 1
-                    : flattenedTree.length;
-                  
-                  const finalProvided: DroppableProvided = this.patchDroppableProvided(
-                    provided,
-                  );
-
-                  return (
-                    <div
-                      onTouchMove={this.onPointerMove}
-                      onMouseMove={this.onPointerMove}
+                return (
+                  <div onTouchMove={this.onPointerMove} onMouseMove={this.onPointerMove}>
+                    <List
+                      width={width}
+                      height={height}
+                      itemCount={itemCount}
+                      itemSize={20}
+                      itemData={flattenedTree}
+                      style={{ pointerEvents: 'auto' }}
+                      outerRef={finalProvided.innerRef}
+                      {...finalProvided.droppableProps}
                     >
-                      <List
-                        width={width}
-                        height={height}
-                        itemCount={itemCount}
-                        itemSize={20}
-                        itemData={flattenedTree}
-                        style={{ pointerEvents: 'auto' }}
-                        outerRef={finalProvided.innerRef}
-                        {...finalProvided.droppableProps}
-                      >
-                        {this.renderItem}
-                      </List>
-                    </div>
-                  );
-                }}
-              </Droppable>
-            </DragDropContext>
-          )
-        }
+                      {this.renderItem}
+                    </List>
+                  </div>
+                );
+              }}
+            </Droppable>
+          </DragDropContext>
+        )}
       </AutoSizer>
     );
   }

@@ -1,7 +1,7 @@
-﻿import Konva from "konva";
-import { BaseTreeItem, DocumentTreeItem, ElementType, Position } from "../../types";
-import { TreeItems } from "../../reducer/types";
-import { Bbox } from "tesseract.js";
+import Konva from 'konva';
+import { Bbox } from 'tesseract.js';
+import { BaseTreeItem, DocumentTreeItem, ElementType, Position } from '../../types';
+import { TreeItems } from '../../reducer/types';
 
 export type BoundsTuple = [number, number, number, number];
 
@@ -19,16 +19,18 @@ export const offsetBounds = ([left, top, right, bottom]: BoundsTuple, { x, y }: 
   bottom + y,
 ];
 
-const bboxToBoundsTuple = (bbox: Bbox): BoundsTuple => ([
-  bbox.x0,
-  bbox.y0,
-  bbox.x1,
-  bbox.y1,
-]);
+const bboxToBoundsTuple = (bbox: Bbox): BoundsTuple => [bbox.x0, bbox.y0, bbox.x1, bbox.y1];
 
-const getParent = (treeItems: TreeItems, item: DocumentTreeItem): BaseTreeItem<ElementType, any> | null => item.parentId !== null ? treeItems[item.parentId] : null;
+const getParent = (treeItems: TreeItems, item: DocumentTreeItem): BaseTreeItem<ElementType, any> | null =>
+  item.parentId !== null ? treeItems[item.parentId] : null;
 
-export function calculateDragBounds(node: Konva.Node | null, item: DocumentTreeItem, treeItems: TreeItems, pageWidth: number, pageHeight: number) {
+export function calculateDragBounds(
+  node: Konva.Node | null,
+  item: DocumentTreeItem,
+  treeItems: TreeItems,
+  pageWidth: number,
+  pageHeight: number,
+) {
   if (!node || item.type === ElementType.Page) {
     return INFINITE_BOUNDS;
   }
@@ -53,16 +55,12 @@ export function calculateDragBounds(node: Konva.Node | null, item: DocumentTreeI
 
   const parent = getParent(treeItems, item);
 
-  const parentBounds: BoundsTuple = !parent || parent.type === ElementType.Page ? pageBounds : bboxToBoundsTuple(parent.data.bbox);
+  const parentBounds: BoundsTuple =
+    !parent || parent.type === ElementType.Page ? pageBounds : bboxToBoundsTuple(parent.data.bbox);
 
   const offsetParentBounds = offsetBounds(parentBounds, stageOffset);
 
-  const [
-    parentLeft,
-    parentTop,
-    parentRight,
-    parentBottom
-  ] = offsetParentBounds;
+  const [parentLeft, parentTop, parentRight, parentBottom] = offsetParentBounds;
 
   return {
     left: parentLeft * scale.x,

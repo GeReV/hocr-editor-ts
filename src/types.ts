@@ -1,4 +1,4 @@
-import { Word, Line, Paragraph, Block, Symbol, Bbox, Page } from "tesseract.js";
+import { Word, Line, Paragraph, Block, Symbol, Bbox, Page } from 'tesseract.js';
 
 export interface Position {
   x: number;
@@ -42,7 +42,7 @@ export interface BaseTreeItem<T extends ElementType, V> {
   type: T;
   data: V;
   parentId: ItemId | null;
-  parentRelativeOffset: Position,
+  parentRelativeOffset: Position;
   children: ItemId[];
   isExpanded: boolean;
 }

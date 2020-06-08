@@ -1,12 +1,12 @@
-import { Bbox } from "tesseract.js";
-import produce from 'immer';
+import { Bbox } from 'tesseract.js';
+import { produce } from 'immer';
 
-import { BaseTreeItem, ElementType, ItemId, Position } from "../types";
-import { buildTree, walkChildren } from "../treeBuilder";
-import { ActionType, AppReducerAction, ModifyNodePayload, State, TreeItems } from "./types";
-import { TreeDestinationPosition, TreeSourcePosition } from "../components/SortableTree";
-import { isLeafItem } from "../components/SortableTree/utils/tree";
-import { createUniqueIdentifier } from "../utils";
+import { BaseTreeItem, ElementType, ItemId, Position } from '../types';
+import { buildTree, walkChildren } from '../treeBuilder';
+import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
+import { isLeafItem } from '../components/SortableTree/utils/tree';
+import { createUniqueIdentifier } from '../utils';
+import { ActionType, AppReducerAction, ModifyNodePayload, State, TreeItems } from './types';
 
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
@@ -28,18 +28,25 @@ export function getNodeOrThrow(treeItems: TreeItems, nodeId: ItemId): BaseTreeIt
   if (!node) {
     throw new Error(`Could not find node with ID ${nodeId}.`);
   }
-  
+
   return node;
 }
 
-function updateTreeNodePosition(state: State, nodeId: ItemId, x: number, y: number, width: number | undefined, height: number | undefined): State {
+function updateTreeNodePosition(
+  state: State,
+  nodeId: ItemId,
+  x: number,
+  y: number,
+  width: number | undefined,
+  height: number | undefined,
+): State {
   return produce(state, (draft) => {
     const tree = draft.documents[draft.currentDocument].tree;
-    
+
     if (!tree) {
       return;
     }
-    
+
     const treeItems = tree.items;
 
     const node = getNodeOrThrow(treeItems, nodeId);
@@ -62,14 +69,14 @@ function updateTreeNodePosition(state: State, nodeId: ItemId, x: number, y: numb
       y1: typeof height === 'undefined' ? node.data.bbox.y1 + delta.y : newPosition.y + height,
     };
 
-    node.parentRelativeOffset = { x, y, };
+    node.parentRelativeOffset = { x, y };
     node.data.bbox = newBbox;
 
     walkChildren(node.children, treeItems, (item) => {
       if (item.type === ElementType.Page) {
         return;
       }
-      
+
       item.data.bbox = offsetBbox(item.data.bbox, delta);
     });
   });
@@ -78,16 +85,16 @@ function updateTreeNodePosition(state: State, nodeId: ItemId, x: number, y: numb
 function moveTreeNode(state: State, source: TreeSourcePosition, destination: TreeDestinationPosition): State {
   return produce(state, (draft) => {
     const tree = draft.documents[draft.currentDocument].tree;
-    
+
     if (!tree) {
       throw new Error('Cannot move node when no tree exists. This should never happen.');
     }
 
     const sourceParent = tree.items[source.parentId];
     const destinationParent = tree.items[destination.parentId];
-    
+
     const item = sourceParent.children.splice(source.index, 1)[0];
-    
+
     sourceParent.isExpanded = sourceParent.children.length > 0 && sourceParent.isExpanded;
 
     if (typeof destination.index === 'undefined') {
@@ -103,31 +110,31 @@ function moveTreeNode(state: State, source: TreeSourcePosition, destination: Tre
 function deleteTreeNode(state: State, nodeId: ItemId): State {
   return produce(state, (draft) => {
     const tree = draft.documents[draft.currentDocument].tree;
-    
+
     if (!tree) {
       return;
     }
-    
+
     const treeItems = tree.items;
-    
+
     const node = getNodeOrThrow(treeItems, nodeId);
-    
+
     if (node.parentId !== null) {
       const parent = getNodeOrThrow(treeItems, node.parentId);
-      
+
       const nodeIndex = parent.children.indexOf(nodeId.toString());
-      
+
       if (nodeIndex < 0) {
         throw new Error(`Node with ID ${nodeId} was expected to be a child of node with ID ${parent.id}.`);
       }
-      
+
       parent.children.splice(nodeIndex, 1);
     }
-    
+
     walkChildren(node.children, treeItems, (item) => {
       delete treeItems[item.id];
     });
-    
+
     delete treeItems[nodeId.toString()];
   });
 }
@@ -139,18 +146,18 @@ function modifyTreeNode(state: State, payload: ModifyNodePayload) {
     if (!tree) {
       return;
     }
-    
+
     const treeItems = tree.items;
-    
+
     const node = getNodeOrThrow(treeItems, payload.itemId);
 
     const changes = payload.changes;
-    
-    if (typeof changes.isExpanded !== "undefined") {
+
+    if (typeof changes.isExpanded !== 'undefined') {
       node.isExpanded = changes.isExpanded;
     }
-    
-    if (typeof changes.text !== "undefined") {
+
+    if (typeof changes.text !== 'undefined') {
       node.data.text = changes.text;
     }
   });
@@ -174,13 +181,13 @@ export function reducer(state: State, action: AppReducerAction): State {
     case ActionType.RecognizeDocument: {
       return produce(state, (draft) => {
         const [rootId, items] = buildTree(action.payload.result);
-        
-        const document = draft.documents.find(doc => doc.id === action.payload.id);
-        
+
+        const document = draft.documents.find((doc) => doc.id === action.payload.id);
+
         if (!document) {
           throw new Error(`Document with ID ${action.payload.id} not found.`);
         }
-        
+
         document.tree = {
           rootId,
           items,
@@ -204,17 +211,24 @@ export function reducer(state: State, action: AppReducerAction): State {
     }
     case ActionType.ChangeDocumentIsProcessing: {
       return produce(state, (draft) => {
-        const document = draft.documents.find(doc => doc.id === action.payload.id);
-        
+        const document = draft.documents.find((doc) => doc.id === action.payload.id);
+
         if (!document) {
           throw new Error(`Document with ID ${action.payload.id} not found.`);
         }
-        
+
         document.isProcessing = action.payload.isProcessing;
       });
     }
     case ActionType.UpdateTreeNodeRect: {
-      return updateTreeNodePosition(state, action.payload.nodeId, action.payload.x, action.payload.y, action.payload.width, action.payload.height);
+      return updateTreeNodePosition(
+        state,
+        action.payload.nodeId,
+        action.payload.x,
+        action.payload.y,
+        action.payload.width,
+        action.payload.height,
+      );
     }
     case ActionType.ModifyNode: {
       return modifyTreeNode(state, action.payload);

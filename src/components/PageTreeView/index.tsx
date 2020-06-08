@@ -1,21 +1,15 @@
-import React from "react";
+import React from 'react';
 import { Row } from 'react-bootstrap';
 
-import { createChangeHovered, createChangeSelected, createModifyNode, createMoveNode } from "../../reducer/actions";
-import { useAppReducer } from "../../reducerContext";
-import Tree from "../SortableTree/components/Tree";
-import {
-  ItemId,
-  Path,
-  TreeDestinationPosition,
-  TreeSourcePosition
-} from "../SortableTree";
+import { createChangeHovered, createChangeSelected, createModifyNode, createMoveNode } from '../../reducer/actions';
+import { useAppReducer } from '../../reducerContext';
+import Tree from '../SortableTree/components/Tree';
+import { ItemId, Path, TreeDestinationPosition, TreeSourcePosition } from '../SortableTree';
 
 import './index.scss';
-import TreeNode from "./TreeNode";
+import TreeNode from './TreeNode';
 
-interface Props {
-}
+interface Props {}
 
 export default function PageTreeView(props: Props) {
   const [state, dispatch] = useAppReducer();
@@ -24,13 +18,15 @@ export default function PageTreeView(props: Props) {
     if (!destination) {
       return;
     }
-    
-    dispatch(createMoveNode({
-      source, 
-      destination
-    }));
+
+    dispatch(
+      createMoveNode({
+        source,
+        destination,
+      }),
+    );
   }
-  
+
   function onMouseEnter(evt: React.MouseEvent, nodeId: ItemId) {
     evt.stopPropagation();
 
@@ -42,13 +38,13 @@ export default function PageTreeView(props: Props) {
 
     dispatch(createChangeHovered(null));
   }
-  
+
   function onSelect(evt: React.MouseEvent, nodeId: ItemId) {
     evt.stopPropagation();
-    
+
     dispatch(createChangeSelected(nodeId));
   }
-  
+
   function handleCollapse(itemId: ItemId, path: Path) {
     dispatch(createModifyNode(itemId, { isExpanded: false }));
   }
@@ -58,16 +54,13 @@ export default function PageTreeView(props: Props) {
   }
 
   const tree = state.documents[state.currentDocument]?.tree;
-  
+
   if (!tree) {
     return null;
   }
 
   return (
-    <Row
-      className="Tree"
-      onMouseLeave={onMouseLeave}
-    >
+    <Row className="Tree" onMouseLeave={onMouseLeave}>
       <Tree
         tree={tree}
         onExpand={handleExpand}
@@ -77,8 +70,8 @@ export default function PageTreeView(props: Props) {
           <TreeNode
             onMouseEnter={onMouseEnter}
             onClick={onSelect}
-            isSelected={state.selectedId === params.item.id} 
-            {...params} 
+            isSelected={state.selectedId === params.item.id}
+            {...params}
           />
         )}
         offsetPerLevel={24}

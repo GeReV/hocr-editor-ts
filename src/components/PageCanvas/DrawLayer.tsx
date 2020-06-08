@@ -1,9 +1,9 @@
-﻿import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Konva from "konva";
-import { Group, Layer, Rect, Transformer } from "react-konva";
-import { IRect } from "konva/types/types";
-import { Position } from "../../types";
-import { clamp } from "../../utils";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Konva from 'konva';
+import { Group, Layer, Rect, Transformer } from 'react-konva';
+import { IRect } from 'konva/types/types';
+import { Position } from '../../types';
+import { clamp } from '../../utils';
 
 interface Box extends IRect {
   rotation: number;
@@ -21,13 +21,13 @@ const MINIMUM_NODE_HEIGHT = 5;
 
 const isLeftMouseButtonPressed = (mouseEvent: MouseEvent): boolean => !!(mouseEvent.buttons & 1);
 
-const DrawLayer = (({ width, height }: Props) => {
+const DrawLayer = ({ width, height }: Props) => {
   const [isDrawing, setIsDrawing] = useState(false);
-  
+
   const groupRef = useRef<Konva.Group>(null);
   const rectRef = useRef<Konva.Rect>(null);
   const trRef = useRef<Konva.Transformer>(null);
-  
+
   useEffect(() => {
     if (isDrawing || !rectRef.current) {
       return;
@@ -70,7 +70,7 @@ const DrawLayer = (({ width, height }: Props) => {
     });
 
     layer.batchDraw();
-    
+
     setIsDrawing(true);
   }, []);
 
@@ -82,10 +82,10 @@ const DrawLayer = (({ width, height }: Props) => {
     if (isLeftMouseButtonPressed(mouseEvent) || !rect) {
       return;
     }
-    
+
     const rectPos = rect.position();
     const rectSize = rect.size();
-    
+
     if (rectSize.width < 0) {
       rect.x(rectPos.x + rectSize.width);
       rect.width(Math.abs(rectSize.width));
@@ -103,65 +103,71 @@ const DrawLayer = (({ width, height }: Props) => {
     setIsDrawing(false);
   }, []);
 
-  const handleMouseMove = useCallback<KonvaMouseEventHandler>((evt) => {
-    const mouseEvent: MouseEvent = evt.evt;
-    
-    const rect = rectRef.current;
-    
-    if (!isLeftMouseButtonPressed(mouseEvent) || !isDrawing || !rect) {
-      return;
-    }
-    
-    const stage = rect.getStage();
-    const layer = rect.getLayer();
+  const handleMouseMove = useCallback<KonvaMouseEventHandler>(
+    (evt) => {
+      const mouseEvent: MouseEvent = evt.evt;
 
-    if (!stage || !layer) {
-      return;
-    }
+      const rect = rectRef.current;
 
-    const pos = rect.position();
-    const offset = stage.position();
-    const scale = stage.scale();
+      if (!isLeftMouseButtonPressed(mouseEvent) || !isDrawing || !rect) {
+        return;
+      }
 
-    rect.size({
-      width: ((mouseEvent.offsetX - offset.x) / scale.x) - pos.x,
-      height: ((mouseEvent.offsetY - offset.y) / scale.y) - pos.y,
-    });
+      const stage = rect.getStage();
+      const layer = rect.getLayer();
 
-    layer.batchDraw();
-  }, [isDrawing]);
+      if (!stage || !layer) {
+        return;
+      }
 
-  const dragBoundFunc = useCallback<(pos: Position) => Position>((pos) => {
-    const rect = rectRef.current;
-    
-    if (!rect) {
-      return pos;
-    }
+      const pos = rect.position();
+      const offset = stage.position();
+      const scale = stage.scale();
 
-    const stage = rect.getStage();
+      rect.size({
+        width: (mouseEvent.offsetX - offset.x) / scale.x - pos.x,
+        height: (mouseEvent.offsetY - offset.y) / scale.y - pos.y,
+      });
 
-    if (!stage) {
-      return pos;
-    }
+      layer.batchDraw();
+    },
+    [isDrawing],
+  );
 
-    const scale = rect.getAbsoluteScale();
+  const dragBoundFunc = useCallback<(pos: Position) => Position>(
+    (pos) => {
+      const rect = rectRef.current;
 
-    const stageOffset: Position = stage.position();
-    
-    const rectSize = rect.size();
+      if (!rect) {
+        return pos;
+      }
 
-    const bounds = {
-      left: stageOffset.x,
-      top: stageOffset.y,
-      right: (width - rectSize.width) * scale.x + stageOffset.x,
-      bottom: (height - rectSize.height) * scale.y + stageOffset.y,
-    };
+      const stage = rect.getStage();
 
-    return {
-      x: clamp(pos.x, bounds.left, bounds.right),
-      y: clamp(pos.y, bounds.top, bounds.bottom),
-    };
-  }, [width, height]);
+      if (!stage) {
+        return pos;
+      }
+
+      const scale = rect.getAbsoluteScale();
+
+      const stageOffset: Position = stage.position();
+
+      const rectSize = rect.size();
+
+      const bounds = {
+        left: stageOffset.x,
+        top: stageOffset.y,
+        right: (width - rectSize.width) * scale.x + stageOffset.x,
+        bottom: (height - rectSize.height) * scale.y + stageOffset.y,
+      };
+
+      return {
+        x: clamp(pos.x, bounds.left, bounds.right),
+        y: clamp(pos.y, bounds.top, bounds.bottom),
+      };
+    },
+    [width, height],
+  );
 
   const handleTransformEnd = useCallback<(evt: Konva.KonvaEventObject<Event>) => void>((evt) => {
     // transformer is changing scale of the rect
@@ -189,49 +195,52 @@ const DrawLayer = (({ width, height }: Props) => {
     });
   }, []);
 
-  const boundBoxFunc = useCallback<(oldBox: Box, newBox: Box) => Box>((oldBox, newBox) => {
-    if (!groupRef.current) {
+  const boundBoxFunc = useCallback<(oldBox: Box, newBox: Box) => Box>(
+    (oldBox, newBox) => {
+      if (!groupRef.current) {
+        return newBox;
+      }
+
+      const stage = groupRef.current.getStage();
+
+      if (!stage) {
+        return newBox;
+      }
+
+      const bounds = {
+        x0: 0,
+        y0: 0,
+        x1: width,
+        y1: height,
+      };
+
+      const scale = groupRef.current.getAbsoluteScale();
+      const stagePos = stage.position();
+
+      const scaledBbox = {
+        left: bounds.x0 * scale.x + stagePos.x,
+        top: bounds.y0 * scale.y + stagePos.y,
+        right: bounds.x1 * scale.x + stagePos.x,
+        bottom: bounds.y1 * scale.y + stagePos.y,
+      };
+
+      // The 1 offset is to make things a bit more forgiving, since precision errors could lead to unwanted behaviors, for
+      // example, when rects are on virtually the same pixel.
+      if (
+        newBox.x < scaledBbox.left - 1 ||
+        newBox.y < scaledBbox.top - 1 ||
+        newBox.width > scaledBbox.right - newBox.x + 1 ||
+        newBox.height > scaledBbox.bottom - newBox.y + 1 ||
+        newBox.width < MINIMUM_NODE_WIDTH ||
+        newBox.height < MINIMUM_NODE_HEIGHT
+      ) {
+        return oldBox;
+      }
+
       return newBox;
-    }
-
-    const stage = groupRef.current.getStage();
-    
-    if (!stage) {
-      return newBox;
-    }
-    
-    const bounds = {
-      x0: 0,
-      y0: 0,
-      x1: width,
-      y1: height,
-    };
-
-    const scale = groupRef.current.getAbsoluteScale();
-    const stagePos = stage.position();
-
-    const scaledBbox = {
-      left: bounds.x0 * scale.x + stagePos.x,
-      top: bounds.y0 * scale.y + stagePos.y,
-      right: bounds.x1 * scale.x + stagePos.x,
-      bottom: bounds.y1 * scale.y + stagePos.y,
-    };
-
-    // The 1 offset is to make things a bit more forgiving, since precision errors could lead to unwanted behaviors, for
-    // example, when rects are on virtually the same pixel.
-    if (
-      newBox.x < scaledBbox.left - 1 ||
-      newBox.y < scaledBbox.top - 1 ||
-      newBox.width > scaledBbox.right - newBox.x + 1 ||
-      newBox.height > scaledBbox.bottom - newBox.y + 1 ||
-      newBox.width < MINIMUM_NODE_WIDTH ||
-      newBox.height < MINIMUM_NODE_HEIGHT
-    ) {
-      return oldBox;
-    }
-
-    return newBox;
-  }, [width, height]);
+    },
+    [width, height],
+  );
 
   return (
     <Layer>
@@ -251,20 +260,12 @@ const DrawLayer = (({ width, height }: Props) => {
           dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
         />
-        {
-          !isDrawing && (
-            <Transformer
-              ref={trRef}
-              rotateEnabled={false}
-              keepRatio={false}
-              anchorSize={7}
-              boundBoxFunc={boundBoxFunc}
-            />
-          )
-        }
+        {!isDrawing && (
+          <Transformer ref={trRef} rotateEnabled={false} keepRatio={false} anchorSize={7} boundBoxFunc={boundBoxFunc} />
+        )}
       </Group>
     </Layer>
   );
-});
+};
 
 export default DrawLayer;

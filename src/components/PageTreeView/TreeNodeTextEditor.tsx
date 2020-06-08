@@ -1,7 +1,7 @@
-﻿import React, { useCallback, useRef } from "react";
-import { Button, Col, Form } from "react-bootstrap";
-import { useKey } from "react-use";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import React, { useCallback, useRef } from 'react';
+import { Button, Col, Form } from 'react-bootstrap';
+import { useKey } from 'react-use';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 interface Props {
   defaultValue?: string;
@@ -18,41 +18,35 @@ function TreeNodeTextEditor({ defaultValue, onCancel, onSave }: Props) {
     onSave(text);
   }, [onSave]);
 
-  useKey('Escape', () => {
-    onCancel();
-  }, undefined, [onCancel]);
+  useKey(
+    'Escape',
+    () => {
+      onCancel();
+    },
+    undefined,
+    [onCancel],
+  );
 
-  useKey('Enter', () => {
-    handleSave();
-  }, undefined, [handleSave]);
+  useKey(
+    'Enter',
+    () => {
+      handleSave();
+    },
+    undefined,
+    [handleSave],
+  );
 
   return (
     <Form className="Tree-rowEditor">
       <Form.Row>
         <Col xs={true}>
-          <Form.Control
-            ref={editorRef}
-            type="text"
-            size="sm"
-            defaultValue={defaultValue}
-            autoFocus
-          />
+          <Form.Control ref={editorRef} type="text" size="sm" defaultValue={defaultValue} autoFocus />
         </Col>
         <Col xs="auto">
-          <Button
-            type="submit"
-            variant="success"
-            size="sm"
-            onClick={() => handleSave()}
-          >
+          <Button type="submit" variant="success" size="sm" onClick={() => handleSave()}>
             <FontAwesomeIcon icon="check" />
-          </Button>
-          {' '}
-          <Button
-            variant="light"
-            size="sm"
-            onClick={() => onCancel()}
-          >
+          </Button>{' '}
+          <Button variant="light" size="sm" onClick={() => onCancel()}>
             <FontAwesomeIcon icon="times" />
           </Button>
         </Col>

@@ -1,12 +1,12 @@
-﻿import React from "react";
-import Konva from "konva";
-import { Image, Layer, Stage } from "react-konva";
-import { ItemId, PageImage, Position } from "../../types";
-import { AppReducerContext } from "../../reducerContext";
-import Blocks from "./Blocks";
-import { createUpdateTreeNodeRect } from "../../reducer/actions";
-import BlocksLayer from "./BlocksLayer";
-import DrawLayer from "./DrawLayer";
+import React from 'react';
+import Konva from 'konva';
+import { Image, Layer, Stage } from 'react-konva';
+import { ItemId, PageImage, Position } from '../../types';
+import { AppReducerContext } from '../../reducerContext';
+import { createUpdateTreeNodeRect } from '../../reducer/actions';
+import Blocks from './Blocks';
+import BlocksLayer from './BlocksLayer';
+import DrawLayer from './DrawLayer';
 
 export interface Props {
   width: number;
@@ -25,7 +25,7 @@ export interface Props {
 
 class PageGraphics extends React.Component<Props> {
   layer: React.RefObject<Konva.Layer> = React.createRef<Konva.Layer>();
-  
+
   rectRefs: Record<ItemId, Konva.Rect | null> = {};
 
   setInnerRef = (itemId: ItemId, el: Konva.Rect | null) => {
@@ -76,64 +76,53 @@ class PageGraphics extends React.Component<Props> {
 
     return (
       <AppReducerContext.Consumer>
-        {
-          (consumer) => {
-            if (!consumer) {
-              return null;
-            }
-
-            const [state, dispatch] = consumer;
-
-            const tree = state.documents[state.currentDocument]?.tree;
-
-            return (
-              <Stage
-                ref={innerRef}
-                onClick={onDeselect}
-                width={width}
-                height={height}
-                scaleX={scale}
-                scaleY={scale}
-                x={position.x}
-                y={position.y}
-                onDragEnd={(evt) => {
-                  const stage = evt.target.getStage();
-
-                  setPosition({
-                    x: stage?.x() ?? 0,
-                    y: stage?.y() ?? 0,
-                  });
-                }}
-                draggable={!isDrawing}
-              >
-                <BlocksLayer ref={this.layer}>
-                  <Image image={pageImage.image} />
-                  <Blocks
-                    tree={tree}
-                    onChange={(args) => dispatch(createUpdateTreeNodeRect(args))}
-                    onSelect={onSelect}
-                    selectedId={selectedId}
-                    pageProps={pageProps}
-                    setInnerRef={this.setInnerRef}
-                  />
-                </BlocksLayer>
-                {
-                  isDrawing && (
-                    <DrawLayer
-                      width={pageImage?.image.width ?? 0}
-                      height={pageImage?.image.height ?? 0}
-                    />
-                  )
-                }
-              </Stage>
-            )
+        {(consumer) => {
+          if (!consumer) {
+            return null;
           }
-        }
+
+          const [state, dispatch] = consumer;
+
+          const tree = state.documents[state.currentDocument]?.tree;
+
+          return (
+            <Stage
+              ref={innerRef}
+              onClick={onDeselect}
+              width={width}
+              height={height}
+              scaleX={scale}
+              scaleY={scale}
+              x={position.x}
+              y={position.y}
+              onDragEnd={(evt) => {
+                const stage = evt.target.getStage();
+
+                setPosition({
+                  x: stage?.x() ?? 0,
+                  y: stage?.y() ?? 0,
+                });
+              }}
+              draggable={!isDrawing}
+            >
+              <BlocksLayer ref={this.layer}>
+                <Image image={pageImage.image} />
+                <Blocks
+                  tree={tree}
+                  onChange={(args) => dispatch(createUpdateTreeNodeRect(args))}
+                  onSelect={onSelect}
+                  selectedId={selectedId}
+                  pageProps={pageProps}
+                  setInnerRef={this.setInnerRef}
+                />
+              </BlocksLayer>
+              {isDrawing && <DrawLayer width={pageImage?.image.width ?? 0} height={pageImage?.image.height ?? 0} />}
+            </Stage>
+          );
+        }}
       </AppReducerContext.Consumer>
     );
   }
 }
 
-export default React.forwardRef<Stage, Props>((props, ref) => (
-  <PageGraphics innerRef={ref} {...props} />
-));
+export default React.forwardRef<Stage, Props>((props, ref) => <PageGraphics innerRef={ref} {...props} />);
