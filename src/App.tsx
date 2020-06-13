@@ -6,7 +6,7 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 
 import { OcrDocument } from './reducer/types';
 import { useAppReducer } from './reducerContext';
-import { createDeleteNode, createSelectDocument } from './reducer/actions';
+import { createDeleteNode, createRedo, createSelectDocument, createUndo } from './reducer/actions';
 import Header from './components/Header';
 import PageCanvas from './components/PageCanvas';
 import PageTreeView from './components/PageTreeView';
@@ -32,6 +32,29 @@ function App() {
     },
     undefined,
     [state.selectedId],
+  );
+
+  useKey(
+    (evt) => evt.key === 'z' && (evt.ctrlKey || evt.metaKey),
+    () => {
+      dispatch(createUndo());
+    },
+    undefined,
+    [dispatch],
+  );
+
+  useKey(
+    (evt) => {
+      const cmdShiftZ = evt.key.toLowerCase() === 'z' && (evt.ctrlKey || evt.metaKey) && evt.shiftKey;
+      const ctrlY = evt.key === 'y' && evt.ctrlKey;
+
+      return cmdShiftZ || ctrlY;
+    },
+    () => {
+      dispatch(createRedo());
+    },
+    undefined,
+    [dispatch],
   );
 
   const handleSelect = useCallback(

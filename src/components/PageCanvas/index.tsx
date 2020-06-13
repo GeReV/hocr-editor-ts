@@ -52,14 +52,14 @@ function PageCanvas({ document, documents, hoveredId, selectedId, dispatch }: Pr
     }
 
     const fitScale =
-      document.pageImage.image.width > document.pageImage.image.height
-        ? width / document.pageImage.image.width
-        : height / document.pageImage.image.height;
+      document.pageImage.width > document.pageImage.height
+        ? width / document.pageImage.width
+        : height / document.pageImage.height;
 
     setScale(fitScale);
     setPosition({
-      x: (width - document.pageImage.image.width * fitScale) * 0.5,
-      y: (height - document.pageImage.image.height * fitScale) * 0.5,
+      x: (width - document.pageImage.width * fitScale) * 0.5,
+      y: (height - document.pageImage.height * fitScale) * 0.5,
     });
   }, [document, height, width]);
 
@@ -159,4 +159,4 @@ function PageCanvas({ document, documents, hoveredId, selectedId, dispatch }: Pr
   );
 }
 
-export default React.memo(PageCanvas);
+export default PageCanvas;

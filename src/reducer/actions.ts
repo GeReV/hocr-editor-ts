@@ -57,3 +57,6 @@ export const createRecognizeDocument = createAction<
   },
 }));
 export const createLogUpdate = createAction<RecognizeUpdate | null, ActionType.LogUpdate>(ActionType.LogUpdate);
+
+export const createUndo = createAction<void, ActionType.Undo>(ActionType.Undo);
+export const createRedo = createAction<void, ActionType.Redo>(ActionType.Redo);

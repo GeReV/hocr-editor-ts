@@ -70,7 +70,8 @@ export async function loadImage(buffer: ArrayBuffer, mimeType: string): Promise<
   }
 
   return {
-    image: img,
+    width: img.width,
+    height: img.height,
     urlObject: URL.createObjectURL(blob),
     thumbnailUrlObject,
   };

@@ -1,12 +1,15 @@
 import { Bbox } from 'tesseract.js';
-import { produce } from 'immer';
+import { produce, produceWithPatches, enablePatches, applyPatches } from 'immer';
+import type { Draft } from 'immer/dist/types/types-external';
 
 import { BaseTreeItem, ElementType, ItemId, Position } from '../types';
 import { buildTree, walkChildren } from '../treeBuilder';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
 import { isLeafItem } from '../components/SortableTree/utils/tree';
 import { createUniqueIdentifier } from '../utils';
-import { ActionType, AppReducerAction, ModifyNodePayload, State, TreeItems } from './types';
+import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State, TreeItems } from './types';
+
+enablePatches();
 
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
@@ -16,6 +19,8 @@ const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
 });
 
 export const initialState: State = {
+  changesets: [],
+  currentChangeset: -1,
   documents: [],
   currentDocument: 0,
   selectedId: null,
@@ -41,7 +46,7 @@ function updateTreeNodePosition(
   width: number | undefined,
   height: number | undefined,
 ): State {
-  return produce(state, (draft) => {
+  return produceWithUndo(state, (draft) => {
     const tree = draft.documents[draft.currentDocument].tree;
 
     if (!tree) {
@@ -84,7 +89,7 @@ function updateTreeNodePosition(
 }
 
 function moveTreeNode(state: State, source: TreeSourcePosition, destination: TreeDestinationPosition): State {
-  return produce(state, (draft) => {
+  return produceWithUndo(state, (draft) => {
     const tree = draft.documents[draft.currentDocument].tree;
 
     if (!tree) {
@@ -109,7 +114,7 @@ function moveTreeNode(state: State, source: TreeSourcePosition, destination: Tre
 }
 
 function deleteTreeNode(state: State, nodeId: ItemId): State {
-  return produce(state, (draft) => {
+  return produceWithUndo(state, (draft) => {
     const tree = draft.documents[draft.currentDocument].tree;
 
     if (!tree) {
@@ -140,8 +145,8 @@ function deleteTreeNode(state: State, nodeId: ItemId): State {
   });
 }
 
-function modifyTreeNode(state: State, payload: ModifyNodePayload) {
-  return produce(state, (draft) => {
+function modifyTreeNode(state: State, payload: ModifyNodePayload): State {
+  return produceWithUndo(state, (draft) => {
     const tree = draft.documents[draft.currentDocument].tree;
 
     if (!tree) {
@@ -166,10 +171,10 @@ function modifyTreeNode(state: State, payload: ModifyNodePayload) {
 
 const documentId = createUniqueIdentifier();
 
-export function reducer(state: State, action: AppReducerAction): State {
+function reduce(state: State, action: AppReducerAction): State {
   switch (action.type) {
     case ActionType.AddDocument: {
-      return produce(state, (draft) => {
+      return produceWithUndo(state, (draft) => {
         draft.documents.push({
           id: documentId(),
           isProcessing: false,
@@ -180,10 +185,10 @@ export function reducer(state: State, action: AppReducerAction): State {
       });
     }
     case ActionType.RecognizeDocument: {
-      return produce(state, (draft) => {
+      return produceWithUndo(state, (draft) => {
         const [rootId, items] = buildTree(action.payload.result);
 
-        const document = draft.documents.find((doc) => doc.id === action.payload.id);
+        const document = draft.documents.find((doc: OcrDocument) => doc.id === action.payload.id);
 
         if (!document) {
           throw new Error(`Document with ID ${action.payload.id} not found.`);
@@ -196,12 +201,12 @@ export function reducer(state: State, action: AppReducerAction): State {
       });
     }
     case ActionType.SelectDocument: {
-      return produce(state, (draft) => {
+      return produceWithUndo(state, (draft) => {
         draft.currentDocument = action.payload;
       });
     }
     case ActionType.ChangeSelected: {
-      return produce(state, (draft) => {
+      return produceWithUndo(state, (draft) => {
         draft.selectedId = action.payload;
       });
     }
@@ -248,4 +253,56 @@ export function reducer(state: State, action: AppReducerAction): State {
     default:
       throw new Error(`Unknown action ${JSON.stringify(action)}`);
   }
+}
+
+export function produceWithUndo(state: State, action: (draft: Draft<State>) => void): State {
+  const [newState, changes, inverseChanges] = produceWithPatches(state, action);
+
+  return produce(newState, (draft) => {
+    if (draft.changesets.length === MAX_CHANGESETS) {
+      draft.changesets.shift();
+    }
+
+    // When we've undone a few steps and make a new change, delete all future steps to start a new "timeline".
+    if (draft.currentChangeset < draft.changesets.length - 1) {
+      draft.changesets = draft.changesets.slice(draft.currentChangeset);
+    }
+
+    draft.changesets.push({
+      changes,
+      inverseChanges,
+    });
+
+    draft.currentChangeset = Math.min(draft.currentChangeset + 1, MAX_CHANGESETS - 1);
+  });
+}
+
+const MAX_CHANGESETS = 200;
+
+export function reducer(state: State, action: AppReducerAction): State {
+  if (action.type === ActionType.Undo) {
+    if (state.currentChangeset < 0) {
+      return state;
+    }
+
+    const newState: State = applyPatches(state, state.changesets[state.currentChangeset].inverseChanges);
+
+    return produce(newState, (draft) => {
+      draft.currentChangeset--;
+    });
+  }
+
+  if (action.type === ActionType.Redo) {
+    if (state.currentChangeset === state.changesets.length - 1) {
+      return state;
+    }
+
+    const update = produce(state, (draft) => {
+      draft.currentChangeset++;
+    });
+
+    return applyPatches(update, update.changesets[update.currentChangeset].changes);
+  }
+
+  return reduce(state, action);
 }

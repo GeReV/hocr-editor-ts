@@ -1,4 +1,5 @@
 import { RecognizeResult } from 'tesseract.js';
+import { Patch } from 'immer/compat/pre-3.7/dist/immer';
 import { DocumentTreeItem, ItemId, PageImage, RecognizeUpdate } from '../types';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
 import * as actions from './actions';
@@ -16,7 +17,14 @@ export interface OcrDocument {
   } | null;
 }
 
+interface Changeset {
+  changes: Patch[];
+  inverseChanges: Patch[];
+}
+
 export interface State {
+  changesets: Changeset[];
+  currentChangeset: number;
   documents: OcrDocument[];
   currentDocument: number;
   selectedId: ItemId | null;
@@ -37,6 +45,9 @@ export enum ActionType {
   DeleteNode = 'DeleteNode',
   MoveNode = 'MoveNode',
   LogUpdate = 'LogUpdate',
+
+  Undo = 'Undo',
+  Redo = 'Redo',
 }
 
 export interface AddDocumentPayload {

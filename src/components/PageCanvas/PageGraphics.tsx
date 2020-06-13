@@ -24,17 +24,25 @@ export interface Props {
   dispatch: Dispatch<AppReducerAction>;
 }
 
-class PageGraphics extends React.Component<Props> {
+interface State {
+  image: HTMLImageElement | null;
+}
+
+class PageGraphics extends React.Component<Props, State> {
   layer: React.RefObject<Konva.Layer> = React.createRef<Konva.Layer>();
 
   rectRefs: Record<ItemId, Konva.Rect | null> = {};
+
+  state: State = {
+    image: null,
+  };
 
   setInnerRef = (itemId: ItemId, el: Konva.Rect | null) => {
     this.rectRefs[itemId] = el;
   };
 
-  componentDidUpdate({ hoveredId: prevHoveredId }: Readonly<Props>) {
-    const { hoveredId } = this.props;
+  async componentDidUpdate({ hoveredId: prevHoveredId, document: prevDocument }: Readonly<Props>) {
+    const { hoveredId, document } = this.props;
 
     if (typeof prevHoveredId === 'string' || typeof prevHoveredId === 'number') {
       this.rectRefs[prevHoveredId]?.strokeEnabled(false);
@@ -42,6 +50,17 @@ class PageGraphics extends React.Component<Props> {
 
     if (typeof hoveredId === 'string' || typeof hoveredId === 'number') {
       this.rectRefs[hoveredId]?.strokeEnabled(true);
+    }
+
+    if (document?.pageImage.urlObject && document.pageImage.urlObject !== prevDocument?.pageImage.urlObject) {
+      const image = new window.Image();
+
+      image.onload = () =>
+        this.setState({
+          image,
+        });
+
+      image.src = document.pageImage.urlObject;
     }
 
     this.layer.current?.batchDraw();
@@ -67,13 +86,15 @@ class PageGraphics extends React.Component<Props> {
       dispatch,
     } = this.props;
 
-    if (!document?.pageImage || !document?.tree) {
+    const { image } = this.state;
+
+    if (!document?.pageImage) {
       return null;
     }
 
     const pageProps = {
-      pageWidth: document.pageImage.image.width,
-      pageHeight: document.pageImage.image.height,
+      pageWidth: document.pageImage.width,
+      pageHeight: document.pageImage.height,
     };
 
     return (
@@ -97,7 +118,7 @@ class PageGraphics extends React.Component<Props> {
         draggable={!isDrawing}
       >
         <BlocksLayer ref={this.layer}>
-          <Image image={document.pageImage.image} />
+          {image && <Image image={image} />}
           <Blocks
             tree={document.tree}
             onChange={(args) => dispatch(createUpdateTreeNodeRect(args))}
@@ -107,9 +128,7 @@ class PageGraphics extends React.Component<Props> {
             setInnerRef={this.setInnerRef}
           />
         </BlocksLayer>
-        {isDrawing && (
-          <DrawLayer width={document.pageImage.image.width ?? 0} height={document.pageImage.image.height ?? 0} />
-        )}
+        {isDrawing && <DrawLayer width={document.pageImage.width ?? 0} height={document.pageImage.height ?? 0} />}
       </Stage>
     );
   }

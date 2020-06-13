@@ -6,7 +6,8 @@ export interface Position {
 }
 
 export interface PageImage {
-  image: ImageBitmap;
+  width: number;
+  height: number;
   urlObject: string;
   thumbnailUrlObject: string;
 }

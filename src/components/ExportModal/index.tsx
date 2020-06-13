@@ -41,8 +41,8 @@ export default function ExportModal({ document, onClose, show }: Props) {
     const page = rootTreeItem.data;
 
     const size = {
-      width: document.pageImage.image.width,
-      height: document.pageImage.image.height,
+      width: document.pageImage.width,
+      height: document.pageImage.height,
     };
 
     const doc = buildHocrDocument(page, size, document.filename);
