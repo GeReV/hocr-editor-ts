@@ -1,5 +1,5 @@
 import { Bbox } from 'tesseract.js';
-import { produce, produceWithPatches, enablePatches, applyPatches } from 'immer';
+import { produce } from 'immer';
 import type { Draft } from 'immer/dist/types/types-external';
 
 import { BaseTreeItem, ElementType, ItemId, Position } from '../types';
@@ -9,8 +9,6 @@ import { isLeafItem } from '../components/SortableTree/utils/tree';
 import { createUniqueIdentifier } from '../utils';
 import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State, TreeItems } from './types';
 
-enablePatches();
-
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
   y0: bbox.y0 + offset.y,
@@ -19,8 +17,8 @@ const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
 });
 
 export const initialState: State = {
-  changesets: [],
-  currentChangeset: -1,
+  snapshots: [],
+  currentSnapshot: -1,
   documents: [],
   currentDocument: 0,
   selectedId: null,
@@ -256,52 +254,66 @@ function reduce(state: State, action: AppReducerAction): State {
 }
 
 export function produceWithUndo(state: State, action: (draft: Draft<State>) => void): State {
-  const [newState, changes, inverseChanges] = produceWithPatches(state, action);
+  const newState = produce(state, action);
 
   return produce(newState, (draft) => {
-    if (draft.changesets.length === MAX_CHANGESETS) {
-      draft.changesets.shift();
+    const { snapshots, currentSnapshot, ...rest } = draft;
+
+    if (snapshots.length === MAX_CHANGESETS) {
+      draft.snapshots.shift();
     }
 
     // When we've undone a few steps and make a new change, delete all future steps to start a new "timeline".
-    if (draft.currentChangeset < draft.changesets.length - 1) {
-      draft.changesets = draft.changesets.slice(draft.currentChangeset);
+    if (draft.currentSnapshot < draft.snapshots.length - 1) {
+      draft.snapshots = draft.snapshots.slice(0, draft.currentSnapshot);
     }
 
-    draft.changesets.push({
-      changes,
-      inverseChanges,
-    });
-
-    draft.currentChangeset = Math.min(draft.currentChangeset + 1, MAX_CHANGESETS - 1);
+    draft.snapshots.push(rest);
+    draft.currentSnapshot = Math.min(draft.snapshots.length - 1, MAX_CHANGESETS - 1);
   });
 }
 
-const MAX_CHANGESETS = 200;
+const MAX_CHANGESETS = 40;
 
 export function reducer(state: State, action: AppReducerAction): State {
+  const snapshotLastIndex = state.snapshots.length - 1;
+
   if (action.type === ActionType.Undo) {
-    if (state.currentChangeset < 0) {
+    console.debug(state.snapshots);
+    if (state.currentSnapshot <= 0) {
+      console.debug(state.currentSnapshot, '/', snapshotLastIndex);
+
       return state;
     }
 
-    const newState: State = applyPatches(state, state.changesets[state.currentChangeset].inverseChanges);
+    const changes = state.snapshots[state.currentSnapshot - 1];
 
-    return produce(newState, (draft) => {
-      draft.currentChangeset--;
-    });
+    console.debug(state.currentSnapshot - 1, '/', snapshotLastIndex);
+
+    return {
+      ...state,
+      ...changes,
+      currentSnapshot: state.currentSnapshot - 1,
+    };
   }
 
   if (action.type === ActionType.Redo) {
-    if (state.currentChangeset === state.changesets.length - 1) {
+    console.debug(state.snapshots);
+    if (state.currentSnapshot === snapshotLastIndex) {
+      console.debug(state.currentSnapshot, '/', snapshotLastIndex);
+
       return state;
     }
 
-    const update = produce(state, (draft) => {
-      draft.currentChangeset++;
-    });
+    const changes = state.snapshots[state.currentSnapshot + 1];
 
-    return applyPatches(update, update.changesets[update.currentChangeset].changes);
+    console.debug(state.currentSnapshot + 1, '/', snapshotLastIndex);
+
+    return {
+      ...state,
+      ...changes,
+      currentSnapshot: state.currentSnapshot + 1,
+    };
   }
 
   return reduce(state, action);

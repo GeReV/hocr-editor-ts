@@ -23,8 +23,8 @@ interface Changeset {
 }
 
 export interface State {
-  changesets: Changeset[];
-  currentChangeset: number;
+  snapshots: Omit<State, 'snapshots' | 'currentSnapshot'>[];
+  currentSnapshot: number;
   documents: OcrDocument[];
   currentDocument: number;
   selectedId: ItemId | null;
