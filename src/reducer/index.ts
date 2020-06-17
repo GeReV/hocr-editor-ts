@@ -9,6 +9,8 @@ import { isLeafItem } from '../components/SortableTree/utils/tree';
 import { createUniqueIdentifier } from '../utils';
 import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State, TreeItems } from './types';
 
+const MAX_CHANGESETS = 40;
+
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
   y0: bbox.y0 + offset.y,
@@ -260,15 +262,13 @@ export function produceWithUndo(state: State, action: (draft: Draft<State>) => v
 
     // When we've undone a few steps and make a new change, delete all future steps to start a new "timeline".
     if (draft.currentSnapshot < draft.snapshots.length - 1) {
-      draft.snapshots = draft.snapshots.slice(0, draft.currentSnapshot);
+      draft.snapshots = draft.snapshots.slice(0, draft.currentSnapshot + 1);
     }
 
     draft.snapshots.push(rest);
     draft.currentSnapshot = Math.min(draft.snapshots.length - 1, MAX_CHANGESETS - 1);
   });
 }
-
-const MAX_CHANGESETS = 40;
 
 export function reducer(state: State, action: AppReducerAction): State {
   const snapshotLastIndex = state.snapshots.length - 1;
