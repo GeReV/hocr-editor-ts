@@ -253,6 +253,10 @@ function reduce(state: State, action: AppReducerAction): State {
 export function produceWithUndo(state: State, action: (draft: Draft<State>) => void): State {
   const newState = produce(state, action);
 
+  if (state === newState) {
+    return state;
+  }
+
   return produce(newState, (draft) => {
     const { snapshots, currentSnapshot, ...rest } = draft;
 
