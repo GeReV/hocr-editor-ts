@@ -98,16 +98,20 @@ function moveTreeNode(state: State, source: TreeSourcePosition, destination: Tre
     const sourceParent = tree.items[source.parentId];
     const destinationParent = tree.items[destination.parentId];
 
-    const item = sourceParent.children.splice(source.index, 1)[0];
+    const itemId = sourceParent.children.splice(source.index, 1)[0];
+
+    const item = tree.items[itemId];
+
+    item.parentId = destination.parentId;
 
     sourceParent.isExpanded = sourceParent.children.length > 0 && sourceParent.isExpanded;
 
     if (typeof destination.index === 'undefined') {
       if (isLeafItem(destinationParent)) {
-        destinationParent.children.push(item);
+        destinationParent.children.push(itemId);
       }
     } else {
-      destinationParent.children.splice(destination.index, 0, item);
+      destinationParent.children.splice(destination.index, 0, itemId);
     }
   });
 }
