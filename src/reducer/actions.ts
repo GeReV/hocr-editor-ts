@@ -46,15 +46,22 @@ export const createModifyNode = createAction<
     changes,
   },
 }));
-export const createRecognizeDocument = createAction<
-  (id: number, result: RecognizeResult) => { payload: CreateRecognizeDocumentPayload },
-  ActionType.RecognizeDocument
->(ActionType.RecognizeDocument, (id, result) => ({
+
+const buildRecognizePayload = (id: number, result: RecognizeResult): { payload: CreateRecognizeDocumentPayload } => ({
   payload: {
     id,
     result,
   },
-}));
+});
+export const createRecognizeDocument = createAction<typeof buildRecognizePayload, ActionType.RecognizeDocument>(
+  ActionType.RecognizeDocument,
+  buildRecognizePayload,
+);
+export const createRecognizeRegion = createAction<typeof buildRecognizePayload, ActionType.RecognizeRegion>(
+  ActionType.RecognizeRegion,
+  buildRecognizePayload,
+);
+
 export const createLogUpdate = createAction<RecognizeUpdate | null, ActionType.LogUpdate>(ActionType.LogUpdate);
 
 export const createUndo = createAction<void, ActionType.Undo>(ActionType.Undo);

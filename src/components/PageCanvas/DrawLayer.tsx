@@ -12,6 +12,7 @@ interface Box extends IRect {
 interface Props {
   width: number;
   height: number;
+  onChange?: (rect: IRect) => void;
 }
 
 type KonvaMouseEventHandler = (evt: Konva.KonvaEventObject<MouseEvent>) => void;
@@ -21,12 +22,29 @@ const MINIMUM_NODE_HEIGHT = 5;
 
 const isLeftMouseButtonPressed = (mouseEvent: MouseEvent): boolean => !!(mouseEvent.buttons & 1);
 
-const DrawLayer = ({ width, height }: Props) => {
+const DrawLayer = ({ width, height, onChange }: Props) => {
   const [isDrawing, setIsDrawing] = useState(false);
 
   const groupRef = useRef<Konva.Group>(null);
   const rectRef = useRef<Konva.Rect>(null);
   const trRef = useRef<Konva.Transformer>(null);
+
+  const updateRect = useCallback(() => {
+    const rect = rectRef.current;
+
+    if (!rect) {
+      return;
+    }
+
+    const rectangle = {
+      x: rect.x(),
+      y: rect.y(),
+      width: rect.width(),
+      height: rect.height(),
+    };
+
+    onChange?.(rectangle);
+  }, [onChange]);
 
   useEffect(() => {
     if (isDrawing || !rectRef.current) {
@@ -74,34 +92,39 @@ const DrawLayer = ({ width, height }: Props) => {
     setIsDrawing(true);
   }, []);
 
-  const handleMouseUp = useCallback<KonvaMouseEventHandler>((evt) => {
-    const mouseEvent = evt.evt;
+  const handleMouseUp = useCallback<KonvaMouseEventHandler>(
+    (evt) => {
+      const mouseEvent = evt.evt;
 
-    const rect = rectRef.current;
+      const rect = rectRef.current;
 
-    if (isLeftMouseButtonPressed(mouseEvent) || !rect) {
-      return;
-    }
+      if (isLeftMouseButtonPressed(mouseEvent) || !rect) {
+        return;
+      }
 
-    const rectPos = rect.position();
-    const rectSize = rect.size();
+      const rectPos = rect.position();
+      const rectSize = rect.size();
 
-    if (rectSize.width < 0) {
-      rect.x(rectPos.x + rectSize.width);
-      rect.width(Math.abs(rectSize.width));
-    } else {
-      rect.width(Math.max(1, rectSize.width));
-    }
+      if (rectSize.width < 0) {
+        rect.x(rectPos.x + rectSize.width);
+        rect.width(Math.abs(rectSize.width));
+      } else {
+        rect.width(Math.max(1, rectSize.width));
+      }
 
-    if (rectSize.height < 0) {
-      rect.y(rectPos.y + rectSize.height);
-      rect.height(Math.abs(rectSize.height));
-    } else {
-      rect.height(Math.max(1, rectSize.height));
-    }
+      if (rectSize.height < 0) {
+        rect.y(rectPos.y + rectSize.height);
+        rect.height(Math.abs(rectSize.height));
+      } else {
+        rect.height(Math.max(1, rectSize.height));
+      }
 
-    setIsDrawing(false);
-  }, []);
+      updateRect();
+
+      setIsDrawing(false);
+    },
+    [updateRect],
+  );
 
   const handleMouseMove = useCallback<KonvaMouseEventHandler>(
     (evt) => {
@@ -169,31 +192,46 @@ const DrawLayer = ({ width, height }: Props) => {
     [width, height],
   );
 
-  const handleTransformEnd = useCallback<(evt: Konva.KonvaEventObject<Event>) => void>((evt) => {
-    // transformer is changing scale of the rect
-    // and NOT its width or height
-    // but in the store we have only width and height
-    // to match the data better we will reset scale on transform end
-    evt.cancelBubble = true;
-
+  const handleDragEnd = useCallback(() => {
     const rect = rectRef.current;
-    const group = groupRef.current;
 
-    if (!rect || !group) {
+    if (!rect) {
       return;
     }
 
-    const scale = rect.scale();
+    updateRect();
+  }, [updateRect]);
 
-    // we will reset it back
-    rect.scaleX(1);
-    rect.scaleY(1);
+  const handleTransformEnd = useCallback<(evt: Konva.KonvaEventObject<Event>) => void>(
+    (evt) => {
+      // transformer is changing scale of the rect
+      // and NOT its width or height
+      // but in the store we have only width and height
+      // to match the data better we will reset scale on transform end
+      evt.cancelBubble = true;
 
-    rect.size({
-      width: Math.max(MINIMUM_NODE_WIDTH, rect.width() * scale.x),
-      height: Math.max(MINIMUM_NODE_HEIGHT, rect.height() * scale.y),
-    });
-  }, []);
+      const rect = rectRef.current;
+      const group = groupRef.current;
+
+      if (!rect || !group) {
+        return;
+      }
+
+      const scale = rect.scale();
+
+      // we will reset it back
+      rect.scaleX(1);
+      rect.scaleY(1);
+
+      rect.size({
+        width: Math.max(MINIMUM_NODE_WIDTH, rect.width() * scale.x),
+        height: Math.max(MINIMUM_NODE_HEIGHT, rect.height() * scale.y),
+      });
+
+      updateRect();
+    },
+    [updateRect],
+  );
 
   const boundBoxFunc = useCallback<(oldBox: Box, newBox: Box) => Box>(
     (oldBox, newBox) => {
@@ -258,6 +296,7 @@ const DrawLayer = ({ width, height }: Props) => {
           listening={!isDrawing}
           draggable={!isDrawing}
           dragBoundFunc={dragBoundFunc}
+          onDragEnd={handleDragEnd}
           onTransformEnd={handleTransformEnd}
         />
         {!isDrawing && (

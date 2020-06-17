@@ -5,12 +5,15 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { AppReducerProvider } from './reducerContext';
 import { HoveredStateProvider } from './hoverContext';
+import { DrawRectProvider } from './drawRectContext';
 
 ReactDOM.render(
   <React.StrictMode>
     <AppReducerProvider>
       <HoveredStateProvider>
-        <App />
+        <DrawRectProvider>
+          <App />
+        </DrawRectProvider>
       </HoveredStateProvider>
     </AppReducerProvider>
   </React.StrictMode>,

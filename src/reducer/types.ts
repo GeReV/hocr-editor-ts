@@ -36,6 +36,7 @@ export enum ActionType {
   UpdateTreeNodeRect = 'UpdateTreeNodeRect',
   AddDocument = 'AddDocument',
   RecognizeDocument = 'RecognizeDocument',
+  RecognizeRegion = 'RecognizeRegion',
   SelectDocument = 'SelectDocument',
   ChangeDocumentIsProcessing = 'ChangeDocumentIsProcessing',
   ChangeSelected = 'ChangeSelected',

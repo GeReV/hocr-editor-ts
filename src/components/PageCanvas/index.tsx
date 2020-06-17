@@ -13,6 +13,7 @@ import './index.css';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import ExportModal from '../ExportModal';
 import { useHoveredState } from '../../hoverContext';
+import { useDrawRectContext } from '../../drawRectContext';
 import Separator from './Separator';
 import PageGraphics from './PageGraphics';
 import CanvasToolbar from './CanvasToolbar';
@@ -32,7 +33,9 @@ function PageCanvas({ document, documents, selectedId, dispatch }: Props) {
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [isDrawing, setDrawing] = useState<boolean>(false);
   const [showExport, setShowExport] = useState<boolean>(false);
+
   const [hoveredId] = useHoveredState();
+  const [, setDrawRect] = useDrawRectContext();
 
   const stageRef = useRef<Stage>(null);
 
@@ -152,6 +155,7 @@ function PageCanvas({ document, documents, selectedId, dispatch }: Props) {
           position={position}
           setPosition={setPosition}
           isDrawing={isDrawing}
+          onDraw={setDrawRect}
           dispatch={dispatch}
         />
       </div>

@@ -1,4 +1,4 @@
-import tesseract, { RecognizeResult } from 'tesseract.js';
+import tesseract, { RecognizeResult, Rectangle } from 'tesseract.js';
 import { OcrDocument } from './reducer/types';
 import { RecognizeUpdate } from './types';
 
@@ -12,6 +12,7 @@ export type DeepPartial<T> = {
 
 interface RecognizeOptions {
   logger: (update: RecognizeUpdate) => void;
+  rectangle?: Rectangle;
   PSM?: string;
 }
 
@@ -78,12 +79,14 @@ export async function recognize(
 
   const scheduler = tesseract.createScheduler();
 
+  const { logger, rectangle, PSM } = options ?? {};
+
   const workers = Array(2)
     .fill(0)
     .map(() =>
       tesseract.createWorker({
         logger: (update: RecognizeUpdate) => {
-          options?.logger?.(update);
+          logger?.(update);
         },
       }),
     );
@@ -93,15 +96,19 @@ export async function recognize(
     await worker.loadLanguage(langs ?? 'eng');
     await worker.initialize(langs ?? 'eng');
     // @ts-ignore
-    await worker.setParameters({ tessedit_pageseg_mode: options?.PSM ?? '3' });
+    await worker.setParameters({ tessedit_pageseg_mode: PSM ?? '3' });
 
     scheduler.addWorker(worker);
   }
 
+  const recognizeOpts = rectangle ? { rectangle } : {};
+
   const results = await Promise.all(
     docs.map(
       (doc) =>
-        scheduler.addJob('recognize', doc.pageImage.urlObject, {}, `recog-${doc.id}`) as Promise<RecognizeResult>,
+        scheduler.addJob('recognize', doc.pageImage.urlObject, recognizeOpts, `recog-${doc.id}`) as Promise<
+          RecognizeResult
+        >,
     ),
   );
 

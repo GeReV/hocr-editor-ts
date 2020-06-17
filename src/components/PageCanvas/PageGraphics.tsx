@@ -1,6 +1,7 @@
 import React, { Dispatch } from 'react';
 import Konva from 'konva';
 import { Image, Stage } from 'react-konva';
+import { IRect } from 'konva/types/types';
 import { ItemId, Position } from '../../types';
 import { createUpdateTreeNodeRect } from '../../reducer/actions';
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
@@ -20,6 +21,7 @@ export interface Props {
   hoveredId?: ItemId | null;
   selectedId?: ItemId | null;
   isDrawing?: boolean;
+  onDraw?: (rect: IRect) => void;
   innerRef?: React.Ref<Stage>;
   dispatch: Dispatch<AppReducerAction>;
 }
@@ -82,6 +84,7 @@ class PageGraphics extends React.Component<Props, State> {
       setPosition,
       selectedId,
       isDrawing,
+      onDraw,
       innerRef,
       dispatch,
     } = this.props;
@@ -128,7 +131,9 @@ class PageGraphics extends React.Component<Props, State> {
             setInnerRef={this.setInnerRef}
           />
         </BlocksLayer>
-        {isDrawing && <DrawLayer width={document.pageImage.width ?? 0} height={document.pageImage.height ?? 0} />}
+        {isDrawing && (
+          <DrawLayer width={document.pageImage.width ?? 0} height={document.pageImage.height ?? 0} onChange={onDraw} />
+        )}
       </Stage>
     );
   }

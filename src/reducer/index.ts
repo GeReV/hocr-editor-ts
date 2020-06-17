@@ -204,6 +204,52 @@ function reduce(state: State, action: AppReducerAction): State {
         };
       });
     }
+    case ActionType.RecognizeRegion: {
+      return produceWithUndo(state, (draft) => {
+        const [rootId, newItems] = buildTree(action.payload.result);
+
+        const document = draft.documents.find((doc: OcrDocument) => doc.id === action.payload.id);
+
+        if (!document) {
+          throw new Error(`Document with ID ${action.payload.id} not found.`);
+        }
+
+        document.isProcessing = false;
+
+        // Tree already exists for document, append children to existing root.
+        if (document.tree) {
+          const oldRootId = document.tree.rootId;
+          const oldRoot = document.tree.items[oldRootId];
+
+          const newRoot = newItems[rootId];
+
+          const entriesWithoutRoot = Object.entries(newItems).filter(([k]) => k !== rootId);
+
+          const newChildren = Object.fromEntries(entriesWithoutRoot);
+
+          // Add children IDs to old root's children.
+          oldRoot.children.push(...newRoot.children);
+
+          // Re-parent the new root's immediate children to the old root.
+          newRoot.children
+            .map((id) => newChildren[id])
+            .forEach((child) => {
+              child.parentId = oldRootId;
+            });
+
+          // Add children objects to tree items object.
+          document.tree.items = {
+            ...document.tree.items,
+            ...newChildren,
+          };
+        } else {
+          document.tree = {
+            rootId,
+            items: newItems,
+          };
+        }
+      });
+    }
     case ActionType.SelectDocument: {
       return produceWithUndo(state, (draft) => {
         draft.currentDocument = action.payload;

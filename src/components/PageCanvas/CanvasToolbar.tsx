@@ -1,6 +1,7 @@
 import React, { PropsWithChildren, useCallback, useMemo } from 'react';
 import { Dropdown, ButtonGroup, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Rectangle } from 'tesseract.js';
 
 import Header from '../Header';
 import { useAppReducer } from '../../reducerContext';
@@ -9,11 +10,13 @@ import {
   createChangeIsProcessing,
   createLogUpdate,
   createRecognizeDocument,
+  createRecognizeRegion,
 } from '../../reducer/actions';
 import { recognize } from '../../ocr';
 import { OcrDocument } from '../../reducer/types';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import { loadImage } from '../../utils';
+import { useDrawRectContext } from '../../drawRectContext';
 
 import './CanvasToolbar.scss';
 
@@ -21,6 +24,8 @@ interface Props {}
 
 export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
   const [state, dispatch] = useAppReducer();
+
+  const [drawRect] = useDrawRectContext();
 
   const performOCR = useCallback(
     async (documents: OcrDocument[]) => {
@@ -39,8 +44,27 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
       dispatch(createLogUpdate(null));
 
       results.forEach((result, index) => {
+        console.debug(result);
         dispatch(createRecognizeDocument(documents[index].id, result));
       });
+    },
+    [dispatch],
+  );
+
+  const performRegionOCR = useCallback(
+    async (document: OcrDocument, rectangle: Rectangle) => {
+      dispatch(createChangeIsProcessing(document.id, true));
+
+      const [result] = await recognize([document], 'heb+eng', {
+        logger: (update) => {
+          dispatch(createLogUpdate(update));
+        },
+        rectangle,
+      });
+
+      dispatch(createLogUpdate(null));
+
+      dispatch(createRecognizeRegion(document.id, result));
     },
     [dispatch],
   );
@@ -80,6 +104,17 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
   const currentDocument: OcrDocument = state.documents[state.currentDocument];
 
+  const handleRegionOCR = useCallback(async () => {
+    const rectangle = {
+      left: Math.round(drawRect.x),
+      top: Math.round(drawRect.y),
+      width: Math.round(drawRect.width),
+      height: Math.round(drawRect.height),
+    };
+
+    await performRegionOCR(currentDocument, rectangle);
+  }, [currentDocument, drawRect, performRegionOCR]);
+
   return (
     <Header className="Canvas-toolbar">
       <Button className="Toolbar-open" size="sm">
@@ -107,6 +142,7 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
         <Dropdown.Menu>
           <Dropdown.Item onClick={() => performOCR([currentDocument])}>OCR current document</Dropdown.Item>
           <Dropdown.Item onClick={() => performOCR(state.documents)}>OCR all documents</Dropdown.Item>
+          <Dropdown.Item onClick={handleRegionOCR}>OCR selected region</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
 
