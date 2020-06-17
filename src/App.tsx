@@ -81,7 +81,6 @@ function App() {
               documents={state.documents}
               document={currentDocument}
               selectedId={state.selectedId}
-              hoveredId={state.hoveredId}
               dispatch={dispatch}
             />
           </Col>

@@ -12,6 +12,7 @@ import { AppReducerAction, OcrDocument } from '../../reducer/types';
 import './index.css';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import ExportModal from '../ExportModal';
+import { useHoveredState } from '../../hoverContext';
 import Separator from './Separator';
 import PageGraphics from './PageGraphics';
 import CanvasToolbar from './CanvasToolbar';
@@ -19,7 +20,6 @@ import CanvasToolbar from './CanvasToolbar';
 interface Props {
   document: OcrDocument | undefined;
   documents: OcrDocument[];
-  hoveredId: ItemId | null;
   selectedId: ItemId | null;
   dispatch: Dispatch<AppReducerAction>;
 }
@@ -27,11 +27,12 @@ interface Props {
 const SCALE_MAX = 3.0;
 const SCALE_MIN = 0.05;
 
-function PageCanvas({ document, documents, hoveredId, selectedId, dispatch }: Props) {
+function PageCanvas({ document, documents, selectedId, dispatch }: Props) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [isDrawing, setDrawing] = useState<boolean>(false);
   const [showExport, setShowExport] = useState<boolean>(false);
+  const [hoveredId] = useHoveredState();
 
   const stageRef = useRef<Stage>(null);
 

@@ -28,7 +28,6 @@ export interface State {
   documents: OcrDocument[];
   currentDocument: number;
   selectedId: ItemId | null;
-  hoveredId: ItemId | null;
   lastRecognizeUpdate: RecognizeUpdate | null;
 }
 
@@ -40,7 +39,6 @@ export enum ActionType {
   SelectDocument = 'SelectDocument',
   ChangeDocumentIsProcessing = 'ChangeDocumentIsProcessing',
   ChangeSelected = 'ChangeSelected',
-  ChangeHovered = 'ChangeHovered',
   ModifyNode = 'ModifyNode',
   DeleteNode = 'DeleteNode',
   MoveNode = 'MoveNode',

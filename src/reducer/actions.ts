@@ -26,7 +26,6 @@ export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, Actio
   ActionType.UpdateTreeNodeRect,
 );
 export const createChangeSelected = createAction<ItemId | null, ActionType.ChangeSelected>(ActionType.ChangeSelected);
-export const createChangeHovered = createAction<ItemId | null, ActionType.ChangeHovered>(ActionType.ChangeHovered);
 export const createChangeIsProcessing = createAction<
   (id: number, isProcessing: boolean) => { payload: ChangeDocumentIsProcessingPayload },
   ActionType.ChangeDocumentIsProcessing

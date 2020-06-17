@@ -22,7 +22,6 @@ export const initialState: State = {
   documents: [],
   currentDocument: 0,
   selectedId: null,
-  hoveredId: null,
   lastRecognizeUpdate: null,
 };
 
@@ -192,6 +191,7 @@ function reduce(state: State, action: AppReducerAction): State {
           throw new Error(`Document with ID ${action.payload.id} not found.`);
         }
 
+        document.isProcessing = false;
         document.tree = {
           rootId,
           items,
@@ -206,11 +206,6 @@ function reduce(state: State, action: AppReducerAction): State {
     case ActionType.ChangeSelected: {
       return produceWithUndo(state, (draft) => {
         draft.selectedId = action.payload;
-      });
-    }
-    case ActionType.ChangeHovered: {
-      return produce(state, (draft) => {
-        draft.hoveredId = action.payload;
       });
     }
     case ActionType.ChangeDocumentIsProcessing: {

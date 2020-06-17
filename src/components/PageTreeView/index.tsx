@@ -1,12 +1,13 @@
 import React, { useCallback, Dispatch } from 'react';
 import { Row } from 'react-bootstrap';
 
-import { createChangeHovered, createChangeSelected, createModifyNode, createMoveNode } from '../../reducer/actions';
+import { createChangeSelected, createModifyNode, createMoveNode } from '../../reducer/actions';
 import Tree from '../SortableTree/components/Tree';
-import { ItemId, Path, TreeDestinationPosition, TreeSourcePosition } from '../SortableTree';
+import { ItemId, Path, RenderItemParams, TreeDestinationPosition, TreeSourcePosition } from '../SortableTree';
 
 import './index.scss';
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
+import { useHoveredState } from '../../hoverContext';
 import TreeNode from './TreeNode';
 
 interface Props {
@@ -16,6 +17,8 @@ interface Props {
 }
 
 function PageTreeView({ currentDocument, selectedId, dispatch }: Props) {
+  const [, setHoveredId] = useHoveredState();
+
   const handleDragEnd = useCallback(
     (source: TreeSourcePosition, destination?: TreeDestinationPosition) => {
       if (!destination) {
@@ -36,18 +39,18 @@ function PageTreeView({ currentDocument, selectedId, dispatch }: Props) {
     (evt: React.MouseEvent, nodeId: ItemId) => {
       evt.stopPropagation();
 
-      dispatch(createChangeHovered(nodeId));
+      setHoveredId(nodeId);
     },
-    [dispatch],
+    [setHoveredId],
   );
 
   const onMouseLeave = useCallback(
     (evt: React.MouseEvent) => {
       evt.stopPropagation();
 
-      dispatch(createChangeHovered(null));
+      setHoveredId(null);
     },
-    [dispatch],
+    [setHoveredId],
   );
 
   const onSelect = useCallback(
@@ -73,6 +76,18 @@ function PageTreeView({ currentDocument, selectedId, dispatch }: Props) {
     [dispatch],
   );
 
+  const renderItem = useCallback(
+    (params: RenderItemParams) => (
+      <TreeNode
+        onMouseEnter={onMouseEnter}
+        onClick={onSelect}
+        isSelected={String(selectedId) === String(params.item.id)}
+        {...params}
+      />
+    ),
+    [onMouseEnter, onSelect, selectedId],
+  );
+
   const tree = currentDocument?.tree;
 
   if (!tree) {
@@ -86,14 +101,7 @@ function PageTreeView({ currentDocument, selectedId, dispatch }: Props) {
         onExpand={handleExpand}
         onCollapse={handleCollapse}
         onDragEnd={handleDragEnd}
-        renderItem={(params) => (
-          <TreeNode
-            onMouseEnter={onMouseEnter}
-            onClick={onSelect}
-            isSelected={selectedId === params.item.id}
-            {...params}
-          />
-        )}
+        renderItem={renderItem}
         offsetPerLevel={24}
         isDragEnabled
         isNestingEnabled

@@ -1,8 +1,5 @@
 import { Component } from 'react';
-import {
-  DraggableProvidedDraggableProps,
-  DraggableStateSnapshot,
-} from 'react-beautiful-dnd';
+import { DraggableProvidedDraggableProps, DraggableStateSnapshot } from 'react-beautiful-dnd';
 import { isSamePath } from '../../utils/path';
 import { sameProps } from '../../utils/react';
 import { Props, TreeDraggableProvided } from './TreeItem-types';
@@ -10,13 +7,8 @@ import { Props, TreeDraggableProvided } from './TreeItem-types';
 export default class TreeItem extends Component<Props> {
   shouldComponentUpdate(nextProps: Props) {
     return (
-      !sameProps(this.props, nextProps, [
-        'item',
-        'provided',
-        'snapshot',
-        'onCollapse',
-        'onExpand',
-      ]) || !isSamePath(this.props.path, nextProps.path)
+      !sameProps(this.props, nextProps, ['item', 'provided', 'snapshot', 'onCollapse', 'onExpand', 'renderItem']) ||
+      !isSamePath(this.props.path, nextProps.path)
     );
   }
 
@@ -27,9 +19,7 @@ export default class TreeItem extends Component<Props> {
     const { path, style, offsetPerLevel } = this.props;
 
     const transitions =
-      draggableProps.style && draggableProps.style.transition
-        ? [draggableProps.style.transition]
-        : [];
+      draggableProps.style && draggableProps.style.transition ? [draggableProps.style.transition] : [];
     if (snapshot.dropAnimation) {
       transitions.push(
         // @ts-ignore
@@ -49,16 +39,7 @@ export default class TreeItem extends Component<Props> {
   };
 
   render() {
-    const {
-      item,
-      path,
-      onExpand,
-      onCollapse,
-      renderItem,
-      provided,
-      snapshot,
-      itemRef,
-    } = this.props;
+    const { item, path, onExpand, onCollapse, renderItem, provided, snapshot, itemRef } = this.props;
 
     const innerRef = (el: HTMLElement | null) => {
       itemRef(item.id, el);
@@ -66,10 +47,7 @@ export default class TreeItem extends Component<Props> {
     };
 
     const finalProvided: TreeDraggableProvided = {
-      draggableProps: this.patchDraggableProps(
-        provided.draggableProps,
-        snapshot,
-      ),
+      draggableProps: this.patchDraggableProps(provided.draggableProps, snapshot),
       dragHandleProps: provided.dragHandleProps ?? null,
       innerRef,
     };
@@ -77,8 +55,8 @@ export default class TreeItem extends Component<Props> {
     return renderItem({
       item,
       depth: path.length - 1,
-      onExpand: itemId => onExpand(itemId, path),
-      onCollapse: itemId => onCollapse(itemId, path),
+      onExpand: (itemId) => onExpand(itemId, path),
+      onCollapse: (itemId) => onCollapse(itemId, path),
       provided: finalProvided,
       snapshot,
     });

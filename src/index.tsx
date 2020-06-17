@@ -4,11 +4,14 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { AppReducerProvider } from './reducerContext';
+import { HoveredStateProvider } from './hoverContext';
 
 ReactDOM.render(
   <React.StrictMode>
     <AppReducerProvider>
-      <App />
+      <HoveredStateProvider>
+        <App />
+      </HoveredStateProvider>
     </AppReducerProvider>
   </React.StrictMode>,
   document.getElementById('root'),
