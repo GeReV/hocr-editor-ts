@@ -82,6 +82,8 @@ function App() {
               document={currentDocument}
               selectedId={state.selectedId}
               dispatch={dispatch}
+              isDrawing={state.isDrawing}
+              drawRect={state.drawRect}
               hasUndo={!!(state.snapshots.length && state.currentSnapshot > 0)}
               hasRedo={!!(state.snapshots.length && state.currentSnapshot < state.snapshots.length - 1)}
             />

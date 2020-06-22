@@ -1,5 +1,7 @@
 import { createAction } from '@reduxjs/toolkit';
 import { RecognizeResult } from 'tesseract.js';
+import { IRect } from 'konva/types/types';
+
 import { ChangeCallbackParams } from '../components/PageCanvas/Block';
 import { ItemId, PageImage, RecognizeUpdate } from '../types';
 import {
@@ -66,3 +68,6 @@ export const createLogUpdate = createAction<RecognizeUpdate | null, ActionType.L
 
 export const createUndo = createAction<void, ActionType.Undo>(ActionType.Undo);
 export const createRedo = createAction<void, ActionType.Redo>(ActionType.Redo);
+
+export const createSetIsDrawing = createAction<boolean, ActionType.SetIsDrawing>(ActionType.SetIsDrawing);
+export const createSetDrawRect = createAction<IRect, ActionType.SetDrawRect>(ActionType.SetDrawRect);

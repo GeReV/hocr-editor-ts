@@ -21,6 +21,7 @@ export interface Props {
   hoveredId?: ItemId | null;
   selectedId?: ItemId | null;
   isDrawing?: boolean;
+  drawRect?: IRect;
   onDraw?: (rect: IRect) => void;
   innerRef?: React.Ref<Stage>;
   dispatch: Dispatch<AppReducerAction>;
@@ -85,6 +86,7 @@ class PageGraphics extends React.Component<Props, State> {
       selectedId,
       isDrawing,
       onDraw,
+      drawRect,
       innerRef,
       dispatch,
     } = this.props;
@@ -132,7 +134,12 @@ class PageGraphics extends React.Component<Props, State> {
           />
         </BlocksLayer>
         {isDrawing && (
-          <DrawLayer width={document.pageImage.width ?? 0} height={document.pageImage.height ?? 0} onChange={onDraw} />
+          <DrawLayer
+            width={document.pageImage.width ?? 0}
+            height={document.pageImage.height ?? 0}
+            drawRect={drawRect}
+            onChange={onDraw}
+          />
         )}
       </Stage>
     );

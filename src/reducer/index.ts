@@ -2,6 +2,7 @@ import { Bbox } from 'tesseract.js';
 import { produce } from 'immer';
 import type { Draft } from 'immer/dist/types/types-external';
 
+import { IRect } from 'konva/types/types';
 import { BaseTreeItem, ElementType, ItemId, Position } from '../types';
 import { buildTree, walkChildren } from '../treeBuilder';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
@@ -10,6 +11,13 @@ import { createUniqueIdentifier } from '../utils';
 import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State, TreeItems } from './types';
 
 const MAX_CHANGESETS = 40;
+
+const EMPTY_RECT: IRect = {
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+};
 
 const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
   x0: bbox.x0 + offset.x,
@@ -25,6 +33,8 @@ export const initialState: State = {
   currentDocument: 0,
   selectedId: null,
   lastRecognizeUpdate: null,
+  isDrawing: false,
+  drawRect: EMPTY_RECT,
 };
 
 export function getNodeOrThrow(treeItems: TreeItems, nodeId: ItemId): BaseTreeItem<ElementType, any> {
@@ -289,6 +299,16 @@ function reduce(state: State, action: AppReducerAction): State {
     }
     case ActionType.MoveNode: {
       return moveTreeNode(state, action.payload.source, action.payload.destination);
+    }
+    case ActionType.SetIsDrawing: {
+      return produceWithUndo(state, (draft) => {
+        draft.isDrawing = action.payload;
+      });
+    }
+    case ActionType.SetDrawRect: {
+      return produceWithUndo(state, (draft) => {
+        draft.drawRect = action.payload;
+      });
     }
     case ActionType.LogUpdate: {
       return produce(state, (draft) => {

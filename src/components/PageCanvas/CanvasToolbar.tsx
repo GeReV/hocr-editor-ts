@@ -16,7 +16,6 @@ import { recognize } from '../../ocr';
 import { OcrDocument } from '../../reducer/types';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import { loadImage } from '../../utils';
-import { useDrawRectContext } from '../../drawRectContext';
 
 import './CanvasToolbar.scss';
 
@@ -24,8 +23,6 @@ interface Props {}
 
 export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
   const [state, dispatch] = useAppReducer();
-
-  const [drawRect] = useDrawRectContext();
 
   const performOCR = useCallback(
     async (documents: OcrDocument[]) => {
@@ -106,14 +103,14 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
   const handleRegionOCR = useCallback(async () => {
     const rectangle = {
-      left: Math.round(drawRect.x),
-      top: Math.round(drawRect.y),
-      width: Math.round(drawRect.width),
-      height: Math.round(drawRect.height),
+      left: Math.round(state.drawRect.x),
+      top: Math.round(state.drawRect.y),
+      width: Math.round(state.drawRect.width),
+      height: Math.round(state.drawRect.height),
     };
 
     await performRegionOCR(currentDocument, rectangle);
-  }, [currentDocument, drawRect, performRegionOCR]);
+  }, [currentDocument, state.drawRect, performRegionOCR]);
 
   return (
     <Header className="Canvas-toolbar">

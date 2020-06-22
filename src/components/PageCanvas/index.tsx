@@ -5,15 +5,21 @@ import cx from 'classnames';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import { IRect } from 'konva/types/types';
 import { ItemId, Position } from '../../types';
-import { createChangeSelected, createRedo, createUndo } from '../../reducer/actions';
+import {
+  createChangeSelected,
+  createRedo,
+  createSetDrawRect,
+  createSetIsDrawing,
+  createUndo,
+} from '../../reducer/actions';
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
 
 import './index.css';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import ExportModal from '../ExportModal';
 import { useHoveredState } from '../../hoverContext';
-import { useDrawRectContext } from '../../drawRectContext';
 import Separator from './Separator';
 import PageGraphics from './PageGraphics';
 import CanvasToolbar from './CanvasToolbar';
@@ -23,6 +29,8 @@ interface Props {
   documents: OcrDocument[];
   selectedId: ItemId | null;
   dispatch: Dispatch<AppReducerAction>;
+  isDrawing?: boolean;
+  drawRect?: IRect;
   hasUndo?: boolean;
   hasRedo?: boolean;
 }
@@ -30,14 +38,12 @@ interface Props {
 const SCALE_MAX = 3.0;
 const SCALE_MIN = 0.05;
 
-function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRedo }: Props) {
+function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRedo, isDrawing, drawRect }: Props) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
-  const [isDrawing, setDrawing] = useState<boolean>(false);
   const [showExport, setShowExport] = useState<boolean>(false);
 
   const [hoveredId] = useHoveredState();
-  const [, setDrawRect] = useDrawRectContext();
 
   const stageRef = useRef<Stage>(null);
 
@@ -46,7 +52,7 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
   useKey(
     'Escape',
     () => {
-      setDrawing(false);
+      dispatch(createSetIsDrawing(false));
     },
     undefined,
     [isDrawing],
@@ -145,7 +151,7 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
         </Button>
         <Button
           size="sm"
-          onClick={() => setDrawing(!isDrawing)}
+          onClick={() => dispatch(createSetIsDrawing(!isDrawing))}
           disabled={!document?.pageImage}
           active={isDrawing}
           variant="outline-dark"
@@ -168,7 +174,8 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
           position={position}
           setPosition={setPosition}
           isDrawing={isDrawing}
-          onDraw={setDrawRect}
+          onDraw={(rect) => dispatch(createSetDrawRect(rect))}
+          drawRect={drawRect}
           dispatch={dispatch}
         />
       </div>

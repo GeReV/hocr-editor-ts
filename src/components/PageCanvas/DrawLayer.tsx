@@ -12,6 +12,7 @@ interface Box extends IRect {
 interface Props {
   width: number;
   height: number;
+  drawRect?: IRect;
   onChange?: (rect: IRect) => void;
 }
 
@@ -22,8 +23,8 @@ const MINIMUM_NODE_HEIGHT = 5;
 
 const isLeftMouseButtonPressed = (mouseEvent: MouseEvent): boolean => !!(mouseEvent.buttons & 1);
 
-const DrawLayer = ({ width, height, onChange }: Props) => {
-  const [isDrawing, setIsDrawing] = useState(false);
+const DrawLayer = ({ width, height, drawRect, onChange }: Props) => {
+  const [isDragging, setIsDragging] = useState(false);
 
   const groupRef = useRef<Konva.Group>(null);
   const rectRef = useRef<Konva.Rect>(null);
@@ -47,13 +48,13 @@ const DrawLayer = ({ width, height, onChange }: Props) => {
   }, [onChange]);
 
   useEffect(() => {
-    if (isDrawing || !rectRef.current) {
+    if (isDragging || !rectRef.current) {
       return;
     }
 
     trRef.current?.nodes([rectRef.current]);
     trRef.current?.getLayer()?.batchDraw();
-  }, [isDrawing]);
+  }, [isDragging]);
 
   const handleMouseDown = useCallback<KonvaMouseEventHandler>((evt: Konva.KonvaEventObject<MouseEvent>) => {
     const mouseEvent: MouseEvent = evt.evt;
@@ -89,7 +90,7 @@ const DrawLayer = ({ width, height, onChange }: Props) => {
 
     layer.batchDraw();
 
-    setIsDrawing(true);
+    setIsDragging(true);
   }, []);
 
   const handleMouseUp = useCallback<KonvaMouseEventHandler>(
@@ -121,7 +122,7 @@ const DrawLayer = ({ width, height, onChange }: Props) => {
 
       updateRect();
 
-      setIsDrawing(false);
+      setIsDragging(false);
     },
     [updateRect],
   );
@@ -132,7 +133,7 @@ const DrawLayer = ({ width, height, onChange }: Props) => {
 
       const rect = rectRef.current;
 
-      if (!isLeftMouseButtonPressed(mouseEvent) || !isDrawing || !rect) {
+      if (!isLeftMouseButtonPressed(mouseEvent) || !isDragging || !rect) {
         return;
       }
 
@@ -154,7 +155,7 @@ const DrawLayer = ({ width, height, onChange }: Props) => {
 
       layer.batchDraw();
     },
-    [isDrawing],
+    [isDragging],
   );
 
   const dragBoundFunc = useCallback<(pos: Position) => Position>(
@@ -292,14 +293,18 @@ const DrawLayer = ({ width, height, onChange }: Props) => {
       <Group ref={groupRef}>
         <Rect
           ref={rectRef}
+          x={drawRect?.x}
+          y={drawRect?.y}
+          width={drawRect?.width}
+          height={drawRect?.height}
           fill="rgba(255, 0, 255, 0.2)"
-          listening={!isDrawing}
-          draggable={!isDrawing}
+          listening={!isDragging}
+          draggable={!isDragging}
           dragBoundFunc={dragBoundFunc}
           onDragEnd={handleDragEnd}
           onTransformEnd={handleTransformEnd}
         />
-        {!isDrawing && (
+        {!isDragging && (
           <Transformer ref={trRef} rotateEnabled={false} keepRatio={false} anchorSize={7} boundBoxFunc={boundBoxFunc} />
         )}
       </Group>

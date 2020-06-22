@@ -1,5 +1,6 @@
 import { RecognizeResult } from 'tesseract.js';
 import { Patch } from 'immer/compat/pre-3.7/dist/immer';
+import { IRect } from 'konva/types/types';
 import { DocumentTreeItem, ItemId, PageImage, RecognizeUpdate } from '../types';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
 import * as actions from './actions';
@@ -28,6 +29,8 @@ export interface State {
   documents: OcrDocument[];
   currentDocument: number;
   selectedId: ItemId | null;
+  isDrawing: boolean;
+  drawRect: IRect;
   lastRecognizeUpdate: RecognizeUpdate | null;
 }
 
@@ -44,6 +47,9 @@ export enum ActionType {
   DeleteNode = 'DeleteNode',
   MoveNode = 'MoveNode',
   LogUpdate = 'LogUpdate',
+
+  SetIsDrawing = 'SetIsDrawing',
+  SetDrawRect = 'SetDrawRect',
 
   Undo = 'Undo',
   Redo = 'Redo',
