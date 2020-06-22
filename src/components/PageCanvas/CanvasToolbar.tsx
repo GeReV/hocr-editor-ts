@@ -101,6 +101,8 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
   const currentDocument: OcrDocument = state.documents[state.currentDocument];
 
+  const handleOCR = useCallback(() => performOCR([currentDocument]), [currentDocument, performOCR]);
+
   const handleRegionOCR = useCallback(async () => {
     const rectangle = {
       left: Math.round(state.drawRect.x),
@@ -111,6 +113,8 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
     await performRegionOCR(currentDocument, rectangle);
   }, [currentDocument, state.drawRect, performRegionOCR]);
+
+  const shouldOcrRegion: boolean = state.isDrawing && state.drawRect.width > 0 && state.drawRect.height > 0;
 
   return (
     <Header className="Canvas-toolbar">
@@ -123,9 +127,9 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
           size="sm"
           variant="primary"
           disabled={!currentDocument || isProcessing}
-          onClick={() => performOCR([currentDocument])}
+          onClick={shouldOcrRegion ? handleRegionOCR : handleOCR}
         >
-          <FontAwesomeIcon icon="glasses" /> OCR
+          <FontAwesomeIcon icon="glasses" /> {shouldOcrRegion ? 'OCR Selection' : 'OCR'}
         </Button>
 
         <Dropdown.Toggle
@@ -137,9 +141,11 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
         />
 
         <Dropdown.Menu>
-          <Dropdown.Item onClick={() => performOCR([currentDocument])}>OCR current document</Dropdown.Item>
+          <Dropdown.Item onClick={handleOCR}>OCR current document</Dropdown.Item>
           <Dropdown.Item onClick={() => performOCR(state.documents)}>OCR all documents</Dropdown.Item>
-          <Dropdown.Item onClick={handleRegionOCR}>OCR selected region</Dropdown.Item>
+          <Dropdown.Item onClick={handleRegionOCR} disabled={!shouldOcrRegion}>
+            OCR selected region
+          </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
 
