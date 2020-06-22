@@ -2,11 +2,11 @@ import React, { Dispatch, useCallback, useLayoutEffect, useMemo, useRef, useStat
 import { Stage } from 'react-konva';
 import { useKey, useMeasure } from 'react-use';
 import cx from 'classnames';
-import { Button } from 'react-bootstrap';
+import { Button, ButtonGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { ItemId, Position } from '../../types';
-import { createChangeSelected } from '../../reducer/actions';
+import { createChangeSelected, createRedo, createUndo } from '../../reducer/actions';
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
 
 import './index.css';
@@ -23,12 +23,14 @@ interface Props {
   documents: OcrDocument[];
   selectedId: ItemId | null;
   dispatch: Dispatch<AppReducerAction>;
+  hasUndo?: boolean;
+  hasRedo?: boolean;
 }
 
 const SCALE_MAX = 3.0;
 const SCALE_MIN = 0.05;
 
-function PageCanvas({ document, documents, selectedId, dispatch }: Props) {
+function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRedo }: Props) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [isDrawing, setDrawing] = useState<boolean>(false);
@@ -118,6 +120,17 @@ function PageCanvas({ document, documents, selectedId, dispatch }: Props) {
         >
           <FontAwesomeIcon icon="file-export" /> Export
         </Button>
+
+        <Separator />
+
+        <ButtonGroup size="sm">
+          <Button title="Undo" variant="outline-dark" onClick={() => dispatch(createUndo())} disabled={!hasUndo}>
+            <FontAwesomeIcon icon="undo" />
+          </Button>
+          <Button title="Redo" variant="outline-dark" onClick={() => dispatch(createRedo())} disabled={!hasRedo}>
+            <FontAwesomeIcon icon="redo" />
+          </Button>
+        </ButtonGroup>
 
         <Separator />
 
