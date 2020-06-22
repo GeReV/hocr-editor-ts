@@ -348,16 +348,11 @@ export function reducer(state: State, action: AppReducerAction): State {
   const snapshotLastIndex = state.snapshots.length - 1;
 
   if (action.type === ActionType.Undo) {
-    console.debug(state.snapshots);
     if (state.currentSnapshot <= 0) {
-      console.debug(state.currentSnapshot, '/', snapshotLastIndex);
-
       return state;
     }
 
     const changes = state.snapshots[state.currentSnapshot - 1];
-
-    console.debug(state.currentSnapshot - 1, '/', snapshotLastIndex);
 
     return {
       ...state,
@@ -367,16 +362,11 @@ export function reducer(state: State, action: AppReducerAction): State {
   }
 
   if (action.type === ActionType.Redo) {
-    console.debug(state.snapshots);
     if (state.currentSnapshot === snapshotLastIndex) {
-      console.debug(state.currentSnapshot, '/', snapshotLastIndex);
-
       return state;
     }
 
     const changes = state.snapshots[state.currentSnapshot + 1];
-
-    console.debug(state.currentSnapshot + 1, '/', snapshotLastIndex);
 
     return {
       ...state,
