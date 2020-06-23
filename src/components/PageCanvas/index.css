@@ -12,10 +12,6 @@
     padding: .5rem 0;
 }
 
-.Canvas-toolbar > * + * {
-    margin-left: .25rem;
-}
-
 .Canvas-main {
     background: #f0f0f0;
     flex: 1 1 0;

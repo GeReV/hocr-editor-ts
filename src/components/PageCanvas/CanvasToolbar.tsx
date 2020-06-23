@@ -1,9 +1,8 @@
 import React, { PropsWithChildren, useCallback, useMemo } from 'react';
-import { Dropdown, ButtonGroup, Button } from 'react-bootstrap';
+import { Space, Button, Dropdown, Menu } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Rectangle } from 'tesseract.js';
 
-import Header from '../Header';
 import { useAppReducer } from '../../reducerContext';
 import {
   createAddDocument,
@@ -115,40 +114,34 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
   const shouldOcrRegion: boolean = state.isDrawing && state.drawRect.width > 0 && state.drawRect.height > 0;
 
+  const menu = (
+    <Menu>
+      <Menu.Item onClick={handleOCR}>OCR current document</Menu.Item>
+      <Menu.Item onClick={() => performOCR(state.documents)}>OCR all documents</Menu.Item>
+      <Menu.Item onClick={handleRegionOCR} disabled={!shouldOcrRegion}>
+        OCR selected region
+      </Menu.Item>
+    </Menu>
+  );
+
   return (
-    <Header className="Canvas-toolbar">
-      <Button className="Toolbar-open" size="sm">
+    <Space className="Canvas-toolbar">
+      <Button type="primary" className="Toolbar-open">
         <input type="file" className="Toolbar-open-file" onChange={handleFileSelect} accept="image/*" multiple />
         <FontAwesomeIcon icon="folder-open" /> Load images
       </Button>
-      <Dropdown as={ButtonGroup}>
-        <Button
-          size="sm"
-          variant="primary"
-          disabled={!currentDocument || isProcessing}
-          onClick={shouldOcrRegion ? handleRegionOCR : handleOCR}
-        >
-          <FontAwesomeIcon icon="glasses" /> {shouldOcrRegion ? 'OCR Selection' : 'OCR'}
-        </Button>
 
-        <Dropdown.Toggle
-          id="ocr-dropdown"
-          variant="primary"
-          size="sm"
-          disabled={!state.documents.length || isProcessing}
-          split
-        />
-
-        <Dropdown.Menu>
-          <Dropdown.Item onClick={handleOCR}>OCR current document</Dropdown.Item>
-          <Dropdown.Item onClick={() => performOCR(state.documents)}>OCR all documents</Dropdown.Item>
-          <Dropdown.Item onClick={handleRegionOCR} disabled={!shouldOcrRegion}>
-            OCR selected region
-          </Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
+      <Dropdown.Button
+        type="primary"
+        overlay={menu}
+        disabled={!currentDocument || isProcessing}
+        onClick={shouldOcrRegion ? handleRegionOCR : handleOCR}
+        icon={<FontAwesomeIcon icon="caret-down" />}
+      >
+        <FontAwesomeIcon icon="glasses" /> {shouldOcrRegion ? 'OCR Selection' : 'OCR'}
+      </Dropdown.Button>
 
       {children}
-    </Header>
+    </Space>
   );
 }

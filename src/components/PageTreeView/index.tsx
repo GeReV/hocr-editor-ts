@@ -1,5 +1,4 @@
 import React, { useCallback, Dispatch } from 'react';
-import { Row } from 'react-bootstrap';
 
 import { createChangeSelected, createModifyNode, createMoveNode } from '../../reducer/actions';
 import Tree from '../SortableTree/components/Tree';
@@ -95,7 +94,7 @@ function PageTreeView({ currentDocument, selectedId, dispatch }: Props) {
   }
 
   return (
-    <Row className="Tree" onMouseLeave={onMouseLeave}>
+    <div className="Tree" onMouseLeave={onMouseLeave}>
       <Tree
         tree={tree}
         onExpand={handleExpand}
@@ -106,7 +105,7 @@ function PageTreeView({ currentDocument, selectedId, dispatch }: Props) {
         isDragEnabled
         isNestingEnabled
       />
-    </Row>
+    </div>
   );
 }
 

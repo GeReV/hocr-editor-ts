@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Col, Container, Navbar, Row } from 'react-bootstrap';
+import { Layout } from 'antd';
 import { useKey } from 'react-use';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
@@ -13,6 +13,7 @@ import PageTreeView from './components/PageTreeView';
 import PageList from './components/PageList';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'antd/dist/antd.css';
 import './App.css';
 import { LogView } from './components/LogView';
 
@@ -67,16 +68,15 @@ function App() {
   const currentDocument: OcrDocument = state.documents[state.currentDocument];
 
   return (
-    <>
-      <Navbar bg="dark" expand="lg" variant="dark">
-        <Navbar.Brand>hOCR Editor</Navbar.Brand>
-      </Navbar>
-      <Container className="App" fluid>
-        <Row className="App-main">
-          <Col xl={1}>
+    <Layout className="App">
+      <Layout.Header>hOCR Editor</Layout.Header>
+      <Layout.Content className="App-main">
+        <Layout>
+          <Layout.Sider theme="light" width={160}>
+            <Header>Pages</Header>
             <PageList documents={state.documents} currentDocument={currentDocument} onSelect={handleSelect} />
-          </Col>
-          <Col xl={9} className="App-canvas">
+          </Layout.Sider>
+          <Layout.Content className="App-canvas">
             <PageCanvas
               documents={state.documents}
               document={currentDocument}
@@ -87,19 +87,17 @@ function App() {
               hasUndo={!!(state.snapshots.length && state.currentSnapshot > 0)}
               hasRedo={!!(state.snapshots.length && state.currentSnapshot < state.snapshots.length - 1)}
             />
-          </Col>
-          <Col xl={2} className="App-tree">
+          </Layout.Content>
+          <Layout.Sider className="App-tree" theme="light" width={320}>
             <Header>Hierarchy</Header>
             <PageTreeView currentDocument={currentDocument} selectedId={state.selectedId} dispatch={dispatch} />
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-            <LogView lastUpdate={state.lastRecognizeUpdate} />
-          </Col>
-        </Row>
-      </Container>
-    </>
+          </Layout.Sider>
+        </Layout>
+      </Layout.Content>
+      <Layout.Footer className="App-footer">
+        <LogView lastUpdate={state.lastRecognizeUpdate} />
+      </Layout.Footer>
+    </Layout>
   );
 }
 

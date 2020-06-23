@@ -1,0 +1,8 @@
+﻿.ExportModal .ant-modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 95vh;
+}
+.ExportModal .ant-modal-body {
+    overflow: auto;
+}

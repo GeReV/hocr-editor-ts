@@ -5,12 +5,12 @@
   display: flex;
   font-size: .875rem;
   line-height: 1.2;
-  padding: .25rem 0;
-  
+  padding: .25rem;
+
   > * + * {
     margin-left: .25rem;
   }
-  
+
   .LogView-worker,
   .LogView-job,
   .LogView-status,

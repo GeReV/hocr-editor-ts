@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Button, Overlay, Tooltip } from 'react-bootstrap';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button, Modal, Space, Tooltip } from 'antd';
 import { PrismAsync as SyntaxHighlighter } from 'react-syntax-highlighter';
 import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism';
 import { useCopyToClipboard } from 'react-use';
@@ -10,6 +10,8 @@ import { PageTreeItem } from '../../types';
 import buildHocrDocument from '../../lib/hocrBuilder';
 import printHtml from '../../lib/htmlPrinter';
 
+import './index.css';
+
 interface Props {
   document?: OcrDocument;
   onClose?: () => void;
@@ -17,8 +19,6 @@ interface Props {
 }
 
 export default function ExportModal({ document, onClose, show }: Props) {
-  const clipboardButtonRef = useRef(null);
-
   const [hocr, setHocr] = useState<string | null>(null);
 
   const hocrDownload = useMemo(() => (hocr ? `data:text/html;charset=utf-8,${encodeURIComponent(hocr)}` : '#'), [hocr]);
@@ -65,33 +65,37 @@ export default function ExportModal({ document, onClose, show }: Props) {
   }, [showClipboardTooltip]);
 
   return (
-    <Modal onHide={onClose} show={show} size="xl" centered scrollable>
-      <Modal.Header closeButton>
-        <Modal.Title>Export hOCR</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {hocr && (
-          <SyntaxHighlighter language="markup" style={prism}>
-            {hocr}
-          </SyntaxHighlighter>
-        )}
-      </Modal.Body>
-      <Modal.Footer>
-        <Button ref={clipboardButtonRef} onClick={handleCopyToClipboard}>
-          <FontAwesomeIcon icon="copy" /> Copy
-        </Button>
-        <Overlay target={clipboardButtonRef.current} show={showClipboardTooltip} placement="left">
-          {(props) => (
-            <Tooltip id="clipboard-copied-tooltip" {...props}>
-              Copied!
-            </Tooltip>
-          )}
-        </Overlay>
-
-        <Button as="a" href={hocrDownload} download="file.hocr">
-          <FontAwesomeIcon icon="file-download" /> Download
-        </Button>
-      </Modal.Footer>
+    <Modal
+      onCancel={onClose}
+      onOk={onClose}
+      visible={show}
+      centered
+      title="Export hOCR"
+      className="ExportModal"
+      width={960}
+      footer={
+        <Space>
+          <Tooltip title="Copied!" placement="left" trigger={[]} visible={showClipboardTooltip}>
+            <Button type="primary" onClick={handleCopyToClipboard} icon={<FontAwesomeIcon icon="copy" />}>
+              Copy
+            </Button>
+          </Tooltip>
+          <Button
+            type="primary"
+            href={hocrDownload}
+            download="file.hocr"
+            icon={<FontAwesomeIcon icon="file-download" />}
+          >
+            Download
+          </Button>
+        </Space>
+      }
+    >
+      {hocr && (
+        <SyntaxHighlighter language="markup" style={prism}>
+          {hocr}
+        </SyntaxHighlighter>
+      )}
     </Modal>
   );
 }

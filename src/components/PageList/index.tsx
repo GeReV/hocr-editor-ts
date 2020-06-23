@@ -1,8 +1,7 @@
 import React, { useCallback } from 'react';
 import cx from 'classnames';
-import { Image as BsImage, ProgressBar } from 'react-bootstrap';
+import { Progress } from 'antd';
 
-import Header from '../Header';
 import { OcrDocument } from '../../reducer/types';
 
 import './index.scss';
@@ -25,7 +24,6 @@ function PageList({ documents, currentDocument, onSelect }: Props) {
 
   return (
     <div className="Pages">
-      <Header>Pages</Header>
       <ul className="Pages-list">
         {documents.map((doc, index) => (
           <li
@@ -34,8 +32,10 @@ function PageList({ documents, currentDocument, onSelect }: Props) {
             onClick={(evt) => handleClick(evt, index)}
           >
             <div>
-              <BsImage src={doc.pageImage.thumbnailUrlObject} />
-              {doc.isProcessing && <ProgressBar className="Pages-item-progress" now={100} striped animated />}
+              <img src={doc.pageImage.thumbnailUrlObject} alt="" />
+              {doc.isProcessing && (
+                <Progress className="Pages-item-progress" percent={100} status="active" showInfo={false} />
+              )}
             </div>
           </li>
         ))}
