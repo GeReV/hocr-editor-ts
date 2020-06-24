@@ -80,6 +80,8 @@ export default class Tree extends Component<Props, State> {
   // HTMLElement of the container element
   containerElement: HTMLElement | undefined;
 
+  clonedElement: HTMLElement | null = null;
+
   expandTimer = new DelayedFunction(500);
 
   static getDerivedStateFromProps(props: Props, state: State) {
@@ -145,10 +147,8 @@ export default class Tree extends Component<Props, State> {
 
     const moveLegal = canMoveNode(tree, sourcePosition, destinationPosition);
 
-    const draggedElement = this.getDraggedElement();
-
-    draggedElement?.classList.toggle(TREE_DRAG_STATE_LEGAL, moveLegal);
-    draggedElement?.classList.toggle(TREE_DRAG_STATE_ILLEGAL, !moveLegal);
+    this.clonedElement?.classList.toggle(TREE_DRAG_STATE_LEGAL, moveLegal);
+    this.clonedElement?.classList.toggle(TREE_DRAG_STATE_ILLEGAL, !moveLegal);
   };
 
   onDropAnimating = () => {
@@ -180,7 +180,7 @@ export default class Tree extends Component<Props, State> {
       onDragEnd(sourcePosition, undefined);
     }
 
-    this.getDraggedElement()?.classList.remove(TREE_DRAG_STATE_LEGAL, TREE_DRAG_STATE_ILLEGAL);
+    this.clonedElement?.classList.remove(TREE_DRAG_STATE_LEGAL, TREE_DRAG_STATE_ILLEGAL);
 
     this.dragState = undefined;
   };
@@ -237,14 +237,15 @@ export default class Tree extends Component<Props, State> {
 
   getDroppedLevel = (): number | undefined => {
     const { offsetPerLevel } = this.props;
-    const { draggedItemId } = this.state;
+    // const { draggedItemId } = this.state;
 
     if (!this.dragState || !this.containerElement) {
       return undefined;
     }
 
     const containerLeft = getBox(this.containerElement).contentBox.left;
-    const itemElement = this.itemsElement[draggedItemId!];
+    // const itemElement = this.itemsElement[draggedItemId!];
+    const itemElement = this.clonedElement;
 
     if (itemElement) {
       const currentLeft: number = getBox(itemElement).contentBox.left;
@@ -325,6 +326,7 @@ export default class Tree extends Component<Props, State> {
             <Droppable
               droppableId="tree"
               isCombineEnabled={isNestingEnabled}
+              direction="vertical"
               ignoreContainerClipping
               mode="virtual"
               renderClone={(provided: DraggableProvided, snapshot: DraggableStateSnapshot, rubric: DraggableRubric) => {
@@ -346,7 +348,9 @@ export default class Tree extends Component<Props, State> {
                     renderItem={renderItem}
                     provided={provided}
                     snapshot={snapshot}
-                    itemRef={noop}
+                    itemRef={(id, el) => {
+                      this.clonedElement = el;
+                    }}
                     offsetPerLevel={offsetPerLevel}
                   />
                 );
