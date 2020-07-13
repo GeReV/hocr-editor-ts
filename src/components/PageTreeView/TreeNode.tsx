@@ -23,8 +23,8 @@ function buildTitle(items: TreeItems, nodeId: ItemId): string {
 
   switch (node.type) {
     case ElementType.Block: {
-      if (!node.data.text.trim()) {
-        return node.data.blocktype;
+      if (node.data.type === 'graphic') {
+        return node.data.type;
       }
 
       return node.children.map((childId) => buildTitle(items, childId)).join('\n\n');
@@ -60,11 +60,6 @@ function getTypeIcon(node: DocumentTreeItem): { icon: IconName | null; iconTitle
     case ElementType.Word:
       return {
         icon: null,
-      };
-    case ElementType.Symbol:
-      return {
-        icon: 'font',
-        iconTitle: 'Symbol',
       };
     default: {
       return {

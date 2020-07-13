@@ -1,20 +1,25 @@
-import { Bbox, Block, Line, Page, Paragraph, RecognizeResult, Word } from 'tesseract.js';
 import {
   BaseTreeItem,
+  Block,
   BlockTreeItem,
   DocumentTreeItem,
   ElementType,
+  Graphic,
   ItemId,
+  Line,
   LineTreeItem,
+  OcrElement,
+  Page,
   PageTreeItem,
+  Paragraph,
   ParagraphTreeItem,
+  Word,
 } from './types';
 import { TreeItems } from './reducer/types';
-import { canBlockHostChildren } from './utils';
 
 let id = 0;
 
-const createTreeItem = <T extends ElementType, V extends { bbox: Bbox }, P extends BaseTreeItem<ElementType, any>>(
+const createTreeItem = <T extends ElementType, V extends OcrElement<any>, P extends BaseTreeItem<ElementType, any>>(
   type: T,
   parent: P | null,
   data: V,
@@ -50,7 +55,8 @@ const createRootTreeItem = (page: Page): PageTreeItem => ({
   isExpanded: true,
 });
 
-const createBlockTreeItem = (parent: PageTreeItem, block: Block) => createTreeItem(ElementType.Block, parent, block);
+const createBlockTreeItem = (parent: PageTreeItem, block: Block | Graphic) =>
+  createTreeItem(ElementType.Block, parent, block);
 
 const createParagraphTreeItem = (parent: BlockTreeItem, para: Paragraph) =>
   createTreeItem(ElementType.Paragraph, parent, para);
@@ -59,29 +65,33 @@ const createLineTreeItem = (parent: ParagraphTreeItem, line: Line) => createTree
 
 const createWordTreeItem = (parent: LineTreeItem, word: Word) => createTreeItem(ElementType.Word, parent, word);
 
-export function buildTree(recognitionResult: RecognizeResult): [ItemId, TreeItems] {
+export function buildTree(page: Page): [ItemId, TreeItems] {
   const map: TreeItems = {};
 
-  const root = createRootTreeItem(recognitionResult.data);
+  const root = createRootTreeItem(page);
 
   map[root.id] = root;
 
-  root.children = recognitionResult.data.blocks.map((block) => {
+  root.children = page.children.map((block) => {
     const blockTreeItem: BlockTreeItem = createBlockTreeItem(root, block);
 
     map[blockTreeItem.id] = blockTreeItem;
 
-    if (!canBlockHostChildren(block)) {
+    // if (!canBlockHostChildren(block)) {
+    //   return blockTreeItem.id;
+    // }
+
+    if (block.type === 'graphic') {
       return blockTreeItem.id;
     }
 
-    blockTreeItem.children = block.paragraphs.map((para) => {
+    blockTreeItem.children = block.children.map((para) => {
       const paragraphTreeItem: ParagraphTreeItem = createParagraphTreeItem(blockTreeItem, para);
 
-      paragraphTreeItem.children = para.lines.map((line) => {
+      paragraphTreeItem.children = para.children.map((line) => {
         const lineTreeItem: LineTreeItem = createLineTreeItem(paragraphTreeItem, line);
 
-        lineTreeItem.children = line.words.map((word) => {
+        lineTreeItem.children = line.children.map((word) => {
           const wordTreeItem = createWordTreeItem(lineTreeItem, word);
 
           map[wordTreeItem.id] = wordTreeItem;

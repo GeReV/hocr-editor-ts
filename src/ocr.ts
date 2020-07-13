@@ -1,6 +1,7 @@
 import tesseract, { RecognizeResult, Rectangle } from 'tesseract.js';
 import { OcrDocument } from './reducer/types';
-import { RecognizeUpdate } from './types';
+import { Page, RecognizeUpdate } from './types';
+import hocrParser from './lib/hocrParser';
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends Array<infer U>
@@ -66,11 +67,7 @@ interface RecognizeOptions {
 //   return partial;
 // }
 
-export async function recognize(
-  docs: OcrDocument[],
-  langs?: string,
-  options?: RecognizeOptions,
-): Promise<RecognizeResult[]> {
+export async function recognize(docs: OcrDocument[], langs?: string, options?: RecognizeOptions): Promise<Page[]> {
   // const stored = localStorage.getItem('OCR');
   //
   // if (stored) {
@@ -118,5 +115,7 @@ export async function recognize(
 
   // localStorage.setItem('OCR', JSON.stringify(decirc));
 
-  return results;
+  console.debug(results.map((r) => r.data.hocr));
+
+  return results.map((result) => hocrParser(result.data.hocr ?? ''));
 }

@@ -1,5 +1,4 @@
-import { Baseline, Bbox, Block, Line, Page, Paragraph, Word } from 'tesseract.js';
-import { BlockType } from '../types';
+import { Baseline, Bbox, Block, Line, Page, Paragraph, Word, Graphic } from '../types';
 
 interface Size {
   width: number;
@@ -24,14 +23,9 @@ function bbox(bbox: Bbox): string {
   return `bbox ${bbox.x0} ${bbox.y0} ${bbox.x1} ${bbox.y1}`;
 }
 
-function baseline(bl: Baseline, bbox: Bbox): string {
+function baseline(bl: Baseline): string {
   // Offset is (probably) the difference between bottom of bbox and bottom of baseline
-  const offset = bbox.y1 - Math.max(bl.y0, bl.y1);
-
-  // The angle of the baseline diagonal going from (x0, y0) to (x1, y1).
-  const angle = Math.atan2(bl.y1 - bl.y0, bl.x1 - bl.x0);
-
-  return `baseline ${truncateRound(angle, 3)} ${offset}`;
+  return `baseline ${truncateRound(bl[0], 3)} ${bl[1]}`;
 }
 
 function fontSize(fs: number) {
@@ -40,10 +34,6 @@ function fontSize(fs: number) {
 
 function confidence(conf: number) {
   return `x_wconf ${Math.round(conf)}`;
-}
-
-function direction(isLtr: boolean) {
-  return isLtr ? 'ltr' : 'rtl';
 }
 
 function createElement<K extends keyof HTMLElementTagNameMap>(
@@ -71,13 +61,10 @@ function createPageElement(doc: Document, page: Page, size: Size, filename: stri
   });
 }
 
-function createBlockElement(doc: Document, block: Block) {
+function createBlockElement(doc: Document, block: Block | Graphic) {
   return createElement(doc, 'div', {
     title: bbox(block.bbox),
-    class:
-      block.blocktype === BlockType.FLOWING_IMAGE || block.blocktype === BlockType.PULLOUT_IMAGE
-        ? 'ocr_graphic'
-        : 'ocr_carea',
+    class: block.type === 'graphic' ? 'ocr_graphic' : 'ocr_carea',
   });
 }
 
@@ -85,12 +72,12 @@ function createParagraphElement(doc: Document, para: Paragraph) {
   return createElement(doc, 'p', {
     title: bbox(para.bbox),
     class: 'ocr_par',
-    dir: direction(para.is_ltr),
+    dir: para.direction,
   });
 }
 
 function createLineElement(doc: Document, line: Line) {
-  const title = [baseline(line.baseline, line.bbox), bbox(line.bbox)].join('; ');
+  const title = [line.baseline && baseline(line.baseline), bbox(line.bbox)].join('; ');
 
   return createElement(doc, 'span', {
     title,
@@ -99,7 +86,9 @@ function createLineElement(doc: Document, line: Line) {
 }
 
 function createWordElement(doc: Document, word: Word) {
-  const title = [bbox(word.bbox), fontSize(word.font_size), confidence(word.confidence)].join('; ');
+  const title = [bbox(word.bbox), word.size && fontSize(word.size), word.confidence && confidence(word.confidence)]
+    .filter(Boolean)
+    .join('; ');
 
   const el = createElement(doc, 'span', {
     title,
@@ -132,16 +121,20 @@ function buildHocrHead(doc: Document, page: Page) {
 function buildHocrBody(doc: Document, page: Page, size: Size, filename: string) {
   const el = createPageElement(doc, page, size, filename);
 
-  for (const block of page.blocks) {
+  for (const block of page.children) {
     const b = createBlockElement(doc, block);
 
-    for (const paragraph of block.paragraphs) {
+    if (block.type === 'graphic') {
+      continue;
+    }
+
+    for (const paragraph of block.children) {
       const p = createParagraphElement(doc, paragraph);
 
-      for (const line of paragraph.lines) {
+      for (const line of paragraph.children) {
         const l = createLineElement(doc, line);
 
-        for (const word of line.words) {
+        for (const word of line.children) {
           const w = createWordElement(doc, word);
 
           l.appendChild(w);
