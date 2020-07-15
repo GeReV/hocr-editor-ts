@@ -114,6 +114,11 @@ function moveTreeNode(state: State, source: TreeSourcePosition, destination: Tre
 
     item.parentId = destination.parentId;
 
+    item.parentRelativeOffset = {
+      x: item.data.bbox.x0 - destinationParent.data.bbox.x0,
+      y: item.data.bbox.y0 - destinationParent.data.bbox.y0,
+    };
+
     sourceParent.isExpanded = sourceParent.children.length > 0 && sourceParent.isExpanded;
 
     if (typeof destination.index === 'undefined') {
