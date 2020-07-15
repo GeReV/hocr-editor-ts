@@ -23,6 +23,16 @@
   flex-direction: row;
 }
 
+.App-main .App-panel + .App-panel {
+  border-left: 1px solid #ddd;
+}
+
+.App-panel .Header {
+  background: #f8f8f8;
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+}
+
 .App-canvas {
   display: flex;
   flex-direction: column;
@@ -34,5 +44,6 @@
 }
 
 .App-footer {
+  border-top: 1px solid #ddd;
   padding: 0;
 }

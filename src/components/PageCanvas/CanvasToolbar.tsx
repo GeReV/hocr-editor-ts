@@ -1,8 +1,8 @@
 import React, { PropsWithChildren, useCallback, useMemo } from 'react';
-import { Space, Button, Dropdown, Menu } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Rectangle } from 'tesseract.js';
 
+import { Button, Space, Dropdown, Menu } from 'antd';
 import { useAppReducer } from '../../reducerContext';
 import {
   createAddDocument,

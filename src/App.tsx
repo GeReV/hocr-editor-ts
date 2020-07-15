@@ -72,11 +72,11 @@ function App() {
       <Layout.Header>hOCR Editor</Layout.Header>
       <Layout.Content className="App-main">
         <Layout>
-          <Layout.Sider theme="light" width={160}>
+          <Layout.Sider className="App-panel" theme="light" width={160}>
             <Header>Pages</Header>
             <PageList documents={state.documents} currentDocument={currentDocument} onSelect={handleSelect} />
           </Layout.Sider>
-          <Layout.Content className="App-canvas">
+          <Layout.Content className="App-canvas App-panel">
             <PageCanvas
               documents={state.documents}
               document={currentDocument}
@@ -88,7 +88,7 @@ function App() {
               hasRedo={!!(state.snapshots.length && state.currentSnapshot < state.snapshots.length - 1)}
             />
           </Layout.Content>
-          <Layout.Sider className="App-tree" theme="light" width={320}>
+          <Layout.Sider className="App-tree App-panel" theme="light" width={320}>
             <Header>Hierarchy</Header>
             <PageTreeView currentDocument={currentDocument} selectedId={state.selectedId} dispatch={dispatch} />
           </Layout.Sider>
