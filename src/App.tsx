@@ -1,9 +1,10 @@
 import React, { useCallback } from 'react';
-import { Layout } from 'antd';
+import { Button, Col, Dropdown, Layout, Menu, Row } from 'antd';
 import { useKey } from 'react-use';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OcrDocument } from './reducer/types';
 import { useAppReducer } from './reducerContext';
 import { createDeleteNode, createRedo, createSelectDocument, createUndo } from './reducer/actions';
@@ -67,6 +68,14 @@ function App() {
 
   const currentDocument: OcrDocument = state.documents[state.currentDocument];
 
+  const hierarchyOptionsMenu = (
+    <Menu>
+      <Menu.Item icon={<FontAwesomeIcon icon="check" />}>Auto-enlarge boxes after changes</Menu.Item>
+      <Menu.Item icon={<FontAwesomeIcon icon="check" />}>Auto-shrink boxes after changes</Menu.Item>
+      <Menu.Item>Auto-delete empty elements</Menu.Item>
+    </Menu>
+  );
+
   return (
     <Layout className="App">
       <Layout.Header>hOCR Editor</Layout.Header>
@@ -89,7 +98,16 @@ function App() {
             />
           </Layout.Content>
           <Layout.Sider className="App-tree App-panel" theme="light" width={320}>
-            <Header>Hierarchy</Header>
+            <Header>
+              <Row>
+                <Col flex="auto">Hierarchy</Col>
+                <Col>
+                  <Dropdown overlay={hierarchyOptionsMenu} trigger={['click']}>
+                    <Button type="text" size="small" icon={<FontAwesomeIcon icon="caret-down" />} />
+                  </Dropdown>
+                </Col>
+              </Row>
+            </Header>
             <PageTreeView currentDocument={currentDocument} selectedId={state.selectedId} dispatch={dispatch} />
           </Layout.Sider>
         </Layout>
