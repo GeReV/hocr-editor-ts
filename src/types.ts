@@ -68,6 +68,7 @@ export interface Page extends OcrContainer<'page', Block | Graphic> {
 export enum ElementType {
   Page,
   Block,
+  Graphic,
   Paragraph,
   Line,
   Word,
@@ -77,6 +78,7 @@ export enum BlockType {
   CAPTION_TEXT = 'CAPTION_TEXT',
   FLOWING_IMAGE = 'FLOWING_IMAGE',
   FLOWING_TEXT = 'FLOWING_TEXT',
+  HEADING_IMAGE = 'HEADING_IMAGE',
   HORZ_LINE = 'HORZ_LINE',
   PULLOUT_IMAGE = 'PULLOUT_IMAGE',
   PULLOUT_TEXT = 'PULLOUT_TEXT',
@@ -97,12 +99,19 @@ export interface BaseTreeItem<T extends ElementType, V extends OcrElement<any>> 
 }
 
 export type PageTreeItem = BaseTreeItem<ElementType.Page, Page>;
-export type BlockTreeItem = BaseTreeItem<ElementType.Block, Block | Graphic>;
+export type BlockTreeItem = BaseTreeItem<ElementType.Block, Block>;
+export type GraphicTreeItem = BaseTreeItem<ElementType.Graphic, Graphic>;
 export type ParagraphTreeItem = BaseTreeItem<ElementType.Paragraph, Paragraph>;
 export type LineTreeItem = BaseTreeItem<ElementType.Line, Line>;
 export type WordTreeItem = BaseTreeItem<ElementType.Word, Word>;
 
-export type DocumentTreeItem = PageTreeItem | BlockTreeItem | ParagraphTreeItem | LineTreeItem | WordTreeItem;
+export type DocumentTreeItem =
+  | PageTreeItem
+  | BlockTreeItem
+  | GraphicTreeItem
+  | ParagraphTreeItem
+  | LineTreeItem
+  | WordTreeItem;
 
 export interface RecognizeUpdate {
   workerId: string;

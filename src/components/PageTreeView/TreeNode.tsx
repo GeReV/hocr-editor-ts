@@ -21,18 +21,17 @@ interface TreeNodeProps {
 function buildTitle(items: TreeItems, nodeId: ItemId): string {
   const node = items[nodeId];
 
-  switch (node.type) {
-    case ElementType.Block: {
-      if (node.data.type === 'graphic') {
-        return node.data.type;
-      }
+  const titles = node.children.map((childId) => buildTitle(items, childId));
 
-      return node.children.map((childId) => buildTitle(items, childId)).join('\n\n');
-    }
+  switch (node.type) {
+    case ElementType.Graphic:
+      return 'Graphic';
+    case ElementType.Block:
+      return titles.join('\n\n');
     case ElementType.Paragraph:
-      return node.children.map((childId) => buildTitle(items, childId)).join('\n');
+      return titles.join('\n');
     case ElementType.Line:
-      return node.children.map((childId) => buildTitle(items, childId)).join(' ');
+      return titles.join(' ');
     case ElementType.Word:
       return node.data.text.trim();
     default:
@@ -42,6 +41,11 @@ function buildTitle(items: TreeItems, nodeId: ItemId): string {
 
 function getTypeIcon(node: DocumentTreeItem): { icon: IconName | null; iconTitle?: string } {
   switch (node.type) {
+    case ElementType.Graphic:
+      return {
+        icon: 'image',
+        iconTitle: 'Graphic',
+      };
     case ElementType.Block:
       return {
         icon: 'square',
@@ -58,9 +62,6 @@ function getTypeIcon(node: DocumentTreeItem): { icon: IconName | null; iconTitle
         iconTitle: 'Line',
       };
     case ElementType.Word:
-      return {
-        icon: null,
-      };
     default: {
       return {
         icon: null,

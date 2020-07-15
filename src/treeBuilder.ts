@@ -16,15 +16,14 @@ import {
   Word,
 } from './types';
 import { TreeItems } from './reducer/types';
-
-let id = 0;
+import assert from './lib/assert';
 
 const createTreeItem = <T extends ElementType, V extends OcrElement<any>, P extends BaseTreeItem<ElementType, any>>(
   type: T,
   parent: P | null,
   data: V,
 ): BaseTreeItem<T, V> => ({
-  id: String(id++),
+  id: data.id,
   type,
   parentId: parent?.id.toString() ?? null,
   data: data,
@@ -43,7 +42,7 @@ const createTreeItem = <T extends ElementType, V extends OcrElement<any>, P exte
 });
 
 const createRootTreeItem = (page: Page): PageTreeItem => ({
-  id: String(id++),
+  id: page.id,
   type: ElementType.Page,
   parentId: null,
   data: page,
@@ -55,8 +54,10 @@ const createRootTreeItem = (page: Page): PageTreeItem => ({
   isExpanded: true,
 });
 
-const createBlockTreeItem = (parent: PageTreeItem, block: Block | Graphic) =>
-  createTreeItem(ElementType.Block, parent, block);
+const createBlockTreeItem = (parent: PageTreeItem, block: Block) => createTreeItem(ElementType.Block, parent, block);
+
+const createGraphicTreeItem = (parent: PageTreeItem, graphic: Graphic) =>
+  createTreeItem(ElementType.Graphic, parent, graphic);
 
 const createParagraphTreeItem = (parent: BlockTreeItem, para: Paragraph) =>
   createTreeItem(ElementType.Paragraph, parent, para);
@@ -64,6 +65,10 @@ const createParagraphTreeItem = (parent: BlockTreeItem, para: Paragraph) =>
 const createLineTreeItem = (parent: ParagraphTreeItem, line: Line) => createTreeItem(ElementType.Line, parent, line);
 
 const createWordTreeItem = (parent: LineTreeItem, word: Word) => createTreeItem(ElementType.Word, parent, word);
+
+function assertIsBlock(block: DocumentTreeItem): asserts block is BlockTreeItem {
+  assert(block.type === ElementType.Block, 'Item is of type %s, expected block.', block.data.type);
+}
 
 export function buildTree(page: Page): [ItemId, TreeItems] {
   const map: TreeItems = {};
@@ -73,20 +78,22 @@ export function buildTree(page: Page): [ItemId, TreeItems] {
   map[root.id] = root;
 
   root.children = page.children.map((block) => {
-    const blockTreeItem: BlockTreeItem = createBlockTreeItem(root, block);
+    const treeItem = block.type === 'block' ? createBlockTreeItem(root, block) : createGraphicTreeItem(root, block);
 
-    map[blockTreeItem.id] = blockTreeItem;
+    map[treeItem.id] = treeItem;
 
     // if (!canBlockHostChildren(block)) {
     //   return blockTreeItem.id;
     // }
 
     if (block.type === 'graphic') {
-      return blockTreeItem.id;
+      return treeItem.id;
     }
 
-    blockTreeItem.children = block.children.map((para) => {
-      const paragraphTreeItem: ParagraphTreeItem = createParagraphTreeItem(blockTreeItem, para);
+    assertIsBlock(treeItem);
+
+    treeItem.children = block.children.map((para) => {
+      const paragraphTreeItem: ParagraphTreeItem = createParagraphTreeItem(treeItem, para);
 
       paragraphTreeItem.children = para.children.map((line) => {
         const lineTreeItem: LineTreeItem = createLineTreeItem(paragraphTreeItem, line);
@@ -109,7 +116,7 @@ export function buildTree(page: Page): [ItemId, TreeItems] {
       return paragraphTreeItem.id;
     });
 
-    return blockTreeItem.id;
+    return treeItem.id;
   });
 
   return [root.id, map];

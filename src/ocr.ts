@@ -1,7 +1,7 @@
 import tesseract, { RecognizeResult, Rectangle } from 'tesseract.js';
 import { OcrDocument } from './reducer/types';
 import { Page, RecognizeUpdate } from './types';
-import hocrParser from './lib/hocrParser';
+import { convertPage } from './lib/tesseractConverter';
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends Array<infer U>
@@ -115,7 +115,5 @@ export async function recognize(docs: OcrDocument[], langs?: string, options?: R
 
   // localStorage.setItem('OCR', JSON.stringify(decirc));
 
-  console.debug(results.map((r) => r.data.hocr));
-
-  return results.map((result) => hocrParser(result.data.hocr ?? ''));
+  return results.map((result, i) => convertPage(result.data, docs[i].pageImage));
 }

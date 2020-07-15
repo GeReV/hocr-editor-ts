@@ -41,7 +41,6 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
       dispatch(createLogUpdate(null));
 
       results.forEach((result, index) => {
-        console.debug(result);
         dispatch(createRecognizeDocument(documents[index].id, result));
       });
     },
