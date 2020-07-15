@@ -15,11 +15,16 @@ import {
   ParagraphTreeItem,
   Word,
 } from './types';
-import { TreeItems } from './reducer/types';
+import { Tree, TreeItems } from './reducer/types';
 import assert from './lib/assert';
 import { createUniqueIdentifier } from './utils';
+import { getNodeOrThrow } from './treeUtils';
 
 const uniqueId = createUniqueIdentifier();
+
+function assertIsBlock(block: DocumentTreeItem): asserts block is BlockTreeItem {
+  assert(block.type === ElementType.Block, 'Item is of type %s, expected block.', block.data.type);
+}
 
 const createTreeItem = <T extends ElementType, V extends OcrElement<any>, P extends BaseTreeItem<ElementType, any>>(
   type: T,
@@ -69,11 +74,7 @@ const createLineTreeItem = (parent: ParagraphTreeItem, line: Line) => createTree
 
 const createWordTreeItem = (parent: LineTreeItem, word: Word) => createTreeItem(ElementType.Word, parent, word);
 
-function assertIsBlock(block: DocumentTreeItem): asserts block is BlockTreeItem {
-  assert(block.type === ElementType.Block, 'Item is of type %s, expected block.', block.data.type);
-}
-
-export function buildTree(page: Page): [ItemId, TreeItems] {
+export function buildTree(page: Page): Tree {
   const map: TreeItems = {};
 
   const root = createRootTreeItem(page);
@@ -122,21 +123,18 @@ export function buildTree(page: Page): [ItemId, TreeItems] {
     return treeItem.id;
   });
 
-  return [root.id, map];
+  return {
+    rootId: root.id,
+    items: map,
+  };
 }
 
 export function walkChildren(children: ItemId[], map: TreeItems, action: (item: DocumentTreeItem) => void): void {
-  function resolveChild(childId: ItemId): DocumentTreeItem {
-    const child = map[childId.toString()];
-
-    if (!child) {
-      throw new Error(`Could not find child with ID ${childId} in tree.`);
-    }
-
-    return child;
-  }
-
-  walkTree(children.map(resolveChild), map, action);
+  walkTree(
+    children.map((childId) => getNodeOrThrow(map, childId)),
+    map,
+    action,
+  );
 }
 
 export function walkTree(tree: DocumentTreeItem[], map: TreeItems, action: (item: DocumentTreeItem) => void): void {

@@ -3,12 +3,13 @@ import { produce } from 'immer';
 import type { Draft } from 'immer/dist/types/types-external';
 
 import { IRect } from 'konva/types/types';
-import { BaseTreeItem, ElementType, ItemId, Position } from '../types';
+import { ElementType, ItemId, Position } from '../types';
 import { buildTree, walkChildren } from '../treeBuilder';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
 import { isLeafItem } from '../components/SortableTree/utils/tree';
 import { createUniqueIdentifier } from '../utils';
-import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State, TreeItems } from './types';
+import { calculateParentRelativeOffset, getNodeOrThrow, offsetBbox, resizeBboxToWrap } from '../treeUtils';
+import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State } from './types';
 
 const MAX_CHANGESETS = 40;
 
@@ -18,13 +19,6 @@ const EMPTY_RECT: IRect = {
   width: 0,
   height: 0,
 };
-
-const offsetBbox = (bbox: Bbox, offset: Position): Bbox => ({
-  x0: bbox.x0 + offset.x,
-  y0: bbox.y0 + offset.y,
-  x1: bbox.x1 + offset.x,
-  y1: bbox.y1 + offset.y,
-});
 
 export const initialState: State = {
   snapshots: [],
@@ -36,16 +30,6 @@ export const initialState: State = {
   isDrawing: false,
   drawRect: EMPTY_RECT,
 };
-
-export function getNodeOrThrow(treeItems: TreeItems, nodeId: ItemId): BaseTreeItem<ElementType, any> {
-  const node = treeItems[nodeId.toString()];
-
-  if (!node) {
-    throw new Error(`Could not find node with ID ${nodeId}.`);
-  }
-
-  return node;
-}
 
 function updateTreeNodePosition(
   state: State,
@@ -105,19 +89,16 @@ function moveTreeNode(state: State, source: TreeSourcePosition, destination: Tre
       throw new Error('Cannot move node when no tree exists. This should never happen.');
     }
 
-    const sourceParent = tree.items[source.parentId];
-    const destinationParent = tree.items[destination.parentId];
+    const sourceParent = getNodeOrThrow(tree.items, source.parentId);
+    const destinationParent = getNodeOrThrow(tree.items, destination.parentId);
 
     const itemId = sourceParent.children.splice(source.index, 1)[0];
 
-    const item = tree.items[itemId];
+    const item = getNodeOrThrow(tree.items, itemId);
 
-    item.parentId = destination.parentId;
+    item.parentId = destinationParent.id;
 
-    item.parentRelativeOffset = {
-      x: item.data.bbox.x0 - destinationParent.data.bbox.x0,
-      y: item.data.bbox.y0 - destinationParent.data.bbox.y0,
-    };
+    item.parentRelativeOffset = calculateParentRelativeOffset(item, tree.items);
 
     sourceParent.isExpanded = sourceParent.children.length > 0 && sourceParent.isExpanded;
 
@@ -128,6 +109,12 @@ function moveTreeNode(state: State, source: TreeSourcePosition, destination: Tre
     } else {
       destinationParent.children.splice(destination.index, 0, itemId);
     }
+
+    // TODO: If enlarge option enabled
+    resizeBboxToWrap(destinationParent, tree);
+
+    // TODO: If shrink option enabled
+    resizeBboxToWrap(sourceParent, tree);
   });
 }
 
@@ -171,9 +158,7 @@ function modifyTreeNode(state: State, payload: ModifyNodePayload): State {
       return;
     }
 
-    const treeItems = tree.items;
-
-    const node = getNodeOrThrow(treeItems, payload.itemId);
+    const node = getNodeOrThrow(tree.items, payload.itemId);
 
     const changes = payload.changes;
 
@@ -181,7 +166,7 @@ function modifyTreeNode(state: State, payload: ModifyNodePayload): State {
       node.isExpanded = changes.isExpanded;
     }
 
-    if (typeof changes.text !== 'undefined') {
+    if (typeof changes.text !== 'undefined' && node.type === ElementType.Word) {
       node.data.text = changes.text;
     }
   });
@@ -204,7 +189,7 @@ function reduce(state: State, action: AppReducerAction): State {
     }
     case ActionType.RecognizeDocument: {
       return produceWithUndo(state, (draft) => {
-        const [rootId, items] = buildTree(action.payload.result);
+        const tree = buildTree(action.payload.result);
 
         const document = draft.documents.find((doc: OcrDocument) => doc.id === action.payload.id);
 
@@ -213,15 +198,12 @@ function reduce(state: State, action: AppReducerAction): State {
         }
 
         document.isProcessing = false;
-        document.tree = {
-          rootId,
-          items,
-        };
+        document.tree = tree;
       });
     }
     case ActionType.RecognizeRegion: {
       return produceWithUndo(state, (draft) => {
-        const [rootId, newItems] = buildTree(action.payload.result);
+        const { rootId, items: newItems } = buildTree(action.payload.result);
 
         const document = draft.documents.find((doc: OcrDocument) => doc.id === action.payload.id);
 

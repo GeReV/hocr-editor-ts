@@ -6,15 +6,17 @@ import * as actions from './actions';
 
 export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
+export type Tree = {
+  rootId: ItemId;
+  items: TreeItems;
+};
+
 export interface OcrDocument {
   id: number;
   isProcessing: boolean;
   filename: string;
   pageImage: PageImage;
-  tree: {
-    rootId: ItemId;
-    items: TreeItems;
-  } | null;
+  tree: Tree | null;
 }
 
 interface Changeset {
