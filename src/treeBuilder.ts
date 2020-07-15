@@ -17,13 +17,16 @@ import {
 } from './types';
 import { TreeItems } from './reducer/types';
 import assert from './lib/assert';
+import { createUniqueIdentifier } from './utils';
+
+const uniqueId = createUniqueIdentifier();
 
 const createTreeItem = <T extends ElementType, V extends OcrElement<any>, P extends BaseTreeItem<ElementType, any>>(
   type: T,
   parent: P | null,
   data: V,
 ): BaseTreeItem<T, V> => ({
-  id: data.id,
+  id: uniqueId().toString(),
   type,
   parentId: parent?.id.toString() ?? null,
   data: data,
@@ -42,7 +45,7 @@ const createTreeItem = <T extends ElementType, V extends OcrElement<any>, P exte
 });
 
 const createRootTreeItem = (page: Page): PageTreeItem => ({
-  id: page.id,
+  id: uniqueId().toString(),
   type: ElementType.Page,
   parentId: null,
   data: page,
