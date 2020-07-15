@@ -1,4 +1,4 @@
-import { Baseline, Bbox, Block, Direction, Graphic, Line, Page, Paragraph, Word } from './types';
+import { Baseline, Bbox, Block, Direction, Graphic, Line, Page, Paragraph, Word } from '../types';
 import assert from './assert';
 
 function assertClassName(className: string, expected: string | string[]) {
@@ -31,11 +31,11 @@ function parseAttrBbox(title: string): Bbox {
   };
 }
 
-function parseAttrImage(title: string): string {
+function parseAttrImage(title: string): string | null {
   const matches = title.match(/image '(.*?)'/);
 
   if (!matches) {
-    throw new Error('No image attribute found in title.');
+    return null;
   }
 
   return matches[1];

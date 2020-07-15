@@ -1,7 +1,6 @@
-import { RecognizeResult } from 'tesseract.js';
 import { Patch } from 'immer/compat/pre-3.7/dist/immer';
 import { IRect } from 'konva/types/types';
-import { DocumentTreeItem, ItemId, PageImage, RecognizeUpdate } from '../types';
+import { Page, DocumentTreeItem, ItemId, PageImage, RecognizeUpdate } from '../types';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
 import * as actions from './actions';
 
@@ -77,7 +76,7 @@ export interface ModifyNodePayload {
 
 export interface CreateRecognizeDocumentPayload {
   id: number;
-  result: RecognizeResult;
+  result: Page;
 }
 
 export interface ChangeDocumentIsProcessingPayload {

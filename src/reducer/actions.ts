@@ -1,9 +1,8 @@
 import { createAction } from '@reduxjs/toolkit';
-import { RecognizeResult } from 'tesseract.js';
 import { IRect } from 'konva/types/types';
 
 import { ChangeCallbackParams } from '../components/PageCanvas/Block';
-import { ItemId, PageImage, RecognizeUpdate } from '../types';
+import { ItemId, Page, PageImage, RecognizeUpdate } from '../types';
 import {
   ActionType,
   CreateRecognizeDocumentPayload,
@@ -49,7 +48,7 @@ export const createModifyNode = createAction<
   },
 }));
 
-const buildRecognizePayload = (id: number, result: RecognizeResult): { payload: CreateRecognizeDocumentPayload } => ({
+const buildRecognizePayload = (id: number, result: Page): { payload: CreateRecognizeDocumentPayload } => ({
   payload: {
     id,
     result,

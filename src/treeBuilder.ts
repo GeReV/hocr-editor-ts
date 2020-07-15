@@ -1,25 +1,29 @@
-import { Bbox, Block, Line, Page, Paragraph, RecognizeResult, Word } from 'tesseract.js';
 import {
   BaseTreeItem,
+  Block,
   BlockTreeItem,
   DocumentTreeItem,
   ElementType,
+  Graphic,
   ItemId,
+  Line,
   LineTreeItem,
+  OcrElement,
+  Page,
   PageTreeItem,
+  Paragraph,
   ParagraphTreeItem,
+  Word,
 } from './types';
 import { TreeItems } from './reducer/types';
-import { canBlockHostChildren } from './utils';
+import assert from './lib/assert';
 
-let id = 0;
-
-const createTreeItem = <T extends ElementType, V extends { bbox: Bbox }, P extends BaseTreeItem<ElementType, any>>(
+const createTreeItem = <T extends ElementType, V extends OcrElement<any>, P extends BaseTreeItem<ElementType, any>>(
   type: T,
   parent: P | null,
   data: V,
 ): BaseTreeItem<T, V> => ({
-  id: String(id++),
+  id: data.id,
   type,
   parentId: parent?.id.toString() ?? null,
   data: data,
@@ -38,7 +42,7 @@ const createTreeItem = <T extends ElementType, V extends { bbox: Bbox }, P exten
 });
 
 const createRootTreeItem = (page: Page): PageTreeItem => ({
-  id: String(id++),
+  id: page.id,
   type: ElementType.Page,
   parentId: null,
   data: page,
@@ -52,6 +56,9 @@ const createRootTreeItem = (page: Page): PageTreeItem => ({
 
 const createBlockTreeItem = (parent: PageTreeItem, block: Block) => createTreeItem(ElementType.Block, parent, block);
 
+const createGraphicTreeItem = (parent: PageTreeItem, graphic: Graphic) =>
+  createTreeItem(ElementType.Graphic, parent, graphic);
+
 const createParagraphTreeItem = (parent: BlockTreeItem, para: Paragraph) =>
   createTreeItem(ElementType.Paragraph, parent, para);
 
@@ -59,29 +66,39 @@ const createLineTreeItem = (parent: ParagraphTreeItem, line: Line) => createTree
 
 const createWordTreeItem = (parent: LineTreeItem, word: Word) => createTreeItem(ElementType.Word, parent, word);
 
-export function buildTree(recognitionResult: RecognizeResult): [ItemId, TreeItems] {
+function assertIsBlock(block: DocumentTreeItem): asserts block is BlockTreeItem {
+  assert(block.type === ElementType.Block, 'Item is of type %s, expected block.', block.data.type);
+}
+
+export function buildTree(page: Page): [ItemId, TreeItems] {
   const map: TreeItems = {};
 
-  const root = createRootTreeItem(recognitionResult.data);
+  const root = createRootTreeItem(page);
 
   map[root.id] = root;
 
-  root.children = recognitionResult.data.blocks.map((block) => {
-    const blockTreeItem: BlockTreeItem = createBlockTreeItem(root, block);
+  root.children = page.children.map((block) => {
+    const treeItem = block.type === 'block' ? createBlockTreeItem(root, block) : createGraphicTreeItem(root, block);
 
-    map[blockTreeItem.id] = blockTreeItem;
+    map[treeItem.id] = treeItem;
 
-    if (!canBlockHostChildren(block)) {
-      return blockTreeItem.id;
+    // if (!canBlockHostChildren(block)) {
+    //   return blockTreeItem.id;
+    // }
+
+    if (block.type === 'graphic') {
+      return treeItem.id;
     }
 
-    blockTreeItem.children = block.paragraphs.map((para) => {
-      const paragraphTreeItem: ParagraphTreeItem = createParagraphTreeItem(blockTreeItem, para);
+    assertIsBlock(treeItem);
 
-      paragraphTreeItem.children = para.lines.map((line) => {
+    treeItem.children = block.children.map((para) => {
+      const paragraphTreeItem: ParagraphTreeItem = createParagraphTreeItem(treeItem, para);
+
+      paragraphTreeItem.children = para.children.map((line) => {
         const lineTreeItem: LineTreeItem = createLineTreeItem(paragraphTreeItem, line);
 
-        lineTreeItem.children = line.words.map((word) => {
+        lineTreeItem.children = line.children.map((word) => {
           const wordTreeItem = createWordTreeItem(lineTreeItem, word);
 
           map[wordTreeItem.id] = wordTreeItem;
@@ -99,7 +116,7 @@ export function buildTree(recognitionResult: RecognizeResult): [ItemId, TreeItem
       return paragraphTreeItem.id;
     });
 
-    return blockTreeItem.id;
+    return treeItem.id;
   });
 
   return [root.id, map];

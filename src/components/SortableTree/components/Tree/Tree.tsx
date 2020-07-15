@@ -22,7 +22,6 @@ import TreeItem from '../TreeItem';
 import { getDestinationPath, getItemById, getIndexById } from '../../utils/flat-tree';
 import DelayedFunction from '../../utils/delayed-function';
 import { DocumentTreeItem, ElementType } from '../../../../types';
-import { canBlockHostChildren } from '../../../../utils';
 import { Props, State, DragState } from './Tree-types';
 import { calculateFinalDropPositions } from './Tree-utils';
 
@@ -31,10 +30,10 @@ const TREE_DRAG_STATE_ILLEGAL = 'Tree-drag--illegal';
 
 const canNodeHaveChildren = (node: DocumentTreeItem): boolean => {
   if (node.type === ElementType.Block) {
-    return canBlockHostChildren(node.data);
+    return node.data.type === 'block';
   }
 
-  return node.type !== ElementType.Word && node.type !== ElementType.Symbol;
+  return node.type !== ElementType.Word;
 };
 
 function canMoveNode(
