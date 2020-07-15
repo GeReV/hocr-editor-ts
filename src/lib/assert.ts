@@ -1,4 +1,4 @@
-export default function assert(condition: boolean, format: string = 'Assertion Error', ...args: any[]): void | never {
+export default function assert(condition: any, format: string = 'Assertion Error', ...args: any[]): asserts condition {
   if (!condition) {
     let argIndex = 0;
 
