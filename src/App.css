@@ -5,6 +5,10 @@
   flex-direction: column;
 }
 
+.ant-btn > svg + span {
+  margin-left: 8px;
+}
+
 .App {
   display: flex;
   flex: 1 1 0;
@@ -12,12 +16,34 @@
 }
 
 .App-main {
+  display: flex;
+}
+.App-main > * {
   flex: 1 1 auto;
   flex-direction: row;
 }
 
-.App-canvas,
-.App-tree {
+.App-main .App-panel + .App-panel {
+  border-left: 1px solid #ddd;
+}
+
+.App-panel .Header {
+  background: #f8f8f8;
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+}
+
+.App-canvas {
   display: flex;
   flex-direction: column;
+}
+
+.App-tree > .ant-layout-sider-children {
+  display: flex;
+  flex-direction: column;
+}
+
+.App-footer {
+  border-top: 1px solid #ddd;
+  padding: 0;
 }

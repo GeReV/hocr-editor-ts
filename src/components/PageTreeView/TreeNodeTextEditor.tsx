@@ -1,5 +1,5 @@
-import React, { useCallback, useRef } from 'react';
-import { Button, Col, Form } from 'react-bootstrap';
+import React, { useCallback, useRef, useState } from 'react';
+import { Form, Button, Input, Space } from 'antd';
 import { useKey } from 'react-use';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -10,13 +10,13 @@ interface Props {
 }
 
 function TreeNodeTextEditor({ defaultValue, onCancel, onSave }: Props) {
-  const editorRef = useRef<HTMLInputElement | null>(null);
+  const editorRef = useRef<Input>(null);
+
+  const [value, setValue] = useState(defaultValue);
 
   const handleSave = useCallback(() => {
-    const text = editorRef.current?.value ?? '';
-
-    onSave(text);
-  }, [onSave]);
+    onSave(value ?? '');
+  }, [onSave, value]);
 
   useKey(
     'Escape',
@@ -37,21 +37,23 @@ function TreeNodeTextEditor({ defaultValue, onCancel, onSave }: Props) {
   );
 
   return (
-    <Form className="Tree-rowEditor">
-      <Form.Row>
-        <Col xs={true}>
-          <Form.Control ref={editorRef} type="text" size="sm" defaultValue={defaultValue} autoFocus />
-        </Col>
-        <Col xs="auto">
-          <Button type="submit" variant="success" size="sm" onClick={() => handleSave()}>
-            <FontAwesomeIcon icon="check" />
-          </Button>{' '}
-          <Button variant="light" size="sm" onClick={() => onCancel()}>
-            <FontAwesomeIcon icon="times" />
-          </Button>
-        </Col>
-      </Form.Row>
-    </Form>
+    <div className="Tree-rowEditor">
+      <Form layout="inline">
+        <Space>
+          <Input
+            ref={editorRef}
+            type="text"
+            defaultValue={value}
+            onInput={(evt) => setValue(evt.currentTarget.value)}
+            autoFocus
+          />
+          <Button.Group>
+            <Button type="primary" onClick={() => handleSave()} icon={<FontAwesomeIcon icon="check" />} />
+            <Button onClick={() => onCancel()} icon={<FontAwesomeIcon icon="times" />} />
+          </Button.Group>
+        </Space>
+      </Form>
+    </div>
   );
 }
 

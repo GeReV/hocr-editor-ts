@@ -2,7 +2,7 @@ import React, { Dispatch, useCallback, useLayoutEffect, useMemo, useRef, useStat
 import { Stage } from 'react-konva';
 import { useKey, useMeasure } from 'react-use';
 import cx from 'classnames';
-import { Button, ButtonGroup } from 'react-bootstrap';
+import { Button } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRect } from 'konva/types/types';
@@ -20,7 +20,6 @@ import './index.css';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import ExportModal from '../ExportModal';
 import { useHoveredState } from '../../hoverContext';
-import Separator from './Separator';
 import PageGraphics from './PageGraphics';
 import CanvasToolbar from './CanvasToolbar';
 
@@ -120,45 +119,41 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
     <div className="Canvas" onWheel={handleMouseWheel}>
       <CanvasToolbar>
         <Button
-          size="sm"
+          type="primary"
           disabled={!documents.length || isAnyProcessing || !document?.tree}
           onClick={() => setShowExport(true)}
         >
           <FontAwesomeIcon icon="file-export" /> Export
         </Button>
 
-        <Separator />
-
-        <ButtonGroup size="sm">
-          <Button title="Undo" variant="outline-dark" onClick={() => dispatch(createUndo())} disabled={!hasUndo}>
-            <FontAwesomeIcon icon="undo" />
-          </Button>
-          <Button title="Redo" variant="outline-dark" onClick={() => dispatch(createRedo())} disabled={!hasRedo}>
-            <FontAwesomeIcon icon="redo" />
-          </Button>
-        </ButtonGroup>
-
-        <Separator />
+        <Button.Group>
+          <Button
+            title="Undo"
+            onClick={() => dispatch(createUndo())}
+            disabled={!hasUndo}
+            icon={<FontAwesomeIcon icon="undo" />}
+          />
+          <Button
+            title="Redo"
+            onClick={() => dispatch(createRedo())}
+            disabled={!hasRedo}
+            icon={<FontAwesomeIcon icon="redo" />}
+          />
+        </Button.Group>
 
         <Button
-          size="sm"
           onClick={setFitScale}
           disabled={!document?.pageImage}
-          variant="outline-dark"
           title="Fit image"
-        >
-          <FontAwesomeIcon icon="expand" />
-        </Button>
+          icon={<FontAwesomeIcon icon="expand" />}
+        />
         <Button
-          size="sm"
+          type={isDrawing ? 'primary' : 'default'}
           onClick={() => dispatch(createSetIsDrawing(!isDrawing))}
           disabled={!document?.pageImage}
-          active={isDrawing}
-          variant="outline-dark"
           title="Select region"
-        >
-          <FontAwesomeIcon icon="vector-square" />
-        </Button>
+          icon={<FontAwesomeIcon icon="vector-square" />}
+        />
       </CanvasToolbar>
       <div className={cx('Canvas-main', isDrawing && 'Canvas-main--drawing')} ref={ref}>
         <PageGraphics
