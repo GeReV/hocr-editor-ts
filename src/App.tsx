@@ -70,8 +70,7 @@ function App() {
 
   const hierarchyOptionsMenu = (
     <Menu>
-      <Menu.Item icon={<FontAwesomeIcon icon="check" />}>Auto-enlarge boxes after changes</Menu.Item>
-      <Menu.Item icon={<FontAwesomeIcon icon="check" />}>Auto-shrink boxes after changes</Menu.Item>
+      <Menu.Item icon={<FontAwesomeIcon icon="check" />}>Auto-resize boxes after changes</Menu.Item>
       <Menu.Item>Auto-delete empty elements</Menu.Item>
     </Menu>
   );
