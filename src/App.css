@@ -5,7 +5,8 @@
   flex-direction: column;
 }
 
-.ant-btn > svg + span {
+.ant-btn > svg + span,
+.ant-dropdown-menu-item > svg + span {
   margin-left: 8px;
 }
 
