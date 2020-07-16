@@ -3,13 +3,20 @@ import { produce } from 'immer';
 import type { Draft } from 'immer/dist/types/types-external';
 
 import { IRect } from 'konva/types/types';
-import { ElementType, ItemId, Position } from '../types';
+import { DocumentTreeItem, ElementType, ItemId, Position } from '../types';
 import { buildTree, walkChildren } from '../treeBuilder';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
 import { isLeafItem } from '../components/SortableTree/utils/tree';
 import { createUniqueIdentifier } from '../utils';
-import { calculateParentRelativeOffset, getNodeOrThrow, offsetBbox, resizeBboxToWrap } from '../treeUtils';
-import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State } from './types';
+import {
+  calculateParentRelativeOffset,
+  getAncestorLineageWithoutRoot,
+  getNodeOrThrow,
+  offsetBbox,
+  resizeBboxToWrap,
+} from '../treeUtils';
+import assert from '../lib/assert';
+import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State, Tree } from './types';
 
 const MAX_CHANGESETS = 40;
 
@@ -111,11 +118,42 @@ function moveTreeNode(state: State, source: TreeSourcePosition, destination: Tre
     }
 
     // TODO: If enlarge option enabled
-    resizeBboxToWrap(destinationParent, tree);
+    resizeBboxToWrap(destinationParent.id, tree);
 
-    // TODO: If shrink option enabled
-    resizeBboxToWrap(sourceParent, tree);
+    const sourceAncestors = getAncestorLineageWithoutRoot(sourceParent.id, tree);
+
+    // TODO: If auto-delete option enabled
+    deleteEmptyAncestorNodes(sourceParent.id, tree);
+
+    const lastRemainingParent = sourceAncestors.find((ancestor) => tree.items.hasOwnProperty(ancestor.id.toString()));
+
+    if (lastRemainingParent) {
+      // TODO: If shrink option enabled
+      resizeBboxToWrap(lastRemainingParent.id, tree);
+    }
   });
+}
+
+function deleteEmptyAncestorNodes(nodeId: ItemId, tree: Tree): void {
+  const ancestors = getAncestorLineageWithoutRoot(nodeId, tree);
+
+  ancestors.forEach((ancestor) => {
+    if (ancestor.children.length === 0) {
+      removeFromParent(ancestor, tree);
+    }
+  });
+}
+
+function removeFromParent(node: DocumentTreeItem, tree: Tree): void {
+  assert(node.parentId, 'Expected node to have a parent.');
+
+  const parent = getNodeOrThrow(tree.items, node.parentId);
+
+  const nodeIndex = parent.children.indexOf(node.id.toString());
+
+  assert(nodeIndex >= 0, 'Node with ID %s was expected to be a child of node with ID %s.', node.id, parent.id);
+
+  parent.children.splice(nodeIndex, 1);
 }
 
 function deleteTreeNode(state: State, nodeId: ItemId): State {
@@ -131,15 +169,19 @@ function deleteTreeNode(state: State, nodeId: ItemId): State {
     const node = getNodeOrThrow(treeItems, nodeId);
 
     if (node.parentId !== null) {
-      const parent = getNodeOrThrow(treeItems, node.parentId);
+      removeFromParent(node, tree);
 
-      const nodeIndex = parent.children.indexOf(nodeId.toString());
+      const ancestors = getAncestorLineageWithoutRoot(node.parentId, tree);
 
-      if (nodeIndex < 0) {
-        throw new Error(`Node with ID ${nodeId} was expected to be a child of node with ID ${parent.id}.`);
+      // TODO: If auto-delete option enabled
+      deleteEmptyAncestorNodes(node.parentId, tree);
+
+      const lastRemainingParent = ancestors.find((ancestor) => treeItems.hasOwnProperty(ancestor.id.toString()));
+
+      if (lastRemainingParent) {
+        // TODO: If shrink option enabled
+        resizeBboxToWrap(lastRemainingParent.id, tree);
       }
-
-      parent.children.splice(nodeIndex, 1);
     }
 
     walkChildren(node.children, treeItems, (item) => {

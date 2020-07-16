@@ -77,8 +77,8 @@ export const calculateBoundingBox = (item: DocumentTreeItem, tree: Tree): Bbox =
     },
   );
 
-export function resizeBboxToWrap(initialItem: DocumentTreeItem, tree: Tree) {
-  const ancestors = getAncestorLineageWithoutRoot(initialItem.id, tree);
+export function resizeBboxToWrap(initialItemId: ItemId, tree: Tree) {
+  const ancestors = getAncestorLineageWithoutRoot(initialItemId, tree);
 
   ancestors.forEach((item) => {
     item.data.bbox = calculateBoundingBox(item, tree);
