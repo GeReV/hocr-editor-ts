@@ -7,7 +7,7 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OcrDocument } from './reducer/types';
 import { useAppReducer } from './reducerContext';
-import { createDeleteNode, createRedo, createSelectDocument, createUndo } from './reducer/actions';
+import { createChangeOptions, createDeleteNode, createRedo, createSelectDocument, createUndo } from './reducer/actions';
 import Header from './components/Header';
 import PageCanvas from './components/PageCanvas';
 import PageTreeView from './components/PageTreeView';
@@ -66,12 +66,32 @@ function App() {
     [dispatch],
   );
 
+  const changeAutoResizeNodes = useCallback(
+    () => dispatch(createChangeOptions({ autoResizeNodes: !state.options.autoResizeNodes })),
+    [dispatch, state.options.autoResizeNodes],
+  );
+
+  const changeAutoDeleteEmptyNodes = useCallback(
+    () => dispatch(createChangeOptions({ autoDeleteEmptyNodes: !state.options.autoDeleteEmptyNodes })),
+    [dispatch, state.options.autoDeleteEmptyNodes],
+  );
+
   const currentDocument: OcrDocument = state.documents[state.currentDocument];
 
   const hierarchyOptionsMenu = (
     <Menu>
-      <Menu.Item icon={<FontAwesomeIcon icon="check" />}>Auto-resize boxes after changes</Menu.Item>
-      <Menu.Item>Auto-delete empty elements</Menu.Item>
+      <Menu.Item
+        onClick={changeAutoResizeNodes}
+        icon={state.options.autoResizeNodes && <FontAwesomeIcon icon="check" />}
+      >
+        Auto-resize boxes after changes
+      </Menu.Item>
+      <Menu.Item
+        onClick={changeAutoDeleteEmptyNodes}
+        icon={state.options.autoDeleteEmptyNodes && <FontAwesomeIcon icon="check" />}
+      >
+        Auto-delete empty elements
+      </Menu.Item>
     </Menu>
   );
 

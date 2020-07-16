@@ -1,4 +1,3 @@
-import { Patch } from 'immer/compat/pre-3.7/dist/immer';
 import { IRect } from 'konva/types/types';
 import { Page, DocumentTreeItem, ItemId, PageImage, RecognizeUpdate } from '../types';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
@@ -11,17 +10,17 @@ export type Tree = {
   items: TreeItems;
 };
 
+export interface Options {
+  autoResizeNodes: boolean;
+  autoDeleteEmptyNodes: boolean;
+}
+
 export interface OcrDocument {
   id: number;
   isProcessing: boolean;
   filename: string;
   pageImage: PageImage;
   tree: Tree | null;
-}
-
-interface Changeset {
-  changes: Patch[];
-  inverseChanges: Patch[];
 }
 
 export interface State {
@@ -33,6 +32,7 @@ export interface State {
   isDrawing: boolean;
   drawRect: IRect;
   lastRecognizeUpdate: RecognizeUpdate | null;
+  options: Options;
 }
 
 export enum ActionType {
@@ -51,6 +51,8 @@ export enum ActionType {
 
   SetIsDrawing = 'SetIsDrawing',
   SetDrawRect = 'SetDrawRect',
+
+  ChangeOptions = 'ChangeOptions',
 
   Undo = 'Undo',
   Redo = 'Redo',

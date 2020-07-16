@@ -5,12 +5,13 @@ import { ChangeCallbackParams } from '../components/PageCanvas/Block';
 import { ItemId, Page, PageImage, RecognizeUpdate } from '../types';
 import {
   ActionType,
-  CreateRecognizeDocumentPayload,
+  AddDocumentPayload,
   ChangeDocumentIsProcessingPayload,
+  CreateRecognizeDocumentPayload,
   ModifyNodeChanges,
   ModifyNodePayload,
   MoveNodeParams,
-  AddDocumentPayload,
+  Options,
 } from './types';
 
 export const createAddDocument = createAction<
@@ -65,8 +66,10 @@ export const createRecognizeRegion = createAction<typeof buildRecognizePayload, 
 
 export const createLogUpdate = createAction<RecognizeUpdate | null, ActionType.LogUpdate>(ActionType.LogUpdate);
 
-export const createUndo = createAction<void, ActionType.Undo>(ActionType.Undo);
-export const createRedo = createAction<void, ActionType.Redo>(ActionType.Redo);
-
 export const createSetIsDrawing = createAction<boolean, ActionType.SetIsDrawing>(ActionType.SetIsDrawing);
 export const createSetDrawRect = createAction<IRect, ActionType.SetDrawRect>(ActionType.SetDrawRect);
+
+export const createChangeOptions = createAction<Partial<Options>, ActionType.ChangeOptions>(ActionType.ChangeOptions);
+
+export const createUndo = createAction<void, ActionType.Undo>(ActionType.Undo);
+export const createRedo = createAction<void, ActionType.Redo>(ActionType.Redo);

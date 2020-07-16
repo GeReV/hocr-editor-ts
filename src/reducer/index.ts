@@ -36,6 +36,10 @@ export const initialState: State = {
   lastRecognizeUpdate: null,
   isDrawing: false,
   drawRect: EMPTY_RECT,
+  options: {
+    autoResizeNodes: true,
+    autoDeleteEmptyNodes: false,
+  },
 };
 
 function updateTreeNodePosition(
@@ -117,18 +121,19 @@ function moveTreeNode(state: State, source: TreeSourcePosition, destination: Tre
       destinationParent.children.splice(destination.index, 0, itemId);
     }
 
-    // TODO: If enlarge option enabled
-    resizeBboxToWrap(destinationParent.id, tree);
+    if (state.options.autoResizeNodes) {
+      resizeBboxToWrap(destinationParent.id, tree);
+    }
 
     const sourceAncestors = getAncestorLineageWithoutRoot(sourceParent.id, tree);
 
-    // TODO: If auto-delete option enabled
-    deleteEmptyAncestorNodes(sourceParent.id, tree);
+    if (state.options.autoDeleteEmptyNodes) {
+      deleteEmptyAncestorNodes(sourceParent.id, tree);
+    }
 
     const lastRemainingParent = sourceAncestors.find((ancestor) => tree.items.hasOwnProperty(ancestor.id.toString()));
 
-    if (lastRemainingParent) {
-      // TODO: If shrink option enabled
+    if (state.options.autoResizeNodes && lastRemainingParent) {
       resizeBboxToWrap(lastRemainingParent.id, tree);
     }
   });
@@ -173,13 +178,13 @@ function deleteTreeNode(state: State, nodeId: ItemId): State {
 
       const ancestors = getAncestorLineageWithoutRoot(node.parentId, tree);
 
-      // TODO: If auto-delete option enabled
-      deleteEmptyAncestorNodes(node.parentId, tree);
+      if (state.options.autoDeleteEmptyNodes) {
+        deleteEmptyAncestorNodes(node.parentId, tree);
+      }
 
       const lastRemainingParent = ancestors.find((ancestor) => treeItems.hasOwnProperty(ancestor.id.toString()));
 
-      if (lastRemainingParent) {
-        // TODO: If shrink option enabled
+      if (state.options.autoResizeNodes && lastRemainingParent) {
         resizeBboxToWrap(lastRemainingParent.id, tree);
       }
     }
@@ -342,6 +347,11 @@ function reduce(state: State, action: AppReducerAction): State {
     case ActionType.LogUpdate: {
       return produce(state, (draft) => {
         draft.lastRecognizeUpdate = action.payload;
+      });
+    }
+    case ActionType.ChangeOptions: {
+      return produce(state, (draft) => {
+        Object.assign(draft.options, action.payload);
       });
     }
     default:
