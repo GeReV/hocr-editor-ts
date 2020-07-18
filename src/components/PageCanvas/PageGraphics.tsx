@@ -55,15 +55,19 @@ class PageGraphics extends React.Component<Props, State> {
       this.rectRefs[hoveredId]?.strokeEnabled(true);
     }
 
-    if (document?.pageImage.urlObject && document.pageImage.urlObject !== prevDocument?.pageImage.urlObject) {
-      const image = new window.Image();
+    if (document?.pageImage?.urlObject !== prevDocument?.pageImage?.urlObject) {
+      if (document?.pageImage) {
+        const image = new window.Image();
 
-      image.onload = () =>
-        this.setState({
-          image,
-        });
+        image.onload = () =>
+          this.setState({
+            image,
+          });
 
-      image.src = document.pageImage.urlObject;
+        image.src = document.pageImage.urlObject;
+      } else {
+        this.setState({ image: null });
+      }
     }
 
     this.layer.current?.batchDraw();
@@ -93,13 +97,13 @@ class PageGraphics extends React.Component<Props, State> {
 
     const { image } = this.state;
 
-    if (!document?.pageImage) {
+    if (!document) {
       return null;
     }
 
     const pageProps = {
-      pageWidth: document.pageImage.width,
-      pageHeight: document.pageImage.height,
+      pageWidth: document.width,
+      pageHeight: document.height,
     };
 
     return (
@@ -134,12 +138,7 @@ class PageGraphics extends React.Component<Props, State> {
           />
         </BlocksLayer>
         {isDrawing && (
-          <DrawLayer
-            width={document.pageImage.width ?? 0}
-            height={document.pageImage.height ?? 0}
-            drawRect={drawRect}
-            onChange={onDraw}
-          />
+          <DrawLayer width={document.width} height={document.height} drawRect={drawRect} onChange={onDraw} />
         )}
       </Stage>
     );

@@ -11,6 +11,7 @@ import {
   ModifyNodeChanges,
   ModifyNodePayload,
   MoveNodeParams,
+  OpenDocumentPayload,
   Options,
 } from './types';
 
@@ -23,7 +24,19 @@ export const createAddDocument = createAction<
     pageImage,
   },
 }));
-export const createSelectDocument = createAction<number, ActionType.SelectDocument>(ActionType.SelectDocument);
+
+export const createOpenDocument = createAction<
+  (filename: string, pageImage: PageImage | null, page: Page | null) => { payload: OpenDocumentPayload },
+  ActionType.OpenDocument
+>(ActionType.OpenDocument, (name, pageImage, page) => ({
+  payload: {
+    name,
+    pageImage,
+    page,
+  },
+}));
+
+export const createSelectDocument = createAction<string, ActionType.SelectDocument>(ActionType.SelectDocument);
 export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, ActionType.UpdateTreeNodeRect>(
   ActionType.UpdateTreeNodeRect,
 );

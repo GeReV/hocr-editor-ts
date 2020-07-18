@@ -2,6 +2,7 @@ import tesseract, { RecognizeResult, Rectangle } from 'tesseract.js';
 import { OcrDocument } from './reducer/types';
 import { Page, RecognizeUpdate } from './types';
 import { convertPage } from './lib/tesseractConverter';
+import assert from './lib/assert';
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends Array<infer U>
@@ -101,12 +102,13 @@ export async function recognize(docs: OcrDocument[], langs?: string, options?: R
   const recognizeOpts = rectangle ? { rectangle } : {};
 
   const results = await Promise.all(
-    docs.map(
-      (doc) =>
-        scheduler.addJob('recognize', doc.pageImage.urlObject, recognizeOpts, `recog-${doc.id}`) as Promise<
-          RecognizeResult
-        >,
-    ),
+    docs.map((doc) => {
+      assert(doc.pageImage, 'Expected document %s to have an image.', doc.id);
+
+      return scheduler.addJob('recognize', doc.pageImage?.urlObject, recognizeOpts, `recog-${doc.id}`) as Promise<
+        RecognizeResult
+      >;
+    }),
   );
 
   await scheduler.terminate();
@@ -115,5 +117,11 @@ export async function recognize(docs: OcrDocument[], langs?: string, options?: R
 
   // localStorage.setItem('OCR', JSON.stringify(decirc));
 
-  return results.map((result, i) => convertPage(result.data, docs[i].pageImage));
+  return results.map((result, i) => {
+    const pageImage = docs[i].pageImage;
+
+    assert(pageImage, 'Expected document %s to have an image.', docs[i].id);
+
+    return convertPage(result.data, pageImage);
+  });
 }

@@ -228,9 +228,27 @@ function reduce(state: State, action: AppReducerAction): State {
         draft.documents.push({
           id: documentId(),
           isProcessing: false,
-          filename: action.payload.filename,
+          name: action.payload.filename,
+          width: action.payload.pageImage.width,
+          height: action.payload.pageImage.height,
           pageImage: action.payload.pageImage,
           tree: null,
+        });
+      });
+    }
+    case ActionType.OpenDocument: {
+      return produceWithUndo(state, (draft) => {
+        const width = action.payload.pageImage?.width ?? action.payload.page?.bbox.x1 ?? 0;
+        const height = action.payload.pageImage?.height ?? action.payload.page?.bbox.y1 ?? 0;
+
+        draft.documents.push({
+          id: documentId(),
+          isProcessing: false,
+          name: action.payload.name,
+          width,
+          height,
+          pageImage: action.payload.pageImage,
+          tree: action.payload.page ? buildTree(action.payload.page) : null,
         });
       });
     }
@@ -296,7 +314,7 @@ function reduce(state: State, action: AppReducerAction): State {
     }
     case ActionType.SelectDocument: {
       return produceWithUndo(state, (draft) => {
-        draft.currentDocument = action.payload;
+        draft.currentDocument = state.documents.findIndex((doc) => doc.id.toString() === action.payload);
       });
     }
     case ActionType.ChangeSelected: {

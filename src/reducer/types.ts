@@ -18,8 +18,10 @@ export interface Options {
 export interface OcrDocument {
   id: number;
   isProcessing: boolean;
-  filename: string;
-  pageImage: PageImage;
+  name: string;
+  width: number;
+  height: number;
+  pageImage: PageImage | null;
   tree: Tree | null;
 }
 
@@ -39,6 +41,7 @@ export enum ActionType {
   UpdateTree = 'UpdateTree',
   UpdateTreeNodeRect = 'UpdateTreeNodeRect',
   AddDocument = 'AddDocument',
+  OpenDocument = 'OpenDocument',
   RecognizeDocument = 'RecognizeDocument',
   RecognizeRegion = 'RecognizeRegion',
   SelectDocument = 'SelectDocument',
@@ -61,6 +64,12 @@ export enum ActionType {
 export interface AddDocumentPayload {
   filename: string;
   pageImage: PageImage;
+}
+
+export interface OpenDocumentPayload {
+  name: string;
+  pageImage: PageImage | null;
+  page: Page | null;
 }
 
 export interface MoveNodeParams {

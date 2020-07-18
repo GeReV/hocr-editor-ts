@@ -41,11 +41,11 @@ export default function ExportModal({ document, onClose, show }: Props) {
     const page = rootTreeItem.data;
 
     const size = {
-      width: document.pageImage.width,
-      height: document.pageImage.height,
+      width: document.width,
+      height: document.height,
     };
 
-    const doc = buildHocrDocument(page, size, document.filename);
+    const doc = buildHocrDocument(page, size, document.name);
 
     setHocr(printHtml(doc));
   }, [document, show, hocr]);

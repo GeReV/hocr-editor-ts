@@ -58,19 +58,16 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
   );
 
   const setFitScale = useCallback(() => {
-    if (!document?.pageImage) {
+    if (!document) {
       return;
     }
 
-    const fitScale =
-      document.pageImage.width > document.pageImage.height
-        ? width / document.pageImage.width
-        : height / document.pageImage.height;
+    const fitScale = document.width > document.height ? width / document.width : height / document.height;
 
     setScale(fitScale);
     setPosition({
-      x: (width - document.pageImage.width * fitScale) * 0.5,
-      y: (height - document.pageImage.height * fitScale) * 0.5,
+      x: (width - document.width * fitScale) * 0.5,
+      y: (height - document.height * fitScale) * 0.5,
     });
   }, [document, height, width]);
 
@@ -141,16 +138,11 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
           />
         </Button.Group>
 
-        <Button
-          onClick={setFitScale}
-          disabled={!document?.pageImage}
-          title="Fit image"
-          icon={<FontAwesomeIcon icon="expand" />}
-        />
+        <Button onClick={setFitScale} disabled={!document} title="Fit image" icon={<FontAwesomeIcon icon="expand" />} />
         <Button
           type={isDrawing ? 'primary' : 'default'}
           onClick={() => dispatch(createSetIsDrawing(!isDrawing))}
-          disabled={!document?.pageImage}
+          disabled={!document}
           title="Select region"
           icon={<FontAwesomeIcon icon="vector-square" />}
         />

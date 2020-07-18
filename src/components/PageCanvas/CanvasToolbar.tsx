@@ -2,12 +2,13 @@ import React, { PropsWithChildren, useCallback, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Rectangle } from 'tesseract.js';
 
-import { Button, Space, Dropdown, Menu } from 'antd';
+import { Button, Dropdown, Menu, Space } from 'antd';
 import { useAppReducer } from '../../reducerContext';
 import {
   createAddDocument,
   createChangeIsProcessing,
   createLogUpdate,
+  createOpenDocument,
   createRecognizeDocument,
   createRecognizeRegion,
 } from '../../reducer/actions';
@@ -15,8 +16,12 @@ import { recognize } from '../../ocr';
 import { OcrDocument } from '../../reducer/types';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import { loadImage } from '../../utils';
+import hocrParser from '../../lib/hocrParser';
+import { Page, PageImage } from '../../types';
 
 import './CanvasToolbar.scss';
+
+type Entry = [PageImage | null, Page | null];
 
 interface Props {}
 
@@ -29,9 +34,11 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
         return;
       }
 
-      documents.forEach((doc) => dispatch(createChangeIsProcessing(doc.id, true)));
+      const filteredDocs = documents.filter((doc) => doc.pageImage);
 
-      const results = await recognize(documents, 'heb+eng', {
+      filteredDocs.forEach((doc) => dispatch(createChangeIsProcessing(doc.id, true)));
+
+      const results = await recognize(filteredDocs, 'heb+eng', {
         logger: (update) => {
           dispatch(createLogUpdate(update));
         },
@@ -40,7 +47,7 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
       dispatch(createLogUpdate(null));
 
       results.forEach((result, index) => {
-        dispatch(createRecognizeDocument(documents[index].id, result));
+        dispatch(createRecognizeDocument(filteredDocs[index].id, result));
       });
     },
     [dispatch],
@@ -64,7 +71,67 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
     [dispatch],
   );
 
-  const handleFileSelect = useCallback(
+  const handleImportHocr = useCallback(
+    async (evt: React.ChangeEvent<HTMLInputElement>) => {
+      if (!evt.currentTarget.files) {
+        return;
+      }
+
+      const files = Array.from(evt.currentTarget.files);
+
+      if (!files.length) {
+        return;
+      }
+
+      const map = new Map<string, Entry>();
+
+      const loadFns = files.map(
+        (f) =>
+          new Promise<void>((resolve) => {
+            const dotIndex = f.name.lastIndexOf('.');
+
+            const name = f.name.slice(0, dotIndex);
+
+            const entry: Entry = map.get(name) ?? [null, null];
+
+            const reader = new FileReader();
+
+            if (f.type.startsWith('image/')) {
+              reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
+                entry[0] = await loadImage(loadEvt.target?.result as ArrayBuffer, f.type);
+
+                resolve();
+              };
+
+              reader.readAsArrayBuffer(f);
+            }
+
+            if (f.type.startsWith('text/')) {
+              reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
+                const html = loadEvt.target?.result?.toString();
+
+                entry[1] = html ? hocrParser(html) : null;
+
+                resolve();
+              };
+
+              reader.readAsText(f);
+            }
+
+            map.set(name, entry);
+          }),
+      );
+
+      await Promise.all(loadFns);
+
+      map.forEach((value, key) => {
+        dispatch(createOpenDocument(key, value[0], value[1]));
+      });
+    },
+    [dispatch],
+  );
+
+  const handleLoadImage = useCallback(
     async (evt: React.ChangeEvent<HTMLInputElement>) => {
       if (!evt.currentTarget.files) {
         return;
@@ -127,7 +194,18 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
   return (
     <Space className="Canvas-toolbar">
       <Button type="primary" className="Toolbar-open">
-        <input type="file" className="Toolbar-open-file" onChange={handleFileSelect} accept="image/*" multiple />
+        <input
+          type="file"
+          className="Toolbar-open-file"
+          onChange={handleImportHocr}
+          accept="image/*,text/html,text/xml"
+          multiple
+        />
+        <FontAwesomeIcon icon="folder-open" /> Import hOCR
+      </Button>
+
+      <Button type="primary" className="Toolbar-open">
+        <input type="file" className="Toolbar-open-file" onChange={handleLoadImage} accept="image/*" multiple />
         <FontAwesomeIcon icon="folder-open" /> Load images
       </Button>
 

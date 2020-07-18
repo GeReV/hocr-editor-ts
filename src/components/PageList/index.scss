@@ -3,35 +3,21 @@
 }
 
 .Pages-list {
-  display: flex;
-  flex-direction: column;
-  list-style-type: none;
-  padding: 0 .5rem;
-  margin: 0;
 }
 
-.Pages-item {
-  background: #eee;
-  padding: .5rem;
-  cursor: pointer;
-  position: relative;
-
-  &:hover {
-    background: lighten(#17a2b8, 50%);
-  }
-
-  &--selected,
-  &--selected:hover {
-    background: lighten(#17a2b8, 40%);
-  }
+.Pages-list .Pages-item.ant-menu-item {
+  padding: 8px 16px;
+  height: auto;
 
   img {
     width: 100%;
   }
 }
 
-.Pages-item + .Pages-item {
-  margin-top: .5rem;
+.Pages-item-content {
+  background: #ddd;
+  box-shadow: 0 0 0 1px #bbb;
+  min-height: 160px;
 }
 
 .Pages-item-progress.ant-progress {

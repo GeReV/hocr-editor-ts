@@ -60,8 +60,8 @@ function App() {
   );
 
   const handleSelect = useCallback(
-    (index: number) => {
-      dispatch(createSelectDocument(index));
+    (id: string) => {
+      dispatch(createSelectDocument(id));
     },
     [dispatch],
   );
