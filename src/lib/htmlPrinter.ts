@@ -16,6 +16,28 @@ function printClosingTag(el: Element): string {
 
 type Whitespace = ' ' | '  ' | '    ' | '\t';
 
+function isSelfClosingTag(tagName: string) {
+  const tagNameLower = tagName.toLowerCase();
+
+  // https://developer.mozilla.org/en-US/docs/Glossary/Empty_element
+  return (
+    tagNameLower === 'area' ||
+    tagNameLower === 'base' ||
+    tagNameLower === 'br' ||
+    tagNameLower === 'col' ||
+    tagNameLower === 'embed' ||
+    tagNameLower === 'hr' ||
+    tagNameLower === 'img' ||
+    tagNameLower === 'input' ||
+    tagNameLower === 'link' ||
+    tagNameLower === 'meta' ||
+    tagNameLower === 'param' ||
+    tagNameLower === 'source' ||
+    tagNameLower === 'track' ||
+    tagNameLower === 'wbr'
+  );
+}
+
 function printElement(el: Element, level: number, whitespace: Whitespace = ' '): string {
   const padding = whitespace.repeat(level * 2);
 
@@ -24,7 +46,9 @@ function printElement(el: Element, level: number, whitespace: Whitespace = ' '):
   html += padding;
   html += printOpeningTag(el);
 
-  if (el.children.length) {
+  if (!el.children.length && isSelfClosingTag(el.tagName)) {
+    html = html.replace(/>$/, ' />');
+  } else if (el.children.length) {
     html += '\n';
 
     for (let i = 0; i < el.children.length; ++i) {
@@ -33,11 +57,9 @@ function printElement(el: Element, level: number, whitespace: Whitespace = ' '):
 
     html += padding;
     html += printClosingTag(el);
-  } else if (el.textContent) {
+  } else {
     html += el.textContent;
     html += printClosingTag(el);
-  } else {
-    html = html.replace(/>$/, ' />');
   }
 
   html += '\n';
