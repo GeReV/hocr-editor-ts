@@ -53,7 +53,7 @@ function createElement<K extends keyof HTMLElementTagNameMap>(
 }
 
 function createPageElement(doc: Document, page: Page, size: Size, filename: string) {
-  const title = [`image "${filename}"`, `bbox 0 0 ${size.width} ${size.height}`, 'ppageno 0'].join('; ');
+  const title = [`image '${filename}'`, `bbox 0 0 ${size.width} ${size.height}`, 'ppageno 0'].join('; ');
 
   return createElement(doc, 'div', {
     title,
@@ -77,7 +77,7 @@ function createParagraphElement(doc: Document, para: Paragraph) {
 }
 
 function createLineElement(doc: Document, line: Line) {
-  const title = [line.baseline && baseline(line.baseline), bbox(line.bbox)].join('; ');
+  const title = [line.baseline && baseline(line.baseline), bbox(line.bbox)].filter(Boolean).join('; ');
 
   return createElement(doc, 'span', {
     title,
@@ -124,26 +124,24 @@ function buildHocrBody(doc: Document, page: Page, size: Size, filename: string) 
   for (const block of page.children) {
     const b = createBlockElement(doc, block);
 
-    if (block.type === 'graphic') {
-      continue;
-    }
+    if (block.type === 'block') {
+      for (const paragraph of block.children) {
+        const p = createParagraphElement(doc, paragraph);
 
-    for (const paragraph of block.children) {
-      const p = createParagraphElement(doc, paragraph);
+        for (const line of paragraph.children) {
+          const l = createLineElement(doc, line);
 
-      for (const line of paragraph.children) {
-        const l = createLineElement(doc, line);
+          for (const word of line.children) {
+            const w = createWordElement(doc, word);
 
-        for (const word of line.children) {
-          const w = createWordElement(doc, word);
+            l.appendChild(w);
+          }
 
-          l.appendChild(w);
+          p.appendChild(l);
         }
 
-        p.appendChild(l);
+        b.appendChild(p);
       }
-
-      b.appendChild(p);
     }
 
     el.appendChild(b);
