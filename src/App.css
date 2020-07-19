@@ -16,6 +16,12 @@
   flex-direction: column;
 }
 
+.App-header {
+  color: #fff;
+  padding: 0 8px;
+  font-size: 20px;
+}
+
 .App-main {
   display: flex;
 }

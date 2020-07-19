@@ -97,7 +97,7 @@ function App() {
 
   return (
     <Layout className="App">
-      <Layout.Header>hOCR Editor</Layout.Header>
+      <Layout.Header className="App-header">hOCR Editor</Layout.Header>
       <Layout.Content className="App-main">
         <Layout>
           <Layout.Sider className="App-panel" theme="light" width={160}>
