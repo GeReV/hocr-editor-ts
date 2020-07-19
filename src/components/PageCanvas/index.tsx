@@ -2,7 +2,7 @@ import React, { Dispatch, useCallback, useLayoutEffect, useMemo, useRef, useStat
 import { Stage } from 'react-konva';
 import { useKey, useMeasure } from 'react-use';
 import cx from 'classnames';
-import { Button } from 'antd';
+import { Button, Space } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRect } from 'konva/types/types';
@@ -10,18 +10,21 @@ import { ItemId, Position } from '../../types';
 import {
   createChangeSelected,
   createRedo,
+  createSetDocumentImage,
   createSetDrawRect,
   createSetIsDrawing,
   createUndo,
 } from '../../reducer/actions';
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
-
-import './index.css';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import ExportModal from '../ExportModal';
 import { useHoveredState } from '../../hoverContext';
+import { loadImage } from '../../utils';
+import assert from '../../lib/assert';
 import PageGraphics from './PageGraphics';
 import CanvasToolbar from './CanvasToolbar';
+
+import './index.css';
 
 interface Props {
   document: OcrDocument | undefined;
@@ -110,6 +113,33 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
     [scale, showExport],
   );
 
+  const handleLoadImage = useCallback(
+    (evt: React.ChangeEvent<HTMLInputElement>) => {
+      if (!document || !evt.currentTarget.files) {
+        return;
+      }
+
+      const file = evt.currentTarget.files[0];
+
+      assert(file, 'Expceted a file.');
+
+      const reader = new FileReader();
+
+      reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
+        const pageImage = await loadImage(loadEvt.target?.result as ArrayBuffer, file.type);
+
+        if (!pageImage) {
+          return;
+        }
+
+        dispatch(createSetDocumentImage(document.id, pageImage));
+      };
+
+      reader.readAsArrayBuffer(file);
+    },
+    [dispatch, document],
+  );
+
   const isAnyProcessing = useMemo(() => isAnyDocumentProcessing(documents), [documents]);
 
   return (
@@ -165,6 +195,20 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
           drawRect={drawRect}
           dispatch={dispatch}
         />
+        {document && !document.pageImage && (
+          <Space className="Canvas-missing-image" size="large">
+            This document is missing an image.
+            <Button type="primary" size="small" className="Canvas-missing-image-upload">
+              <input
+                type="file"
+                className="Canvas-missing-image-upload-input"
+                onChange={handleLoadImage}
+                accept="image/*"
+              />
+              Load an image
+            </Button>
+          </Space>
+        )}
       </div>
       <ExportModal show={showExport} onClose={() => setShowExport(false)} document={document} />
     </div>

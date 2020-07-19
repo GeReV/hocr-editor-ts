@@ -236,6 +236,15 @@ function reduce(state: State, action: AppReducerAction): State {
         });
       });
     }
+    case ActionType.SetDocumentImage: {
+      return produceWithUndo(state, (draft) => {
+        const doc = draft.documents.find((doc) => doc.id === action.payload.documentId);
+
+        assert(doc, 'Could not find document with ID %s.', action.payload.documentId);
+
+        doc.pageImage = action.payload.pageImage;
+      });
+    }
     case ActionType.OpenDocument: {
       return produceWithUndo(state, (draft) => {
         const width = action.payload.pageImage?.width ?? action.payload.page?.bbox.x1 ?? 0;

@@ -41,6 +41,7 @@ export enum ActionType {
   UpdateTree = 'UpdateTree',
   UpdateTreeNodeRect = 'UpdateTreeNodeRect',
   AddDocument = 'AddDocument',
+  SetDocumentImage = 'SetDocumentImage',
   OpenDocument = 'OpenDocument',
   RecognizeDocument = 'RecognizeDocument',
   RecognizeRegion = 'RecognizeRegion',
@@ -63,6 +64,11 @@ export enum ActionType {
 
 export interface AddDocumentPayload {
   filename: string;
+  pageImage: PageImage;
+}
+
+export interface SetDocumentImagePayload {
+  documentId: number;
   pageImage: PageImage;
 }
 

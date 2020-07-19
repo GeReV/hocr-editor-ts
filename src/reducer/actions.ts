@@ -13,6 +13,7 @@ import {
   MoveNodeParams,
   OpenDocumentPayload,
   Options,
+  SetDocumentImagePayload,
 } from './types';
 
 export const createAddDocument = createAction<
@@ -21,6 +22,16 @@ export const createAddDocument = createAction<
 >(ActionType.AddDocument, (filename, pageImage) => ({
   payload: {
     filename,
+    pageImage,
+  },
+}));
+
+export const createSetDocumentImage = createAction<
+  (documentId: number, pageImage: PageImage) => { payload: SetDocumentImagePayload },
+  ActionType.SetDocumentImage
+>(ActionType.SetDocumentImage, (documentId, pageImage) => ({
+  payload: {
+    documentId,
     pageImage,
   },
 }));
