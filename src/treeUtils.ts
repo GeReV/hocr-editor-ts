@@ -57,8 +57,12 @@ export function getAncestorLineageWithoutRoot(initialItemId: ItemId, tree: Tree)
   return ancestors;
 }
 
-export const calculateBoundingBox = (item: DocumentTreeItem, tree: Tree): Bbox =>
-  item.children.reduce(
+export const calculateBoundingBox = (item: DocumentTreeItem, tree: Tree): Bbox => {
+  if (!item.children.length) {
+    return item.data.bbox;
+  }
+
+  return item.children.reduce(
     (bbox, itemId) => {
       const item = getNodeOrThrow(tree.items, itemId);
 
@@ -76,6 +80,7 @@ export const calculateBoundingBox = (item: DocumentTreeItem, tree: Tree): Bbox =
       y1: Number.NEGATIVE_INFINITY,
     },
   );
+};
 
 export function resizeBboxToWrap(initialItemId: ItemId, tree: Tree) {
   const ancestors = getAncestorLineageWithoutRoot(initialItemId, tree);
