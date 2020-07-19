@@ -6,6 +6,14 @@ This project is still early work-in-progress.
 
 ![hOCR Editor Screenshot](./screenshot/screenshot.png)
 
+## Features
+
+- Drag & drop interface for restructuring or resizing of sentences, paragraphs and blocks.
+- Optional automatic resizing of elements to wrap their contents.
+- Optional automatic cleanup of empty elements.
+- Import and export of hOCR documents.
+- Built-in OCR, using Tesseract, of one or more documents or regions of documents.
+
 ## Rationale
 
 While working on a personal project, I went looking for an editor which would allow me to correct some of the mistakes made by Tesseract in magazine scans with mixed language (Hebrew and English in my case).
@@ -16,14 +24,6 @@ correcting recognition errors and restructuring the document features.
 Tesseract, on occasion, leaves text lines in separate paragraphs to where one would expect them, and occasionally fails to correctly recognize letters or words, especially in mixed-language sentences.
 
 This application was designed to help reorganize the structure of documents and help edit recognized words using easy-to-use visual representation of the document.
-
-## Features
-
-- Drag & drop interface for restructuring or resizing of sentences, paragraphs and blocks.
-- Optional automatic resizing of elements to wrap their contents.
-- Optional automatic cleanup of empty elements.
-- Import and export of hOCR documents.
-- Built-in OCR, using Tesseract, of one or more documents or regions of documents.
 
 ## Available Scripts
 
