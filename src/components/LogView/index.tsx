@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { RecognizeUpdate } from '../../types';
-
 import './index.scss';
 
 interface Props {

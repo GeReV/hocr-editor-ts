@@ -1,4 +1,5 @@
 import { IRect } from 'konva/types/types';
+
 import { Page, DocumentTreeItem, ItemId, PageImage, RecognizeUpdate } from '../types';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
 import * as actions from './actions';

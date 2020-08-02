@@ -1,8 +1,8 @@
 import React, { PropsWithChildren, useCallback, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Rectangle } from 'tesseract.js';
-
 import { Button, Dropdown, Menu, Space } from 'antd';
+
 import { useAppReducer } from '../../reducerContext';
 import {
   createAddDocument,
@@ -12,7 +12,6 @@ import {
   createRecognizeDocument,
   createRecognizeRegion,
 } from '../../reducer/actions';
-import { recognize } from '../../ocr';
 import { OcrDocument } from '../../reducer/types';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import { loadImage } from '../../utils';
@@ -24,6 +23,14 @@ import './CanvasToolbar.scss';
 type Entry = [PageImage | null, Page | null];
 
 interface Props {}
+
+async function getRecognizeFunction() {
+  if (process.env.REACT_APP_ELECTRON) {
+    return (await import('../../ocr.electron')).recognize;
+  }
+
+  return (await import('../../ocr')).recognize;
+}
 
 export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
   const [state, dispatch] = useAppReducer();
@@ -38,17 +45,27 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
       filteredDocs.forEach((doc) => dispatch(createChangeIsProcessing(doc.id, true)));
 
-      const results = await recognize(filteredDocs, 'heb+eng', {
-        logger: (update) => {
-          dispatch(createLogUpdate(update));
-        },
-      });
+      if (process.env.REACT_APP_ELECTRON) {
+        const ocr = await import('../../ocr.electron');
 
-      dispatch(createLogUpdate(null));
+        console.log(ocr);
 
-      results.forEach((result, index) => {
-        dispatch(createRecognizeDocument(filteredDocs[index].id, result));
-      });
+        await ocr.test();
+      } else {
+        const recognize = (await import('../../ocr')).recognize;
+
+        const results = await recognize(filteredDocs, 'heb+eng', {
+          logger: (update) => {
+            dispatch(createLogUpdate(update));
+          },
+        });
+
+        dispatch(createLogUpdate(null));
+
+        results.forEach((result, index) => {
+          dispatch(createRecognizeDocument(filteredDocs[index].id, result));
+        });
+      }
     },
     [dispatch],
   );
@@ -56,6 +73,8 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
   const performRegionOCR = useCallback(
     async (document: OcrDocument, rectangle: Rectangle) => {
       dispatch(createChangeIsProcessing(document.id, true));
+
+      const recognize = await getRecognizeFunction();
 
       const [result] = await recognize([document], 'heb+eng', {
         logger: (update) => {

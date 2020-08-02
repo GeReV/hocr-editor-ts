@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { BlockTreeItem, ItemId } from '../../types';
 import { TreeItems } from '../../reducer/types';
 import { getNodeOrThrow } from '../../treeUtils';

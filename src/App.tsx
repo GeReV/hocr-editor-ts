@@ -3,8 +3,8 @@ import { Button, Col, Dropdown, Layout, Menu, Row } from 'antd';
 import { useKey } from 'react-use';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import { OcrDocument } from './reducer/types';
 import { useAppReducer } from './reducerContext';
 import { createChangeOptions, createDeleteNode, createRedo, createSelectDocument, createUndo } from './reducer/actions';
@@ -12,11 +12,11 @@ import Header from './components/Header';
 import PageCanvas from './components/PageCanvas';
 import PageTreeView from './components/PageTreeView';
 import PageList from './components/PageList';
+import { LogView } from './components/LogView';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'antd/dist/antd.css';
 import './App.css';
-import { LogView } from './components/LogView';
 
 library.add(fas);
 
@@ -97,7 +97,7 @@ function App() {
 
   return (
     <Layout className="App">
-      <Layout.Header className="App-header">hOCR Editor</Layout.Header>
+      {process.env.REACT_APP_ELECTRON ? null : <Layout.Header className="App-header">hOCR Editor</Layout.Header>}
       <Layout.Content className="App-main">
         <Layout>
           <Layout.Sider className="App-panel" theme="light" width={160}>

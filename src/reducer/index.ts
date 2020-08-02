@@ -1,8 +1,8 @@
 import { Bbox } from 'tesseract.js';
 import { produce } from 'immer';
 import type { Draft } from 'immer/dist/types/types-external';
-
 import { IRect } from 'konva/types/types';
+
 import { DocumentTreeItem, ElementType, ItemId, Position } from '../types';
 import { buildTree, walkChildren } from '../treeBuilder';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';

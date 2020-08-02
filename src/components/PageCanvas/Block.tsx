@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { Group, Rect, Transformer } from 'react-konva';
 import Konva from 'konva';
-
 import { IRect } from 'konva/types/types';
+
 import { DocumentTreeItem, ElementType, ItemId, Position } from '../../types';
 import { TreeItems } from '../../reducer/types';
 import { clamp } from '../../utils';

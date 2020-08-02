@@ -9,7 +9,6 @@ import { OcrDocument } from '../../reducer/types';
 import { PageTreeItem } from '../../types';
 import buildHocrDocument from '../../lib/hocrBuilder';
 import printHtml from '../../lib/htmlPrinter';
-
 import './index.css';
 
 interface Props {

@@ -4,8 +4,8 @@ import { useKey, useMeasure } from 'react-use';
 import cx from 'classnames';
 import { Button, Space } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
 import { IRect } from 'konva/types/types';
+
 import { ItemId, Position } from '../../types';
 import {
   createChangeSelected,

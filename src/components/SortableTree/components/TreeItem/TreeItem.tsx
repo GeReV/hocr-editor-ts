@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { DraggableProvidedDraggableProps, DraggableStateSnapshot } from 'react-beautiful-dnd';
+
 import { isSamePath } from '../../utils/path';
 import { sameProps } from '../../utils/react';
 import { Props, TreeDraggableProvided } from './TreeItem-types';

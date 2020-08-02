@@ -15,6 +15,7 @@ import {
   DroppableStateSnapshot,
 } from 'react-beautiful-dnd';
 import { getBox } from 'css-box-model';
+
 import { noop } from '../../utils/handy';
 import { flattenTree, mutateTree } from '../../utils/tree';
 import { FlattenedItem, ItemId, Path, TreeData, TreeDestinationPosition, TreeSourcePosition } from '../../types';

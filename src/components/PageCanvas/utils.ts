@@ -1,5 +1,6 @@
 import Konva from 'konva';
 import { Bbox } from 'tesseract.js';
+
 import { BaseTreeItem, DocumentTreeItem, ElementType, Position } from '../../types';
 import { TreeItems } from '../../reducer/types';
 

@@ -1,4 +1,5 @@
 import * as t from 'tesseract.js';
+
 import { PageImage, Block, Direction, Line, Page, Paragraph, Word, Graphic, BlockType } from '../types';
 import { createUniqueIdentifier } from '../utils';
 

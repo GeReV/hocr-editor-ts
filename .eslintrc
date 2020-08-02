@@ -9,6 +9,6 @@
   "rules": {
     "comma-dangle": ["error", "always-multiline"],
     "quotes": ["error", "single"],
-    "import/order": ["error"]
+    "import/order": ["warn"]
   }
 }

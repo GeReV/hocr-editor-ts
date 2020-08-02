@@ -4,10 +4,11 @@ import { createChangeSelected, createModifyNode, createMoveNode } from '../../re
 import Tree from '../SortableTree/components/Tree';
 import { ItemId, Path, RenderItemParams, TreeDestinationPosition, TreeSourcePosition } from '../SortableTree';
 
-import './index.scss';
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
 import { useHoveredState } from '../../hoverContext';
 import TreeNode from './TreeNode';
+
+import './index.scss';
 
 interface Props {
   currentDocument: OcrDocument | undefined;

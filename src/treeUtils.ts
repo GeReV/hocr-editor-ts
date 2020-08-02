@@ -2,8 +2,8 @@ import { Bbox } from 'tesseract.js';
 
 import { Tree, TreeItems } from './reducer/types';
 import { DocumentTreeItem, ItemId, Position } from './types';
-import assert from './lib/assert';
 import { walkChildren } from './treeBuilder';
+import assert from './lib/assert';
 
 export function getNodeOrThrow(treeItems: TreeItems, nodeId: ItemId): DocumentTreeItem {
   const node = treeItems[nodeId.toString()];
