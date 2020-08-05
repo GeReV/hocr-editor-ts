@@ -1,12 +1,12 @@
-﻿const util = require('util');
-const path = require('path');
-const url = require('url');
-const { execFile: ef } = require('child_process');
-const { app, BrowserWindow, ipcMain } = require('electron');
+﻿import util from 'util';
+import path from 'path';
+import url from 'url';
+import { execFile as ef } from 'child_process';
+import { app, BrowserWindow, ipcMain } from 'electron';
 
 function createWindow() {
   const startUrl = process.env.ELECTRON_START_URL || url.format({
-    pathname: path.join(__dirname, '../dist/index.html'),
+    pathname: path.join(__dirname, '../index.html'),
     protocol: 'file:',
     slashes: true,
   });
@@ -39,8 +39,8 @@ app.on('activate', function () {
 
 const execFile = util.promisify(ef);
 
-ipcMain.handle('ocr', async (event, args) => {
-  if (args[0] === 'test') {
+ipcMain.handle('ocr', async (event, ...args) => {
+  if (args[0] === 'list') {
     const { stdout } = await execFile('C:/02 - Applications/tesseract/tesseract.exe', ['--list-langs']);
 
     console.log(stdout);
