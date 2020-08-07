@@ -1,9 +1,12 @@
+import { Rectangle } from 'tesseract.js';
+
 export interface Position {
   x: number;
   y: number;
 }
 
 export interface PageImage {
+  path: string;
   width: number;
   height: number;
   urlObject: string;
@@ -118,4 +121,10 @@ export interface RecognizeUpdate {
   jobId?: string;
   status: string;
   progress: number;
+}
+
+export interface RecognizeOptions {
+  logger: (update: RecognizeUpdate) => void;
+  rectangle?: Rectangle;
+  PSM?: string;
 }

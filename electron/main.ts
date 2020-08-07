@@ -3,6 +3,8 @@ import path from 'path';
 import url from 'url';
 import { execFile as ef } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
+import { TesseractMessage } from '../src/ocr.electron';
+import { getConfig } from './config';
 
 function createWindow() {
   const startUrl = process.env.ELECTRON_START_URL || url.format({
@@ -16,8 +18,8 @@ function createWindow() {
       preload: startUrl,
       nodeIntegration: true,
     },
-    width: 1440,
-    height: 900,
+    width: 1920,
+    height: 1080,
   });
 
   mainWindow.loadURL(startUrl);
@@ -39,14 +41,17 @@ app.on('activate', function () {
 
 const execFile = util.promisify(ef);
 
-ipcMain.handle('ocr', async (event, ...args) => {
-  if (args[0] === 'list') {
-    const { stdout } = await execFile('C:/02 - Applications/tesseract/tesseract.exe', ['--list-langs']);
+ipcMain.handle('ocr', async (event, message: TesseractMessage) => {
+  switch (message.type) {
+    case 'list': {
+      const { stdout } = await execFile(getConfig().tesseractPath, ['--list-langs']);
 
-    console.log(stdout);
+      return stdout;
+    }
+    case 'hocr': {
+      const { stdout } = await execFile(getConfig().tesseractPath, [message.filename, 'stdout', '-l', message.langs, 'hocr']);
 
-    return stdout;
+      return stdout;
+    }
   }
-
-  return null;
 });

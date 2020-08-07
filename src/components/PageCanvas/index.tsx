@@ -126,7 +126,7 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
       const reader = new FileReader();
 
       reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
-        const pageImage = await loadImage(loadEvt.target?.result as ArrayBuffer, file.type);
+        const pageImage = await loadImage(file, loadEvt.target?.result as ArrayBuffer);
 
         if (!pageImage) {
           return;

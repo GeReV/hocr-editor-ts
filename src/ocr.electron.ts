@@ -1,59 +1,39 @@
 import { ipcRenderer } from 'electron';
-import { RecognizeResult, Rectangle } from 'tesseract.js';
 
 import { OcrDocument } from './reducer/types';
-import { Page, RecognizeUpdate } from './types';
-import { convertPage } from './lib/tesseractConverter';
+import { Page, RecognizeOptions } from './types';
+import hocrParser from './lib/hocrParser';
 import assert from './lib/assert';
 
-interface RecognizeOptions {
-  logger: (update: RecognizeUpdate) => void;
-  rectangle?: Rectangle;
-  PSM?: string;
+type TesseractListLanguagesMessage = {
+  type: 'list';
+};
+
+type TesseractHocrMessage = {
+  type: 'hocr';
+  filename: string;
+  langs: string;
+};
+
+export type TesseractMessage = TesseractListLanguagesMessage | TesseractHocrMessage;
+
+function invokeTesseractMessage(message: TesseractMessage): Promise<any> {
+  return ipcRenderer.invoke('ocr', message);
 }
 
-export async function test() {
-  const response = await ipcRenderer.invoke('ocr', 'list');
+export async function recognize(docs: OcrDocument[], langs?: string, _options?: RecognizeOptions): Promise<Page[]> {
+  const results = await Promise.all(
+    docs.map((doc) => {
+      assert(doc.pageImage, 'No image loaded for document %s.', doc.name);
 
-  console.log(response);
-}
+      // TODO: Rectangle recognition
+      return invokeTesseractMessage({
+        type: 'hocr',
+        filename: doc.pageImage?.path,
+        langs: langs ?? 'eng',
+      });
+    }),
+  );
 
-export async function recognize(docs: OcrDocument[], langs?: string, options?: RecognizeOptions): Promise<Page[]> {
-  // const tesseract = spawn('C:/02 - Applications/tesseract/tesseract.exe', ['--list-langs']);
-  //
-  // tesseract.stdout.on('data', (data: string) => {
-  //   console.log(`stdout: ${data}`);
-  // });
-  //
-  // tesseract.stderr.on('data', (data: string) => {
-  //   console.error(`stderr: ${data}`);
-  // });
-  //
-  // tesseract.on('close', (code: string) => {
-  //   console.log(`child process exited with code ${code}`);
-  // });
-  //
-  // const { logger, rectangle, PSM } = options ?? {};
-  //
-  // const recognizeOpts = rectangle ? { rectangle } : {};
-  //
-  // // const results = await Promise.all(
-  // //   docs.map((doc) => {
-  // //     assert(doc.pageImage, 'Expected document %s to have an image.', doc.id);
-  // //
-  // //     return scheduler.addJob('recognize', doc.pageImage?.urlObject, recognizeOpts, `recog-${doc.id}`) as Promise<
-  // //       RecognizeResult
-  // //     >;
-  // //   }),
-  // // );
-  // //
-  // // return results.map((result, i) => {
-  // //   const pageImage = docs[i].pageImage;
-  // //
-  // //   assert(pageImage, 'Expected document %s to have an image.', docs[i].id);
-  // //
-  // //   return convertPage(result.data, pageImage);
-  // // });
-
-  return [];
+  return results.map(hocrParser);
 }

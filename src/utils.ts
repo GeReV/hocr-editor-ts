@@ -44,8 +44,8 @@ export function resizeImage(image: ImageBitmap, width: number, height: number): 
   return canvas.toDataURL();
 }
 
-export async function loadImage(buffer: ArrayBuffer, mimeType: string): Promise<PageImage | null> {
-  const blob = new Blob([buffer], { type: mimeType });
+export async function loadImage(file: File, buffer: ArrayBuffer): Promise<PageImage | null> {
+  const blob = new Blob([buffer], { type: file.type });
 
   const img = await createImageBitmap(blob);
 
@@ -71,6 +71,7 @@ export async function loadImage(buffer: ArrayBuffer, mimeType: string): Promise<
   }
 
   return {
+    path: file.path,
     width: img.width,
     height: img.height,
     urlObject: URL.createObjectURL(blob),

@@ -1,7 +1,7 @@
 import tesseract, { RecognizeResult, Rectangle } from 'tesseract.js';
 
 import { OcrDocument } from './reducer/types';
-import { Page, RecognizeUpdate } from './types';
+import { Page, RecognizeOptions, RecognizeUpdate } from './types';
 import { convertPage } from './lib/tesseractConverter';
 import assert from './lib/assert';
 
@@ -12,12 +12,6 @@ export type DeepPartial<T> = {
     ? ReadonlyArray<DeepPartial<U>>
     : DeepPartial<T[P]>;
 };
-
-interface RecognizeOptions {
-  logger: (update: RecognizeUpdate) => void;
-  rectangle?: Rectangle;
-  PSM?: string;
-}
 
 // function decircularize(recog: RecognizeResult): DeepPartial<RecognizeResult> {
 //   const partial: DeepPartial<RecognizeResult> = recog;

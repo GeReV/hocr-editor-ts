@@ -16,7 +16,7 @@ import { OcrDocument } from '../../reducer/types';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import { loadImage } from '../../utils';
 import hocrParser from '../../lib/hocrParser';
-import { Page, PageImage } from '../../types';
+import { Page, PageImage, RecognizeOptions } from '../../types';
 
 import './CanvasToolbar.scss';
 
@@ -32,6 +32,12 @@ async function getRecognizeFunction() {
   return (await import('../../ocr')).recognize;
 }
 
+async function processDocs(docs: OcrDocument[], langs?: string, options?: RecognizeOptions): Promise<Page[]> {
+  const recognize = await getRecognizeFunction();
+
+  return recognize(docs, langs, options);
+}
+
 export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
   const [state, dispatch] = useAppReducer();
 
@@ -45,27 +51,15 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
       filteredDocs.forEach((doc) => dispatch(createChangeIsProcessing(doc.id, true)));
 
-      if (process.env.REACT_APP_ELECTRON) {
-        const ocr = await import('../../ocr.electron');
+      const results = await processDocs(filteredDocs, 'heb+eng', {
+        logger: (update) => dispatch(createLogUpdate(update)),
+      });
 
-        console.log(ocr);
+      dispatch(createLogUpdate(null));
 
-        await ocr.test();
-      } else {
-        const recognize = (await import('../../ocr')).recognize;
-
-        const results = await recognize(filteredDocs, 'heb+eng', {
-          logger: (update) => {
-            dispatch(createLogUpdate(update));
-          },
-        });
-
-        dispatch(createLogUpdate(null));
-
-        results.forEach((result, index) => {
-          dispatch(createRecognizeDocument(filteredDocs[index].id, result));
-        });
-      }
+      results.forEach((result, index) => {
+        dispatch(createRecognizeDocument(filteredDocs[index].id, result));
+      });
     },
     [dispatch],
   );
@@ -117,7 +111,7 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
             if (f.type.startsWith('image/')) {
               reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
-                entry[0] = await loadImage(loadEvt.target?.result as ArrayBuffer, f.type);
+                entry[0] = await loadImage(f, loadEvt.target?.result as ArrayBuffer);
 
                 resolve();
               };
@@ -166,7 +160,7 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
         const reader = new FileReader();
 
         reader.onload = async (loadEvt: ProgressEvent<FileReader>) => {
-          const pageImage = await loadImage(loadEvt.target?.result as ArrayBuffer, f.type);
+          const pageImage = await loadImage(f, loadEvt.target?.result as ArrayBuffer);
 
           if (!pageImage) {
             return;
