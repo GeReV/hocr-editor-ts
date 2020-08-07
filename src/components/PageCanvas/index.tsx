@@ -39,6 +39,7 @@ interface Props {
 
 const SCALE_MAX = 3.0;
 const SCALE_MIN = 0.05;
+const DELTA_CONSTANT = 3;
 
 function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRedo, isDrawing, drawRect }: Props) {
   const [scale, setScale] = useState(1);
@@ -95,7 +96,11 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
 
       const pointer = stage.getPointerPosition() ?? { x: 0, y: 0 };
 
-      const newScale = Math.max(SCALE_MIN, Math.min(SCALE_MAX, scale * Math.pow(2, -evt.deltaY * 0.05)));
+      // Different browsers give different values for the mouse delta, so we'll convert them to ±1 and
+      // use our own constant.
+      const deltaY = Math.sign(evt.deltaY) * DELTA_CONSTANT;
+
+      const newScale = Math.max(SCALE_MIN, Math.min(SCALE_MAX, scale * Math.pow(2, -deltaY * 0.05)));
 
       const mousePointTo = {
         x: (pointer.x - stage.x()) / scale,
