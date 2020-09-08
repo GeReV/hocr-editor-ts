@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Button, Col, Dropdown, Layout, Menu, Row } from 'antd';
 import { useKey } from 'react-use';
 import { library } from '@fortawesome/fontawesome-svg-core';
@@ -13,6 +13,7 @@ import PageCanvas from './components/PageCanvas';
 import PageTreeView from './components/PageTreeView';
 import PageList from './components/PageList';
 import { LogView } from './components/LogView';
+import SettingsModal from './components/SettingsModal';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'antd/dist/antd.css';
@@ -22,6 +23,10 @@ library.add(fas);
 
 function App() {
   const [state, dispatch] = useAppReducer();
+
+  const [showSettings, setShowSettings] = useState(true);
+
+  const onSettingsClose = useCallback(() => setShowSettings(false), []);
 
   useKey(
     'Delete',
@@ -96,45 +101,48 @@ function App() {
   );
 
   return (
-    <Layout className="App">
-      {process.env.REACT_APP_ELECTRON ? null : <Layout.Header className="App-header">hOCR Editor</Layout.Header>}
-      <Layout.Content className="App-main">
-        <Layout>
-          <Layout.Sider className="App-panel" theme="light" width={160}>
-            <Header>Pages</Header>
-            <PageList documents={state.documents} currentDocument={currentDocument} onSelect={handleSelect} />
-          </Layout.Sider>
-          <Layout.Content className="App-canvas App-panel">
-            <PageCanvas
-              documents={state.documents}
-              document={currentDocument}
-              selectedId={state.selectedId}
-              dispatch={dispatch}
-              isDrawing={state.isDrawing}
-              drawRect={state.drawRect}
-              hasUndo={!!(state.snapshots.length && state.currentSnapshot > 0)}
-              hasRedo={!!(state.snapshots.length && state.currentSnapshot < state.snapshots.length - 1)}
-            />
-          </Layout.Content>
-          <Layout.Sider className="App-tree App-panel" theme="light" width={320}>
-            <Header>
-              <Row>
-                <Col flex="auto">Hierarchy</Col>
-                <Col>
-                  <Dropdown overlay={hierarchyOptionsMenu} trigger={['click']}>
-                    <Button type="text" size="small" icon={<FontAwesomeIcon icon="caret-down" />} />
-                  </Dropdown>
-                </Col>
-              </Row>
-            </Header>
-            <PageTreeView currentDocument={currentDocument} selectedId={state.selectedId} dispatch={dispatch} />
-          </Layout.Sider>
-        </Layout>
-      </Layout.Content>
-      <Layout.Footer className="App-footer">
-        <LogView lastUpdate={state.lastRecognizeUpdate} />
-      </Layout.Footer>
-    </Layout>
+    <>
+      <Layout className="App">
+        {process.env.REACT_APP_ELECTRON ? null : <Layout.Header className="App-header">hOCR Editor</Layout.Header>}
+        <Layout.Content className="App-main">
+          <Layout>
+            <Layout.Sider className="App-panel" theme="light" width={160}>
+              <Header>Pages</Header>
+              <PageList documents={state.documents} currentDocument={currentDocument} onSelect={handleSelect} />
+            </Layout.Sider>
+            <Layout.Content className="App-canvas App-panel">
+              <PageCanvas
+                documents={state.documents}
+                document={currentDocument}
+                selectedId={state.selectedId}
+                dispatch={dispatch}
+                isDrawing={state.isDrawing}
+                drawRect={state.drawRect}
+                hasUndo={!!(state.snapshots.length && state.currentSnapshot > 0)}
+                hasRedo={!!(state.snapshots.length && state.currentSnapshot < state.snapshots.length - 1)}
+              />
+            </Layout.Content>
+            <Layout.Sider className="App-tree App-panel" theme="light" width={320}>
+              <Header>
+                <Row>
+                  <Col flex="auto">Hierarchy</Col>
+                  <Col>
+                    <Dropdown overlay={hierarchyOptionsMenu} trigger={['click']}>
+                      <Button type="text" size="small" icon={<FontAwesomeIcon icon="caret-down" />} />
+                    </Dropdown>
+                  </Col>
+                </Row>
+              </Header>
+              <PageTreeView currentDocument={currentDocument} selectedId={state.selectedId} dispatch={dispatch} />
+            </Layout.Sider>
+          </Layout>
+        </Layout.Content>
+        <Layout.Footer className="App-footer">
+          <LogView lastUpdate={state.lastRecognizeUpdate} />
+        </Layout.Footer>
+      </Layout>
+      {process.env.REACT_APP_ELECTRON ? <SettingsModal visible={showSettings} onClose={onSettingsClose} /> : null}
+    </>
   );
 }
 

@@ -1,7 +1,7 @@
 ﻿import fs from 'fs';
 import path from 'path';
 
-interface Config {
+export interface Config {
   tesseractPath: string;
 }
 
@@ -11,6 +11,11 @@ export function getConfig(): Config {
   return JSON.parse(json);
 }
 
+export function setConfig(config: Config): void {
+  fs.writeFileSync(path.resolve(__dirname, '../config.json'), JSON.stringify(config), { encoding: 'utf-8' });
+}
+
 export default {
   get: getConfig,
+  set: setConfig,
 }

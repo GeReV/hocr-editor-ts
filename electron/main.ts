@@ -2,9 +2,12 @@
 import path from 'path';
 import url from 'url';
 import { execFile as ef } from 'child_process';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import { TesseractMessage } from '../src/ocr.electron';
-import { getConfig } from './config';
+import assert from '../src/lib/assert';
+import { Config, getConfig, setConfig } from './config';
+
+let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   const startUrl = process.env.ELECTRON_START_URL || url.format({
@@ -13,7 +16,7 @@ function createWindow() {
     slashes: true,
   });
 
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     webPreferences: {
       preload: startUrl,
       nodeIntegration: true,
@@ -54,4 +57,27 @@ ipcMain.handle('ocr', async (event, message: TesseractMessage) => {
       return stdout;
     }
   }
+});
+
+ipcMain.handle('browse', async (event) => {
+  assert(mainWindow);
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+  });
+
+  if (result.filePaths.length) {
+    return result.filePaths[0];
+  }
+
+  return null;
+});
+
+ipcMain.handle('config', async (event, config: Config | undefined) => {
+  if (config) {
+    setConfig(config);
+    return;
+  }
+
+  return getConfig();
 });
