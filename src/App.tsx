@@ -24,7 +24,7 @@ library.add(fas);
 function App() {
   const [state, dispatch] = useAppReducer();
 
-  const [showSettings, setShowSettings] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
 
   const onSettingsClose = useCallback(() => setShowSettings(false), []);
 
