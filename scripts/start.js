@@ -166,6 +166,12 @@ checkBrowsers(paths.appPath, isInteractive)
         devServer.close();
         process.exit();
       });
+
+      electronProcess.stdout.setEncoding('utf8');
+      electronProcess.stderr.setEncoding('utf8');
+
+      electronProcess.stdout.on('data', data => console.log(data));
+      electronProcess.stderr.on('data', data => console.error(data));
     }
 
     const shutdown = function () {

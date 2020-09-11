@@ -2,8 +2,8 @@
 import path from 'path';
 import url from 'url';
 import { execFile as ef } from 'child_process';
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
-import { TesseractMessage } from '../src/ocr.electron';
+import { app, BrowserWindow, dialog, ipcMain, IpcMainEvent } from 'electron';
+import { OCR_CHANNEL, TesseractHocrRequestMessage, TesseractHocrResponseMessage } from '../src/ocr.electron';
 import assert from '../src/lib/assert';
 import { Config, getConfig, setConfig } from './config';
 
@@ -44,20 +44,64 @@ app.on('activate', function () {
 
 const execFile = util.promisify(ef);
 
-ipcMain.handle('ocr', async (event, message: TesseractMessage) => {
-  switch (message.type) {
-    case 'list': {
-      const { stdout } = await execFile(getConfig().tesseractPath, ['--list-langs']);
+ipcMain.handle('ocr-list-langs', async () => {
+  const config = getConfig();
 
-      return stdout;
-    }
-    case 'hocr': {
-      const { stdout } = await execFile(getConfig().tesseractPath, [message.filename, 'stdout', '-l', message.langs, 'hocr']);
+  const { stdout } = await execFile(config.tesseractPath, ['--list-langs']);
 
-      return stdout;
-    }
-  }
+  return stdout;
+})
+
+let isRunningJobs = false;
+
+type Job = [IpcMainEvent, TesseractHocrRequestMessage];
+const jobs: Job[] = [];
+
+ipcMain.on(OCR_CHANNEL, async (event, message: TesseractHocrRequestMessage) => {
+  console.log('Received OCR request:', message.filename, message.langs);
+
+  jobs.push([event, message]);
+
+  await runJobs();
 });
+
+async function runJobs() {
+  // No need to enter this section more than once if the loop is running.
+  if (isRunningJobs) {
+    return;
+  }
+
+  console.log('Running jobs...');
+
+  isRunningJobs = true;
+
+  const config = getConfig();
+
+  // Handle all jobs in sequence.
+  // TODO: Use a pool.
+  while (jobs.length) {
+    const job = jobs.pop();
+
+    assert(job);
+
+    const [event, message] = job;
+
+    console.log('Running job:', message.filename);
+
+    const { stdout } = await execFile(config.tesseractPath, [message.filename, 'stdout', '-l', message.langs, 'hocr']);
+
+    const response: TesseractHocrResponseMessage = {
+      filename: message.filename,
+      hocr: stdout,
+    };
+
+    event.reply(OCR_CHANNEL, response);
+  }
+
+  console.log('Done running jobs.');
+
+  isRunningJobs = false;
+}
 
 ipcMain.handle('browse', async (event) => {
   assert(mainWindow);

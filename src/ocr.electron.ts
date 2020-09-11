@@ -1,39 +1,46 @@
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, IpcRendererEvent } from 'electron';
 
 import { OcrDocument } from './reducer/types';
 import { Page, RecognizeOptions } from './types';
 import hocrParser from './lib/hocrParser';
 import assert from './lib/assert';
 
-type TesseractListLanguagesMessage = {
-  type: 'list';
-};
-
-type TesseractHocrMessage = {
-  type: 'hocr';
+export interface TesseractHocrRequestMessage {
   filename: string;
   langs: string;
-};
-
-export type TesseractMessage = TesseractListLanguagesMessage | TesseractHocrMessage;
-
-function invokeTesseractMessage(message: TesseractMessage): Promise<any> {
-  return ipcRenderer.invoke('ocr', message);
 }
 
-export async function recognize(docs: OcrDocument[], langs?: string, _options?: RecognizeOptions): Promise<Page[]> {
-  const results = await Promise.all(
-    docs.map((doc) => {
-      assert(doc.pageImage, 'No image loaded for document %s.', doc.name);
+export interface TesseractHocrResponseMessage {
+  filename: string;
+  hocr: string;
+}
 
-      // TODO: Rectangle recognition
-      return invokeTesseractMessage({
+export const OCR_CHANNEL = 'ocr';
+
+export async function recognize(docs: OcrDocument[], langs?: string, _options?: RecognizeOptions): Promise<Page[]> {
+  const promises = docs.map((doc) => {
+    assert(doc.pageImage, 'No image loaded for document %s.', doc.name);
+
+    return new Promise<Page>((resolve) => {
+      const listener = (event: IpcRendererEvent, message: TesseractHocrResponseMessage) => {
+        if (message.filename !== doc.pageImage?.path) {
+          return;
+        }
+
+        ipcRenderer.removeListener(OCR_CHANNEL, listener);
+
+        resolve(hocrParser(message.hocr));
+      };
+
+      ipcRenderer.on(OCR_CHANNEL, listener);
+
+      ipcRenderer.send(OCR_CHANNEL, {
         type: 'hocr',
         filename: doc.pageImage?.path,
         langs: langs ?? 'eng',
       });
-    }),
-  );
+    });
+  });
 
-  return results.map(hocrParser);
+  return Promise.all(promises);
 }
