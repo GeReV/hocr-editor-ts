@@ -1,4 +1,7 @@
-
+import { IRect } from 'konva/types/types';
+import type { Draft } from 'immer/dist/types/types-external';
+import { produce, enableMapSet } from 'immer';
+import { Bbox } from 'tesseract.js';
 import { DocumentTreeItem, ElementType, ItemId, Position } from '../types';
 import { buildTree, walkChildren } from '../treeBuilder';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
@@ -13,10 +16,6 @@ import {
 } from '../treeUtils';
 import assert from '../lib/assert';
 import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State, Tree } from './types';
-import { IRect } from 'konva/types/types';
-import type { Draft } from 'immer/dist/types/types-external';
-import { produce, enableMapSet } from 'immer';
-import { Bbox } from 'tesseract.js';
 
 enableMapSet();
 

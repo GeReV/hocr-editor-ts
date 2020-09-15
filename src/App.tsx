@@ -1,4 +1,9 @@
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { useKey } from 'react-use';
+import { Button, Col, Dropdown, Layout, Menu, Row } from 'antd';
+import React, { useCallback, useState } from 'react';
 import { OcrDocument } from './reducer/types';
 import { useAppReducer } from './reducerContext';
 import {
@@ -14,12 +19,6 @@ import PageTreeView from './components/PageTreeView';
 import PageList from './components/PageList';
 import { LogView } from './components/LogView';
 import SettingsModal from './components/SettingsModal';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { fas } from '@fortawesome/free-solid-svg-icons';
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { useKey } from 'react-use';
-import { Button, Col, Dropdown, Layout, Menu, Row } from 'antd';
-import React, { useCallback, useState } from 'react';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'antd/dist/antd.css';

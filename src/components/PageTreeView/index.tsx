@@ -1,4 +1,4 @@
-
+import React, { useCallback, Dispatch } from 'react';
 import { createChangeSelectedItem, createModifyNode, createMoveNode } from '../../reducer/actions';
 import Tree from '../SortableTree/components/Tree';
 import { ItemId, Path, RenderItemParams, TreeDestinationPosition, TreeSourcePosition } from '../SortableTree';
@@ -6,7 +6,6 @@ import { ItemId, Path, RenderItemParams, TreeDestinationPosition, TreeSourcePosi
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
 import { useHoveredState } from '../../hoverContext';
 import TreeNode from './TreeNode';
-import React, { useCallback, Dispatch } from 'react';
 
 import './index.scss';
 
