@@ -1,3 +1,6 @@
+import { OcrDocument } from '../../reducer/types';
+import buildHocrDocument from '../../lib/hocrBuilder';
+import printHtml from '../../lib/htmlPrinter';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Modal, Space, Tooltip } from 'antd';
 import { PrismAsync as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -5,19 +8,15 @@ import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism';
 import { useCopyToClipboard } from 'react-use';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { OcrDocument } from '../../reducer/types';
-import { PageTreeItem } from '../../types';
-import buildHocrDocument from '../../lib/hocrBuilder';
-import printHtml from '../../lib/htmlPrinter';
 import './index.css';
 
 interface Props {
-  document?: OcrDocument;
+  documents: OcrDocument[];
   onClose?: () => void;
   show?: boolean;
 }
 
-export default function ExportModal({ document, onClose, show }: Props) {
+export default function ExportModal({ documents, onClose, show }: Props) {
   const [hocr, setHocr] = useState<string | null>(null);
 
   const hocrDownload = useMemo(() => (hocr ? `data:text/html;charset=utf-8,${encodeURIComponent(hocr)}` : '#'), [hocr]);
@@ -31,23 +30,14 @@ export default function ExportModal({ document, onClose, show }: Props) {
   }, [hocr, copyToClipboard]);
 
   useEffect(() => {
-    if (!document?.tree || !show || !!hocr) {
+    if (documents.some((doc) => !doc?.tree) || !show || !!hocr) {
       return;
     }
 
-    const rootTreeItem = document.tree.items[document.tree.rootId] as PageTreeItem;
-
-    const page = rootTreeItem.data;
-
-    const size = {
-      width: document.width,
-      height: document.height,
-    };
-
-    const doc = buildHocrDocument(page, size, document.name);
+    const doc = buildHocrDocument(documents);
 
     setHocr(printHtml(doc));
-  }, [document, show, hocr]);
+  }, [show, hocr, documents]);
 
   useEffect(() => {
     let timeoutId: number;

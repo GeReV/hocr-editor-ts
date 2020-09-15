@@ -1,5 +1,3 @@
-import { createAction } from '@reduxjs/toolkit';
-import { IRect } from 'konva/types/types';
 
 import { ChangeCallbackParams } from '../components/PageCanvas/Block';
 import { ItemId, Page, PageImage, RecognizeUpdate } from '../types';
@@ -15,6 +13,8 @@ import {
   Options,
   SetDocumentImagePayload,
 } from './types';
+import { IRect } from 'konva/types/types';
+import { createAction } from '@reduxjs/toolkit';
 
 export const createAddDocument = createAction<
   (filename: string, pageImage: PageImage) => { payload: AddDocumentPayload },
@@ -47,11 +47,13 @@ export const createOpenDocument = createAction<
   },
 }));
 
-export const createSelectDocument = createAction<string, ActionType.SelectDocument>(ActionType.SelectDocument);
+export const createSelectDocuments = createAction<string[], ActionType.SelectDocuments>(ActionType.SelectDocuments);
 export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, ActionType.UpdateTreeNodeRect>(
   ActionType.UpdateTreeNodeRect,
 );
-export const createChangeSelected = createAction<ItemId | null, ActionType.ChangeSelected>(ActionType.ChangeSelected);
+export const createChangeSelectedItem = createAction<ItemId | null, ActionType.ChangeSelectedItem>(
+  ActionType.ChangeSelectedItem,
+);
 export const createChangeIsProcessing = createAction<
   (id: number, isProcessing: boolean) => { payload: ChangeDocumentIsProcessingPayload },
   ActionType.ChangeDocumentIsProcessing
@@ -94,6 +96,10 @@ export const createSetIsDrawing = createAction<boolean, ActionType.SetIsDrawing>
 export const createSetDrawRect = createAction<IRect, ActionType.SetDrawRect>(ActionType.SetDrawRect);
 
 export const createChangeOptions = createAction<Partial<Options>, ActionType.ChangeOptions>(ActionType.ChangeOptions);
+
+export const createSetLockInteractions = createAction<boolean, ActionType.SetLockInteractions>(
+  ActionType.SetLockInteractions,
+);
 
 export const createUndo = createAction<void, ActionType.Undo>(ActionType.Undo);
 export const createRedo = createAction<void, ActionType.Redo>(ActionType.Redo);

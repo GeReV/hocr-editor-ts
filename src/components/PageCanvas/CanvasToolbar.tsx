@@ -1,7 +1,3 @@
-import React, { PropsWithChildren, useCallback, useMemo } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Rectangle } from 'tesseract.js';
-import { Button, Dropdown, Menu, Space } from 'antd';
 
 import { useAppReducer } from '../../reducerContext';
 import {
@@ -11,12 +7,19 @@ import {
   createOpenDocument,
   createRecognizeDocument,
   createRecognizeRegion,
+  createSetLockInteractions,
 } from '../../reducer/actions';
 import { OcrDocument } from '../../reducer/types';
 import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import { loadImage } from '../../utils';
 import hocrParser from '../../lib/hocrParser';
 import { Page, PageImage, RecognizeOptions } from '../../types';
+import ExportModal from '../ExportModal';
+import assert from '../../lib/assert';
+import { Button, Dropdown, Menu, Space } from 'antd';
+import { Rectangle } from 'tesseract.js';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React, { PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import './CanvasToolbar.scss';
 
@@ -40,6 +43,20 @@ async function processDocs(docs: OcrDocument[], langs?: string, options?: Recogn
 
 export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
   const [state, dispatch] = useAppReducer();
+
+  const [showExport, setShowExport] = useState<boolean>(false);
+
+  const selectedDocuments = useMemo<OcrDocument[]>(
+    () =>
+      Array.from(state.selectedDocuments).map((id) => {
+        const doc = state.documents.find((doc) => doc.id.toString() === id);
+
+        assert(doc, 'Could not find document with ID %s', id);
+
+        return doc;
+      }),
+    [state],
+  );
 
   const performOCR = useCallback(
     async (documents: OcrDocument[]) => {
@@ -179,7 +196,11 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
 
   const currentDocument: OcrDocument = state.documents[state.currentDocument];
 
-  const handleOCR = useCallback(() => performOCR([currentDocument]), [currentDocument, performOCR]);
+  const handleOCR = useCallback(() => performOCR(selectedDocuments.length ? selectedDocuments : [currentDocument]), [
+    performOCR,
+    selectedDocuments,
+    currentDocument,
+  ]);
 
   const handleRegionOCR = useCallback(async () => {
     const rectangle = {
@@ -192,7 +213,21 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
     await performRegionOCR(currentDocument, rectangle);
   }, [currentDocument, state.drawRect, performRegionOCR]);
 
+  const handleShowExport = useCallback(() => {
+    dispatch(createSetLockInteractions(true));
+    setShowExport(true);
+  }, [dispatch]);
+
+  const handleHideExport = useCallback(() => {
+    dispatch(createSetLockInteractions(false));
+    setShowExport(false);
+  }, [dispatch]);
+
   const shouldOcrRegion: boolean = state.isDrawing && state.drawRect.width > 0 && state.drawRect.height > 0;
+
+  const canExportDocument: boolean = selectedDocuments.length
+    ? selectedDocuments.every((doc) => doc?.tree)
+    : !!currentDocument?.tree;
 
   const menu = (
     <Menu>
@@ -232,7 +267,21 @@ export default function CanvasToolbar({ children }: PropsWithChildren<Props>) {
         <FontAwesomeIcon icon="glasses" /> {shouldOcrRegion ? 'OCR Selection' : 'OCR'}
       </Dropdown.Button>
 
+      <Button
+        type="primary"
+        disabled={!state.documents.length || isProcessing || !canExportDocument}
+        onClick={handleShowExport}
+      >
+        <FontAwesomeIcon icon="file-export" /> Export
+      </Button>
+
       {children}
+
+      <ExportModal
+        show={showExport}
+        onClose={handleHideExport}
+        documents={selectedDocuments.length ? selectedDocuments : [currentDocument]}
+      />
     </Space>
   );
 }

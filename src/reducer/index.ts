@@ -1,7 +1,3 @@
-import { Bbox } from 'tesseract.js';
-import { produce } from 'immer';
-import type { Draft } from 'immer/dist/types/types-external';
-import { IRect } from 'konva/types/types';
 
 import { DocumentTreeItem, ElementType, ItemId, Position } from '../types';
 import { buildTree, walkChildren } from '../treeBuilder';
@@ -17,6 +13,12 @@ import {
 } from '../treeUtils';
 import assert from '../lib/assert';
 import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State, Tree } from './types';
+import { IRect } from 'konva/types/types';
+import type { Draft } from 'immer/dist/types/types-external';
+import { produce, enableMapSet } from 'immer';
+import { Bbox } from 'tesseract.js';
+
+enableMapSet();
 
 const MAX_CHANGESETS = 40;
 
@@ -32,6 +34,7 @@ export const initialState: State = {
   currentSnapshot: -1,
   documents: [],
   currentDocument: 0,
+  selectedDocuments: new Set(),
   selectedId: null,
   lastRecognizeUpdate: null,
   isDrawing: false,
@@ -40,6 +43,7 @@ export const initialState: State = {
     autoResizeNodes: true,
     autoDeleteEmptyNodes: false,
   },
+  lockInteractions: false,
 };
 
 function updateTreeNodePosition(
@@ -321,12 +325,18 @@ function reduce(state: State, action: AppReducerAction): State {
         }
       });
     }
-    case ActionType.SelectDocument: {
+    case ActionType.SelectDocuments: {
       return produceWithUndo(state, (draft) => {
-        draft.currentDocument = state.documents.findIndex((doc) => doc.id.toString() === action.payload);
+        const selectedIds = action.payload;
+
+        draft.selectedDocuments = new Set(selectedIds);
+
+        draft.currentDocument = selectedIds.length
+          ? state.documents.findIndex((doc) => doc.id.toString() === selectedIds[selectedIds.length - 1])
+          : 0;
       });
     }
-    case ActionType.ChangeSelected: {
+    case ActionType.ChangeSelectedItem: {
       return produceWithUndo(state, (draft) => {
         draft.selectedId = action.payload;
       });
@@ -379,6 +389,11 @@ function reduce(state: State, action: AppReducerAction): State {
     case ActionType.ChangeOptions: {
       return produce(state, (draft) => {
         Object.assign(draft.options, action.payload);
+      });
+    }
+    case ActionType.SetLockInteractions: {
+      return produce(state, (draft) => {
+        draft.lockInteractions = action.payload;
       });
     }
     default:

@@ -1,35 +1,49 @@
+import { OcrDocument } from '../../reducer/types';
 import React, { useCallback } from 'react';
 import cx from 'classnames';
 import { Menu, Progress } from 'antd';
 
-import { OcrDocument } from '../../reducer/types';
 import './index.scss';
 
 interface Props {
   documents: OcrDocument[];
-  currentDocument?: OcrDocument;
-  onSelect: (documentId: string) => void;
+  selectedDocuments: Set<string>;
+  onSelect: (selectedKeys: string[]) => void;
 }
 
-function PageList({ documents, currentDocument, onSelect }: Props) {
+function PageList({ documents, selectedDocuments, onSelect }: Props) {
   const handleClick = useCallback<(args: { key: React.Key; domEvent: React.MouseEvent<HTMLElement> }) => void>(
     ({ key, domEvent }) => {
       domEvent.preventDefault();
 
-      onSelect(key.toString());
+      const keyStr = key.toString();
+
+      if (domEvent.ctrlKey) {
+        const selectedDocumentsArr = Array.from(selectedDocuments);
+
+        if (selectedDocuments.has(keyStr)) {
+          selectedDocumentsArr.splice(selectedDocumentsArr.indexOf(keyStr), 1);
+        } else {
+          selectedDocumentsArr.push(keyStr);
+        }
+
+        onSelect(selectedDocumentsArr);
+        return;
+      }
+
+      onSelect([keyStr]);
     },
-    [onSelect],
+    [selectedDocuments, onSelect],
   );
 
   return (
     <div className="Pages">
-      <Menu
-        className="Pages-list"
-        onClick={handleClick}
-        selectedKeys={currentDocument?.id ? [currentDocument?.id.toString()] : []}
-      >
+      <Menu className="Pages-list" onClick={handleClick} selectedKeys={Array.from(selectedDocuments)}>
         {documents.map((doc, index) => (
-          <Menu.Item key={doc.id} className={cx('Pages-item', doc === currentDocument && 'Pages-item--selected')}>
+          <Menu.Item
+            key={doc.id}
+            className={cx('Pages-item', selectedDocuments.has(doc.id.toString()) && 'Pages-item--selected')}
+          >
             <div className="Pages-item-content">
               {doc.pageImage && <img src={doc.pageImage.thumbnailUrlObject} alt="" />}
               {doc.isProcessing && (

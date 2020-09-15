@@ -1,14 +1,7 @@
-import React, { Dispatch, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Stage } from 'react-konva';
-import { useKey, useMeasure } from 'react-use';
-import cx from 'classnames';
-import { Button, Space } from 'antd';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IRect } from 'konva/types/types';
 
 import { ItemId, Position } from '../../types';
 import {
-  createChangeSelected,
+  createChangeSelectedItem,
   createRedo,
   createSetDocumentImage,
   createSetDrawRect,
@@ -16,13 +9,18 @@ import {
   createUndo,
 } from '../../reducer/actions';
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
-import { isAnyDocumentProcessing } from '../../reducer/selectors';
-import ExportModal from '../ExportModal';
 import { useHoveredState } from '../../hoverContext';
 import { loadImage } from '../../utils';
 import assert from '../../lib/assert';
 import PageGraphics from './PageGraphics';
 import CanvasToolbar from './CanvasToolbar';
+import { IRect } from 'konva/types/types';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button, Space } from 'antd';
+import cx from 'classnames';
+import { useKey, useMeasure } from 'react-use';
+import { Stage } from 'react-konva';
+import React, { Dispatch, useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import './index.css';
 
@@ -33,6 +31,7 @@ interface Props {
   dispatch: Dispatch<AppReducerAction>;
   isDrawing?: boolean;
   drawRect?: IRect;
+  lockInteractions?: boolean;
   hasUndo?: boolean;
   hasRedo?: boolean;
 }
@@ -41,10 +40,18 @@ const SCALE_MAX = 3.0;
 const SCALE_MIN = 0.05;
 const DELTA_CONSTANT = 3;
 
-function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRedo, isDrawing, drawRect }: Props) {
+function PageCanvas({
+  document,
+  selectedId,
+  dispatch,
+  hasUndo,
+  hasRedo,
+  isDrawing,
+  drawRect,
+  lockInteractions,
+}: Props) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
-  const [showExport, setShowExport] = useState<boolean>(false);
 
   const [hoveredId] = useHoveredState();
 
@@ -79,7 +86,7 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
 
   const handleSelected = useCallback(
     (itemId: ItemId | null) => {
-      dispatch(createChangeSelected(itemId));
+      dispatch(createChangeSelectedItem(itemId));
     },
     [dispatch],
   );
@@ -88,7 +95,7 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
     (evt: React.WheelEvent) => {
       // For some reason, the modal doesn't stop mouse wheel events (even with pointer-events: none),
       // so ignore them explicitly when modal is up.
-      if (!stageRef.current || showExport) {
+      if (!stageRef.current || lockInteractions) {
         return;
       }
 
@@ -115,7 +122,7 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
       setPosition(newPos);
       setScale(newScale);
     },
-    [scale, showExport],
+    [lockInteractions, scale],
   );
 
   const handleLoadImage = useCallback(
@@ -145,19 +152,9 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
     [dispatch, document],
   );
 
-  const isAnyProcessing = useMemo(() => isAnyDocumentProcessing(documents), [documents]);
-
   return (
     <div className="Canvas" onWheel={handleMouseWheel}>
       <CanvasToolbar>
-        <Button
-          type="primary"
-          disabled={!documents.length || isAnyProcessing || !document?.tree}
-          onClick={() => setShowExport(true)}
-        >
-          <FontAwesomeIcon icon="file-export" /> Export
-        </Button>
-
         <Button.Group>
           <Button
             title="Undo"
@@ -215,7 +212,6 @@ function PageCanvas({ document, documents, selectedId, dispatch, hasUndo, hasRed
           </Space>
         )}
       </div>
-      <ExportModal show={showExport} onClose={() => setShowExport(false)} document={document} />
     </div>
   );
 }

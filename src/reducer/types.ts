@@ -1,8 +1,8 @@
-import { IRect } from 'konva/types/types';
 
 import { Page, DocumentTreeItem, ItemId, PageImage, RecognizeUpdate } from '../types';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
 import * as actions from './actions';
+import { IRect } from 'konva/types/types';
 
 export type TreeItems = Record<ItemId, DocumentTreeItem>;
 
@@ -31,11 +31,13 @@ export interface State {
   currentSnapshot: number;
   documents: OcrDocument[];
   currentDocument: number;
+  selectedDocuments: Set<string>;
   selectedId: ItemId | null;
   isDrawing: boolean;
   drawRect: IRect;
   lastRecognizeUpdate: RecognizeUpdate | null;
   options: Options;
+  lockInteractions: boolean;
 }
 
 export enum ActionType {
@@ -46,9 +48,9 @@ export enum ActionType {
   OpenDocument = 'OpenDocument',
   RecognizeDocument = 'RecognizeDocument',
   RecognizeRegion = 'RecognizeRegion',
-  SelectDocument = 'SelectDocument',
+  SelectDocuments = 'SelectDocuments',
+  ChangeSelectedItem = 'ChangeSelectedItem',
   ChangeDocumentIsProcessing = 'ChangeDocumentIsProcessing',
-  ChangeSelected = 'ChangeSelected',
   ModifyNode = 'ModifyNode',
   DeleteNode = 'DeleteNode',
   MoveNode = 'MoveNode',
@@ -58,6 +60,8 @@ export enum ActionType {
   SetDrawRect = 'SetDrawRect',
 
   ChangeOptions = 'ChangeOptions',
+
+  SetLockInteractions = 'SetLockInteractions',
 
   Undo = 'Undo',
   Redo = 'Redo',

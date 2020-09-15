@@ -1,12 +1,12 @@
-import React, { useCallback, Dispatch } from 'react';
 
-import { createChangeSelected, createModifyNode, createMoveNode } from '../../reducer/actions';
+import { createChangeSelectedItem, createModifyNode, createMoveNode } from '../../reducer/actions';
 import Tree from '../SortableTree/components/Tree';
 import { ItemId, Path, RenderItemParams, TreeDestinationPosition, TreeSourcePosition } from '../SortableTree';
 
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
 import { useHoveredState } from '../../hoverContext';
 import TreeNode from './TreeNode';
+import React, { useCallback, Dispatch } from 'react';
 
 import './index.scss';
 
@@ -57,7 +57,7 @@ function PageTreeView({ currentDocument, selectedId, dispatch }: Props) {
     (evt: React.MouseEvent, nodeId: ItemId) => {
       evt.stopPropagation();
 
-      dispatch(createChangeSelected(nodeId));
+      dispatch(createChangeSelectedItem(nodeId));
     },
     [dispatch],
   );

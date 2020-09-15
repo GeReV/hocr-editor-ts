@@ -1,19 +1,25 @@
-import React, { useCallback, useState } from 'react';
-import { Button, Col, Dropdown, Layout, Menu, Row } from 'antd';
-import { useKey } from 'react-use';
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { fas } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { OcrDocument } from './reducer/types';
 import { useAppReducer } from './reducerContext';
-import { createChangeOptions, createDeleteNode, createRedo, createSelectDocument, createUndo } from './reducer/actions';
+import {
+  createChangeOptions,
+  createDeleteNode,
+  createRedo,
+  createSelectDocuments,
+  createUndo,
+} from './reducer/actions';
 import Header from './components/Header';
 import PageCanvas from './components/PageCanvas';
 import PageTreeView from './components/PageTreeView';
 import PageList from './components/PageList';
 import { LogView } from './components/LogView';
 import SettingsModal from './components/SettingsModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { useKey } from 'react-use';
+import { Button, Col, Dropdown, Layout, Menu, Row } from 'antd';
+import React, { useCallback, useState } from 'react';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'antd/dist/antd.css';
@@ -65,8 +71,8 @@ function App() {
   );
 
   const handleSelect = useCallback(
-    (id: string) => {
-      dispatch(createSelectDocument(id));
+    (ids: string[]) => {
+      dispatch(createSelectDocuments(ids));
     },
     [dispatch],
   );
@@ -108,7 +114,11 @@ function App() {
           <Layout>
             <Layout.Sider className="App-panel" theme="light" width={160}>
               <Header>Pages</Header>
-              <PageList documents={state.documents} currentDocument={currentDocument} onSelect={handleSelect} />
+              <PageList
+                documents={state.documents}
+                selectedDocuments={state.selectedDocuments}
+                onSelect={handleSelect}
+              />
             </Layout.Sider>
             <Layout.Content className="App-canvas App-panel">
               <PageCanvas
@@ -118,6 +128,7 @@ function App() {
                 dispatch={dispatch}
                 isDrawing={state.isDrawing}
                 drawRect={state.drawRect}
+                lockInteractions={state.lockInteractions}
                 hasUndo={!!(state.snapshots.length && state.currentSnapshot > 0)}
                 hasRedo={!!(state.snapshots.length && state.currentSnapshot < state.snapshots.length - 1)}
               />

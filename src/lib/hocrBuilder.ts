@@ -1,4 +1,6 @@
-import { Baseline, Bbox, Block, Line, Page, Paragraph, Word, Graphic } from '../types';
+import { Baseline, Bbox, Block, Line, Page, Paragraph, Word, Graphic, PageTreeItem } from '../types';
+import { OcrDocument } from '../reducer/types';
+import assert from './assert';
 
 interface Size {
   width: number;
@@ -52,8 +54,8 @@ function createElement<K extends keyof HTMLElementTagNameMap>(
   return el;
 }
 
-function createPageElement(doc: Document, page: Page, size: Size, filename: string) {
-  const title = [`image '${filename}'`, `bbox 0 0 ${size.width} ${size.height}`, 'ppageno 0'].join('; ');
+function createPageElement(doc: Document, page: Page, size: Size, filename: string, index: number) {
+  const title = [`image '${filename}'`, `bbox 0 0 ${size.width} ${size.height}`, `ppageno ${index}`].join('; ');
 
   return createElement(doc, 'div', {
     title,
@@ -118,8 +120,8 @@ function buildHocrHead(doc: Document, page: Page) {
   );
 }
 
-function buildHocrBody(doc: Document, page: Page, size: Size, filename: string) {
-  const el = createPageElement(doc, page, size, filename);
+function buildHocrBody(doc: Document, page: Page, size: Size, filename: string, index: number) {
+  const el = createPageElement(doc, page, size, filename, index);
 
   for (const block of page.children) {
     const b = createBlockElement(doc, block);
@@ -150,12 +152,31 @@ function buildHocrBody(doc: Document, page: Page, size: Size, filename: string) 
   doc.body.appendChild(el);
 }
 
-export default function buildHocrDocument(page: Page, size: Size, filename: string): Document {
+function getDocumentRootPage(document: OcrDocument): Page {
+  assert(document.tree);
+
+  const rootTreeItem = document.tree.items[document.tree.rootId] as PageTreeItem;
+
+  return rootTreeItem.data;
+}
+
+export default function buildHocrDocument(documents: OcrDocument[]): Document {
+  assert(documents.length, 'Expected at least one document.');
+
   const doc = document.implementation.createHTMLDocument();
 
-  buildHocrHead(doc, page);
+  buildHocrHead(doc, getDocumentRootPage(documents[0]));
 
-  buildHocrBody(doc, page, size, filename);
+  documents.forEach((document, index) => {
+    const page = getDocumentRootPage(document);
+
+    const size = {
+      width: document.width,
+      height: document.height,
+    };
+
+    buildHocrBody(doc, page, size, document.name, index);
+  });
 
   return doc;
 }
