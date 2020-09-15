@@ -1,0 +1,32 @@
+﻿{
+  "extends": [
+    "react-app",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript"
+  ],
+  "plugins": [
+    "import"
+  ],
+  "overrides": [
+    {
+      "files": ["**/*.ts?(x)"],
+      "rules": {
+        "comma-dangle": [
+          "error",
+          "always-multiline"
+        ],
+        "quotes": [
+          "error",
+          "single"
+        ],
+        "import/order": [
+          "warn",
+          {
+            "groups": ["builtin", "external", "parent", "sibling", "index"]
+          }
+        ]
+      }
+    }
+  ]
+}
