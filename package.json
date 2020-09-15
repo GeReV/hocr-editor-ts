@@ -145,7 +145,7 @@
     "eslint-config-react-app": "^5.2.1",
     "eslint-loader": "3.0.3",
     "eslint-plugin-flowtype": "4.x",
-    "eslint-plugin-import": "^2.21.1",
+    "eslint-plugin-import": "2.22.0",
     "eslint-plugin-jsx-a11y": "6.x",
     "eslint-plugin-react": "7.x",
     "eslint-plugin-react-hooks": "2.x",
