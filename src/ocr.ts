@@ -1,4 +1,4 @@
-import tesseract, { RecognizeResult, Rectangle } from 'tesseract.js';
+import tesseract, { RecognizeResult } from 'tesseract.js';
 
 import { OcrDocument } from './reducer/types';
 import { Page, RecognizeOptions, RecognizeUpdate } from './types';
