@@ -195,6 +195,27 @@
     ]
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "react-app",
+      "plugin:import/errors",
+      "plugin:import/warnings",
+      "plugin:import/typescript"
+    ],
+    "plugins": [
+      "import"
+    ],
+    "rules": {
+      "comma-dangle": [
+        "error",
+        "always-multiline"
+      ],
+      "quotes": [
+        "error",
+        "single"
+      ],
+      "import/order": [
+        "warn"
+      ]
+    }
   }
 }
