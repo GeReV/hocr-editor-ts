@@ -47,6 +47,22 @@ export const createOpenDocument = createAction<
 }));
 
 export const createSelectDocuments = createAction<string[], ActionType.SelectDocuments>(ActionType.SelectDocuments);
+
+interface ReorderDocumentsParams {
+  sourceIndex: number;
+  destinationIndex: number;
+}
+
+export const createReorderDocuments = createAction<
+  (sourceIndex: number, destinationIndex: number) => { payload: ReorderDocumentsParams },
+  ActionType.ReorderDocuments
+>(ActionType.ReorderDocuments, (sourceIndex: number, destinationIndex: number) => ({
+  payload: {
+    sourceIndex,
+    destinationIndex,
+  },
+}));
+
 export const createUpdateTreeNodeRect = createAction<ChangeCallbackParams, ActionType.UpdateTreeNodeRect>(
   ActionType.UpdateTreeNodeRect,
 );

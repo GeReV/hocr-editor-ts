@@ -48,6 +48,7 @@ export enum ActionType {
   RecognizeDocument = 'RecognizeDocument',
   RecognizeRegion = 'RecognizeRegion',
   SelectDocuments = 'SelectDocuments',
+  ReorderDocuments = 'ReorderDocuments',
   ChangeSelectedItem = 'ChangeSelectedItem',
   ChangeDocumentIsProcessing = 'ChangeDocumentIsProcessing',
   ModifyNode = 'ModifyNode',

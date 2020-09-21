@@ -3,20 +3,29 @@
 }
 
 .Pages-list {
+  padding: 8px 16px;
 }
 
-.Pages-list .Pages-item.ant-menu-item {
-  padding: 8px 16px;
+.Pages-item {
+  box-shadow: 0 0 0 1px #bbb;
   height: auto;
+  outline: 0;
+
+  &--selected {
+    box-shadow: 0 0 0 3px var(--primary);
+  }
 
   img {
     width: 100%;
   }
 }
 
+.Pages-item + .Pages-item {
+  margin-top: 8px;
+}
+
 .Pages-item-content {
   background: #ddd;
-  box-shadow: 0 0 0 1px #bbb;
   min-height: 160px;
 }
 

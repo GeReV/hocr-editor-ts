@@ -264,6 +264,24 @@ function reduce(state: State, action: AppReducerAction): State {
         });
       });
     }
+    case ActionType.ReorderDocuments: {
+      return produceWithUndo(state, (draft) => {
+        const sourceIndex = action.payload.sourceIndex;
+
+        // Remember current document to set it back later.
+        const currentDocument = draft.documents[draft.currentDocument];
+
+        const item = draft.documents.splice(sourceIndex, 1)[0];
+
+        assert(item, 'Expected item in index %s to exist.', sourceIndex);
+
+        let destinationIndex = action.payload.destinationIndex;
+
+        draft.documents.splice(destinationIndex, 0, item);
+
+        draft.currentDocument = draft.documents.indexOf(currentDocument);
+      });
+    }
     case ActionType.RecognizeDocument: {
       return produceWithUndo(state, (draft) => {
         const tree = buildTree(action.payload.result);
