@@ -93,7 +93,7 @@ function Block(props: BlockProps): React.ReactElement | null {
         y: evt.target.y(),
       });
     },
-    [props.item.id, props.onChange],
+    [props],
   );
 
   const handleTransformEnd = useCallback<(evt: Konva.KonvaEventObject<Event>) => void>(
@@ -126,7 +126,7 @@ function Block(props: BlockProps): React.ReactElement | null {
         height: Math.max(MINIMUM_NODE_HEIGHT, node.height() * scale.y),
       });
     },
-    [props.item.id, props.onChange],
+    [props],
   );
 
   const boundBoxFunc = useCallback<(oldBox: Box, newBox: Box) => Box>(
