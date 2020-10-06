@@ -23,6 +23,7 @@
     "src"
   ],
   "files": [
+    "./typings/global.d.ts",
     "./typings/react-beautiful-dnd-next.d.ts"
   ]
 }
