@@ -1,10 +1,14 @@
 ﻿import util from 'util';
 import path from 'path';
+import fs from 'fs';
 import url from 'url';
 import { execFile as ef } from 'child_process';
 import { app, BrowserWindow, dialog, ipcMain, IpcMainEvent } from 'electron';
+import archiver from 'archiver';
+
 import { OCR_CHANNEL, TesseractHocrRequestMessage, TesseractHocrResponseMessage } from '../src/ocr.electron';
 import assert from '../src/lib/assert';
+import { ExportMessage, ExportType } from '../src/components/ExportModal/actions.electron';
 import { Config, getConfig, setConfig } from './config';
 
 let mainWindow: BrowserWindow | null = null;
@@ -124,4 +128,72 @@ ipcMain.handle('config', async (event, config: Config | undefined) => {
   }
 
   return getConfig();
+});
+
+const writeFile = util.promisify(fs.writeFile);
+const copyFile = util.promisify(fs.copyFile);
+
+ipcMain.handle('export', async (event, message: ExportMessage) => {
+  assert(mainWindow);
+
+  switch (message.type) {
+    case ExportType.Zip: {
+      const result = await dialog.showSaveDialog(mainWindow, {
+        filters: [
+          {
+            name: 'Zip file',
+            extensions: ['zip'],
+          },
+        ],
+      });
+
+      if (result.filePath && !result.canceled) {
+        const output = fs.createWriteStream(result.filePath);
+        const archive = archiver('zip', {
+          zlib: { level: 9 }, // Sets the compression level.
+        });
+
+        output.on('close', function () {
+          console.debug(`Done writing ${result.filePath}: ${archive.pointer()} total bytes`);
+        });
+
+        archive.on('warning', function (err) {
+          console.warn(`Warning while saving zip: ${err.message}`);
+          throw err;
+        });
+
+        archive.on('error', function (err) {
+          console.error(`Error while saving zip: ${err.message}`);
+          throw err;
+        });
+
+        archive.pipe(output);
+
+        archive.append(message.hocr, { name: 'index.hocr.html' });
+
+        message.images.forEach(imagePath => {
+          archive.append(fs.createReadStream(imagePath), { name: path.basename(imagePath) })
+        });
+
+        await archive.finalize();
+      }
+    }
+      break;
+    case ExportType.Folder: {
+      const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory'],
+      });
+
+      if (result.filePaths.length && !result.canceled) {
+        const destinationDir = result.filePaths[0];
+
+        await writeFile(path.join(destinationDir, 'index.hocr.html'), message.hocr, { encoding: 'utf-8' });
+
+        const copies = message.images.map(image => copyFile(image, path.join(destinationDir, path.basename(image))));
+
+        await Promise.all(copies);
+      }
+    }
+      break;
+  }
 });
