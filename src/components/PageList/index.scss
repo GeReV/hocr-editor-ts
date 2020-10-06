@@ -27,6 +27,7 @@
 .Pages-item-content {
   background: #ddd;
   min-height: 160px;
+  position: relative;
 }
 
 .Pages-item-progress.ant-progress {
@@ -36,4 +37,8 @@
   left: 50%;
   transform: translate3d(-50%, 0, 0);
   width: 80%;
+
+  .ant-progress-inner {
+    box-shadow: 0 0 0 2px white;
+  }
 }
