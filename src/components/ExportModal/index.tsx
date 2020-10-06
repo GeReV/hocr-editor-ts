@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Modal, Space, Tooltip } from 'antd';
 import { PrismAsync as SyntaxHighlighter } from 'react-syntax-highlighter';
 import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism';
@@ -16,10 +16,12 @@ interface Props {
   show?: boolean;
 }
 
+const ExportActions = React.lazy(() =>
+  process.env.REACT_APP_ELECTRON ? import('./actions.electron') : import('./actions'),
+);
+
 export default function ExportModal({ documents, onClose, show }: Props) {
   const [hocr, setHocr] = useState<string | null>(null);
-
-  const hocrDownload = useMemo(() => (hocr ? `data:text/html;charset=utf-8,${encodeURIComponent(hocr)}` : '#'), [hocr]);
 
   const [showClipboardTooltip, setShowClipboardTooltip] = useState(false);
   const [, copyToClipboard] = useCopyToClipboard();
@@ -69,14 +71,9 @@ export default function ExportModal({ documents, onClose, show }: Props) {
               Copy
             </Button>
           </Tooltip>
-          <Button
-            type="primary"
-            href={hocrDownload}
-            download="file.hocr"
-            icon={<FontAwesomeIcon icon="file-download" />}
-          >
-            Download
-          </Button>
+          <React.Suspense fallback={null}>
+            <ExportActions documents={documents} hocr={hocr} />
+          </React.Suspense>
         </Space>
       }
     >
