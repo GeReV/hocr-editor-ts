@@ -1,6 +1,8 @@
-import React from 'react';
 
 import { RecognizeUpdate } from '../../types';
+import React from 'react';
+
+
 
 import './index.scss';
 

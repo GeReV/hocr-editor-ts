@@ -1,8 +1,10 @@
-import tesseract, { RecognizeResult, Rectangle } from 'tesseract.js';
+
+
 import { OcrDocument } from './reducer/types';
 import { Page, RecognizeUpdate } from './types';
 import { convertPage } from './lib/tesseractConverter';
 import assert from './lib/assert';
+import tesseract, { RecognizeResult, Rectangle } from 'tesseract.js';
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends Array<infer U>

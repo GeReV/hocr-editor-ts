@@ -1,8 +1,10 @@
+import { OcrDocument } from '../../reducer/types';
+
 import React, { useCallback } from 'react';
 import cx from 'classnames';
 import { Menu, Progress } from 'antd';
 
-import { OcrDocument } from '../../reducer/types';
+
 
 import './index.scss';
 

@@ -1,8 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import cx from 'classnames';
-import { useKey } from 'react-use';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { IconName } from '@fortawesome/free-solid-svg-icons';
+
 
 import { ItemId, RenderItemParams } from '../SortableTree';
 import { DocumentTreeItem, ElementType } from '../../types';
@@ -11,6 +7,13 @@ import { useAppReducer } from '../../reducerContext';
 import { createModifyNode } from '../../reducer/actions';
 import { TreeItems } from '../../reducer/types';
 import TreeNodeTextEditor from './TreeNodeTextEditor';
+
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import cx from 'classnames';
+import { useKey } from 'react-use';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import type { IconName } from '@fortawesome/free-solid-svg-icons';
+
 
 interface TreeNodeProps {
   isSelected?: boolean;

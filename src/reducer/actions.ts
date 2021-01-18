@@ -1,5 +1,5 @@
-import { createAction } from '@reduxjs/toolkit';
-import { IRect } from 'konva/types/types';
+
+
 
 import { ChangeCallbackParams } from '../components/PageCanvas/Block';
 import { ItemId, Page, PageImage, RecognizeUpdate } from '../types';
@@ -15,6 +15,8 @@ import {
   Options,
   SetDocumentImagePayload,
 } from './types';
+import { createAction } from '@reduxjs/toolkit';
+import { IRect } from 'konva/types/types';
 
 export const createAddDocument = createAction<
   (filename: string, pageImage: PageImage) => { payload: AddDocumentPayload },

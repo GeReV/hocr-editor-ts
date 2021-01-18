@@ -1,13 +1,15 @@
-import React, { Dispatch } from 'react';
-import Konva from 'konva';
-import { Image, Stage } from 'react-konva';
-import { IRect } from 'konva/types/types';
+
+
 import { ItemId, Position } from '../../types';
 import { createUpdateTreeNodeRect } from '../../reducer/actions';
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
 import Blocks from './Blocks';
 import BlocksLayer from './BlocksLayer';
 import DrawLayer from './DrawLayer';
+import React, { Dispatch } from 'react';
+import Konva from 'konva';
+import { Image, Stage } from 'react-konva';
+import { IRect } from 'konva/types/types';
 
 export interface Props {
   document: OcrDocument | undefined;
