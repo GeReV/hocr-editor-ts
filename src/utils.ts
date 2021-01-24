@@ -1,5 +1,6 @@
-import { Block } from 'tesseract.js';
 import { BlockType, PageImage } from './types';
+
+import { Block } from 'tesseract.js';
 
 export const clamp = (x: number, min: number, max: number) => Math.max(min, Math.min(x, max));
 

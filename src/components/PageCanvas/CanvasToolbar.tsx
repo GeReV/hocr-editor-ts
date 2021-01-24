@@ -1,8 +1,4 @@
-import React, { PropsWithChildren, useCallback, useMemo } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Rectangle } from 'tesseract.js';
 
-import { Button, Dropdown, Menu, Space } from 'antd';
 import { useAppReducer } from '../../reducerContext';
 import {
   createAddDocument,
@@ -18,6 +14,12 @@ import { isAnyDocumentProcessing } from '../../reducer/selectors';
 import { loadImage } from '../../utils';
 import hocrParser from '../../lib/hocrParser';
 import { Page, PageImage } from '../../types';
+
+import React, { PropsWithChildren, useCallback, useMemo } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Rectangle } from 'tesseract.js';
+import { Button, Dropdown, Menu, Space } from 'antd';
+
 
 import './CanvasToolbar.scss';
 

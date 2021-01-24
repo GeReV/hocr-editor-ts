@@ -1,10 +1,4 @@
-import React, { useCallback } from 'react';
-import { Button, Col, Dropdown, Layout, Menu, Row } from 'antd';
-import { useKey } from 'react-use';
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { fas } from '@fortawesome/free-solid-svg-icons';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OcrDocument } from './reducer/types';
 import { useAppReducer } from './reducerContext';
 import { createChangeOptions, createDeleteNode, createRedo, createSelectDocument, createUndo } from './reducer/actions';
@@ -17,6 +11,15 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'antd/dist/antd.css';
 import './App.css';
 import { LogView } from './components/LogView';
+
+import React, { useCallback } from 'react';
+import { Button, Col, Dropdown, Layout, Menu, Row } from 'antd';
+import { useKey } from 'react-use';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 
 library.add(fas);
 

@@ -1,4 +1,5 @@
-import React, { useCallback, Dispatch } from 'react';
+
+
 
 import { createChangeSelected, createModifyNode, createMoveNode } from '../../reducer/actions';
 import Tree from '../SortableTree/components/Tree';
@@ -8,6 +9,10 @@ import './index.scss';
 import { AppReducerAction, OcrDocument } from '../../reducer/types';
 import { useHoveredState } from '../../hoverContext';
 import TreeNode from './TreeNode';
+
+import React, { useCallback, Dispatch } from 'react';
+
+
 
 interface Props {
   currentDocument: OcrDocument | undefined;

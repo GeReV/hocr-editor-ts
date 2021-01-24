@@ -1,8 +1,4 @@
-import { Bbox } from 'tesseract.js';
-import { produce } from 'immer';
-import type { Draft } from 'immer/dist/types/types-external';
 
-import { IRect } from 'konva/types/types';
 import { DocumentTreeItem, ElementType, ItemId, Position } from '../types';
 import { buildTree, walkChildren } from '../treeBuilder';
 import { TreeDestinationPosition, TreeSourcePosition } from '../components/SortableTree';
@@ -17,6 +13,12 @@ import {
 } from '../treeUtils';
 import assert from '../lib/assert';
 import { ActionType, AppReducerAction, ModifyNodePayload, OcrDocument, State, Tree } from './types';
+
+import { Bbox } from 'tesseract.js';
+import { produce } from 'immer';
+import type { Draft } from 'immer/dist/types/types-external';
+
+import { IRect } from 'konva/types/types';
 
 const MAX_CHANGESETS = 40;
 

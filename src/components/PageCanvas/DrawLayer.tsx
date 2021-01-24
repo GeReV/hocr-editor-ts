@@ -1,9 +1,11 @@
+import { Position } from '../../types';
+import { clamp } from '../../utils';
+
+
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Group, Layer, Rect, Transformer } from 'react-konva';
 import { IRect } from 'konva/types/types';
-import { Position } from '../../types';
-import { clamp } from '../../utils';
 
 interface Box extends IRect {
   rotation: number;

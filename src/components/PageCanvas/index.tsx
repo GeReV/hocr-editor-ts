@@ -1,11 +1,4 @@
-import React, { Dispatch, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Stage } from 'react-konva';
-import { useKey, useMeasure } from 'react-use';
-import cx from 'classnames';
-import { Button, Space } from 'antd';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { IRect } from 'konva/types/types';
 import { ItemId, Position } from '../../types';
 import {
   createChangeSelected,
@@ -23,6 +16,15 @@ import { loadImage } from '../../utils';
 import assert from '../../lib/assert';
 import PageGraphics from './PageGraphics';
 import CanvasToolbar from './CanvasToolbar';
+
+import React, { Dispatch, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Stage } from 'react-konva';
+import { useKey, useMeasure } from 'react-use';
+import cx from 'classnames';
+import { Button, Space } from 'antd';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { IRect } from 'konva/types/types';
+
 
 import './index.css';
 

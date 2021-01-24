@@ -1,3 +1,8 @@
+import { OcrDocument } from '../../reducer/types';
+import { PageTreeItem } from '../../types';
+import buildHocrDocument from '../../lib/hocrBuilder';
+import printHtml from '../../lib/htmlPrinter';
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Modal, Space, Tooltip } from 'antd';
 import { PrismAsync as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -5,10 +10,7 @@ import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism';
 import { useCopyToClipboard } from 'react-use';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { OcrDocument } from '../../reducer/types';
-import { PageTreeItem } from '../../types';
-import buildHocrDocument from '../../lib/hocrBuilder';
-import printHtml from '../../lib/htmlPrinter';
+
 
 import './index.css';
 

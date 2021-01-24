@@ -1,9 +1,10 @@
-import React from 'react';
+
+
 import { BlockTreeItem, ItemId } from '../../types';
 import { TreeItems } from '../../reducer/types';
 import { getNodeOrThrow } from '../../treeUtils';
 import Block, { ChangeCallbackParams, SetInnerRefFn } from './Block';
-
+import React from 'react';
 interface Props {
   tree: {
     rootId: ItemId;

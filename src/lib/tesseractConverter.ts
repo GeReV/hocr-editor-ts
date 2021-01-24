@@ -1,6 +1,8 @@
-import * as t from 'tesseract.js';
+
+
 import { PageImage, Block, Direction, Line, Page, Paragraph, Word, Graphic, BlockType } from '../types';
 import { createUniqueIdentifier } from '../utils';
+import * as t from 'tesseract.js';
 
 const isGraphic = (block: t.Block) =>
   block.blocktype === BlockType.PULLOUT_IMAGE ||
